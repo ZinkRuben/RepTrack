@@ -121,6 +121,8 @@ erDiagram
         VARCHAR_300 message
         BOOLEAN acknowledged
         TIMESTAMPTZ created_at
+        VARCHAR_80 rule_key
+        DATE event_date
     }
     users ||--o{ body_weight_entries : "user_id"
     users ||--o{ exercises : "owner_id"

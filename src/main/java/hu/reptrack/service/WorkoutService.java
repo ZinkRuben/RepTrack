@@ -39,7 +39,7 @@ import org.springframework.validation.annotation.Validated;
  * Az edzésnapló használati esetei (UC7, UC8, UC9): edzés rögzítése, módosítása, törlése, másolása és listázása.
  *
  * <p>Minden művelet a bejelentkezett felhasználó azonosítójával dolgozik, és csak a saját adatait éri el.
- * Mentés, módosítás és törlés után a PR-ek újraszámolódnak; a túlterhelési szabályok (UC16) később ide kapcsolódnak.
+ * Mentés, módosítás és törlés után a PR-ek újraszámolódnak és a túlterhelési figyelmeztetések egyeztetődnek (UC16).
  */
 @Service
 @Validated
@@ -53,13 +53,15 @@ public class WorkoutService {
     private final ExerciseRepository exercises;
     private final UserRepository users;
     private final PersonalRecordService personalRecords;
+    private final OverloadService overload;
 
     public WorkoutService(WorkoutRepository workouts, ExerciseRepository exercises, UserRepository users,
-                          PersonalRecordService personalRecords) {
+                          PersonalRecordService personalRecords, OverloadService overload) {
         this.workouts = workouts;
         this.exercises = exercises;
         this.users = users;
         this.personalRecords = personalRecords;
+        this.overload = overload;
     }
 
     /** Új edzés rögzítése. A gyakorlatok és szettek sorrendjét a listák sorrendje adja. */
@@ -70,6 +72,7 @@ public class WorkoutService {
         apply(workout, userId, request);
         workouts.saveAndFlush(workout);
         personalRecords.recalculate(userId, exerciseIdsOf(workout));
+        overload.evaluate(userId);
         return toView(workout);
     }
 
@@ -93,6 +96,7 @@ public class WorkoutService {
         workouts.flush();
         affected.addAll(exerciseIdsOf(workout));
         personalRecords.recalculate(userId, affected);
+        overload.evaluate(userId);
         return toView(workout);
     }
 
@@ -102,6 +106,7 @@ public class WorkoutService {
         workouts.delete(workout);
         workouts.flush();
         personalRecords.recalculate(userId, affected);
+        overload.evaluate(userId);
     }
 
     /**

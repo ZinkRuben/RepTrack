@@ -3,7 +3,8 @@
 
 Használat a repó gyökeréből:  python3 docs/generate-er.py
 Kimenet: docs/er-diagram.{dot,png,svg} és docs/er-diagram.md (Mermaid változattal).
-Elvárás a migrációkkal szemben: egy oszlop egy sorban, a táblák `CREATE TABLE nev (` ... `);` alakban.
+Elvárás a migrációkkal szemben: egy oszlop egy sorban, a táblák `CREATE TABLE nev (` ... `);` alakban, a későbbi
+oszlopok pedig `ALTER TABLE nev ADD COLUMN ...;` utasításokkal.
 """
 import glob
 import re
@@ -47,6 +48,12 @@ for m in re.finditer(r'CREATE TABLE (\w+) \((.*?)\n\);', sql, re.S):
             c[2], c[5] = True, True
     tables[name] = (cols, fks)
     order.append(name)
+
+# későbbi migrációk ALTER TABLE ... ADD COLUMN utasításai (egy oszlop egy utasításban)
+for m in re.finditer(r'ALTER TABLE (\w+)\s+ADD COLUMN (\w+) (\w+(?:\(\d+(?:,\d+)?\))?)([^;]*);', sql):
+    table, cname, ctype, rest = m.groups()
+    if table in tables:
+        tables[table][0].append([cname, ctype, False, 'REFERENCES' in rest, False, 'NOT NULL' in rest])
 
 d = ['digraph ER {', 'rankdir=LR;',
      'graph [fontname="Helvetica", nodesep=0.45, ranksep=1.3, bgcolor="white", splines=true, overlap=false, pad=0.3];',

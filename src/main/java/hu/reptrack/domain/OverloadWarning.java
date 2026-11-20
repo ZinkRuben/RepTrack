@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "overload_warnings")
@@ -30,6 +31,10 @@ public class OverloadWarning {
 
     @Enumerated(EnumType.STRING)
     private OverloadRule ruleCode;
+
+    private String ruleKey;
+
+    private LocalDate eventDate;
 
     private String message;
 
@@ -91,5 +96,21 @@ public class OverloadWarning {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getRuleKey() {
+        return ruleKey;
+    }
+
+    public void setRuleKey(String ruleKey) {
+        this.ruleKey = ruleKey;
+    }
+
+    public LocalDate getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(LocalDate eventDate) {
+        this.eventDate = eventDate;
     }
 }

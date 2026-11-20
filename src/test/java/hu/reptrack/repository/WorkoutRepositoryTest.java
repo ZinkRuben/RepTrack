@@ -167,6 +167,8 @@ class WorkoutRepositoryTest extends IntegrationTestBase {
         warning.setUser(owner);
         warning.setWorkout(w);
         warning.setRuleCode(OverloadRule.WEEKLY_LOAD);
+        warning.setRuleKey("week:2026-11-16");
+        warning.setEventDate(LocalDate.now());
         warning.setMessage("A heti terhelés meghaladta az átlag 130%-át.");
         warnings.saveAndFlush(warning);
         em.clear();

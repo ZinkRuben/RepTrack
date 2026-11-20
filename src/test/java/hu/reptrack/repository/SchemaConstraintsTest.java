@@ -225,4 +225,15 @@ class SchemaConstraintsTest extends IntegrationTestBase {
         assertThatThrownBy(() -> insertRecord(user, exercise, "BEST_PACE", null, "5K"))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
+
+    // ---- túlterhelési figyelmeztetések ----
+
+    @Test
+    void overloadWarningRuleKeyIsUniquePerUserAndRule() {
+        Long user = insertUser("ow@example.com");
+        String sql = "insert into overload_warnings (user_id, rule_code, rule_key, event_date, message) "
+                + "values (?, 'WEEKLY_LOAD', 'week:2026-11-16', current_date, 'm')";
+        jdbc.update(sql, user);
+        assertThatThrownBy(() -> jdbc.update(sql, user)).isInstanceOf(DataIntegrityViolationException.class);
+    }
 }

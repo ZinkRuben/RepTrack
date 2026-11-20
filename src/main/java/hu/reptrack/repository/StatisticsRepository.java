@@ -2,6 +2,7 @@ package hu.reptrack.repository;
 
 import hu.reptrack.dto.BodyWeightPoint;
 import hu.reptrack.dto.ExerciseCategory;
+import hu.reptrack.dto.MuscleSetCount;
 import hu.reptrack.dto.RecordSet;
 import hu.reptrack.dto.SetRecord;
 import hu.reptrack.dto.WorkoutRow;
@@ -79,6 +80,16 @@ public class StatisticsRepository {
                         + "order by w.startedAt, w.id, s.id", RecordSet.class)
                 .setParameter("userId", userId)
                 .setParameter("exerciseId", exerciseId)
+                .getResultList();
+    }
+
+    /** Edzésenként és elsődleges izomcsoportonként a szettek száma, a lezárt edzésekből (túlterhelési szabályokhoz). */
+    public List<MuscleSetCount> findMuscleSetCounts(Long userId) {
+        return em.createQuery("select new hu.reptrack.dto.MuscleSetCount(w.id, w.startedAt, e.primaryMuscle, count(s)) "
+                        + "from WorkoutSet s join s.workoutExercise we join we.workout w join we.exercise e "
+                        + "where w.user.id = :userId and w.endedAt is not null and e.primaryMuscle is not null "
+                        + "group by w.id, w.startedAt, e.primaryMuscle", MuscleSetCount.class)
+                .setParameter("userId", userId)
                 .getResultList();
     }
 
