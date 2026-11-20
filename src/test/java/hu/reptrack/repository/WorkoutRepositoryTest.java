@@ -48,7 +48,7 @@ class WorkoutRepositoryTest extends IntegrationTestBase {
         squat.setName("Guggolás");
         squat.setCategory(ExerciseCategory.WEIGHTS);
         squat.setPrimaryMuscle(MuscleGroup.QUADS);
-        squat.setSecondaryMuscles("GLUTES,HAMSTRINGS");
+        squat.setSecondaryMuscles(new java.util.LinkedHashSet<>(java.util.List.of(MuscleGroup.GLUTES, MuscleGroup.HAMSTRINGS)));
         squat.setTracksWeight(true);
         squat.setTracksReps(true);
         squat = exercises.save(squat);

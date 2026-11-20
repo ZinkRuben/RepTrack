@@ -1,7 +1,11 @@
 package hu.reptrack.domain;
 
+import hu.reptrack.dto.CardioType;
 import hu.reptrack.dto.ExerciseCategory;
 import hu.reptrack.dto.MuscleGroup;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +17,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "exercises")
@@ -33,7 +39,14 @@ public class Exercise {
     @Enumerated(EnumType.STRING)
     private MuscleGroup primaryMuscle;
 
-    private String secondaryMuscles;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "exercise_secondary_muscles", joinColumns = @JoinColumn(name = "exercise_id"))
+    @Column(name = "muscle")
+    @Enumerated(EnumType.STRING)
+    private Set<MuscleGroup> secondaryMuscles = new LinkedHashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    private CardioType cardioType;
 
     private String description;
 
@@ -92,12 +105,20 @@ public class Exercise {
         this.primaryMuscle = primaryMuscle;
     }
 
-    public String getSecondaryMuscles() {
+    public Set<MuscleGroup> getSecondaryMuscles() {
         return secondaryMuscles;
     }
 
-    public void setSecondaryMuscles(String secondaryMuscles) {
+    public void setSecondaryMuscles(Set<MuscleGroup> secondaryMuscles) {
         this.secondaryMuscles = secondaryMuscles;
+    }
+
+    public CardioType getCardioType() {
+        return cardioType;
+    }
+
+    public void setCardioType(CardioType cardioType) {
+        this.cardioType = cardioType;
     }
 
     public String getDescription() {

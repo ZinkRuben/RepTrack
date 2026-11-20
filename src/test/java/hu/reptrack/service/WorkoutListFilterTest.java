@@ -7,6 +7,7 @@ import hu.reptrack.IntegrationTestBase;
 import hu.reptrack.domain.Exercise;
 import hu.reptrack.domain.User;
 import hu.reptrack.dto.BusinessRuleException;
+import hu.reptrack.dto.CardioType;
 import hu.reptrack.dto.ExerciseCategory;
 import hu.reptrack.dto.WorkoutExerciseRequest;
 import hu.reptrack.dto.WorkoutFilter;
@@ -72,6 +73,9 @@ class WorkoutListFilterTest extends IntegrationTestBase {
         Exercise e = new Exercise();
         e.setName(name);
         e.setCategory(category);
+        if (category == ExerciseCategory.CARDIO) {
+            e.setCardioType(name.equals("Kerékpár") ? CardioType.CYCLING : CardioType.RUNNING);
+        }
         e.setTracksWeight(weight);
         e.setTracksReps(reps);
         e.setTracksDuration(duration);

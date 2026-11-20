@@ -1,5 +1,6 @@
 package hu.reptrack.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -32,6 +33,11 @@ public class TemplateExercise {
     private Short plannedReps;
 
     private BigDecimal plannedWeightKg;
+
+    private Integer plannedDurationSec;
+
+    @Column(name = "planned_distance_m")
+    private Integer plannedDistanceM;
 
     public Long getId() {
         return id;
@@ -79,6 +85,22 @@ public class TemplateExercise {
 
     public void setPlannedReps(Short plannedReps) {
         this.plannedReps = plannedReps;
+    }
+
+    public Integer getPlannedDurationSec() {
+        return plannedDurationSec;
+    }
+
+    public void setPlannedDurationSec(Integer plannedDurationSec) {
+        this.plannedDurationSec = plannedDurationSec;
+    }
+
+    public Integer getPlannedDistanceM() {
+        return plannedDistanceM;
+    }
+
+    public void setPlannedDistanceM(Integer plannedDistanceM) {
+        this.plannedDistanceM = plannedDistanceM;
     }
 
     public BigDecimal getPlannedWeightKg() {

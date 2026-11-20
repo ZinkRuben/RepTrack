@@ -7,8 +7,8 @@ CREATE TABLE users (
     display_name         VARCHAR(100) NOT NULL,
     birth_date           DATE,
     height_cm            SMALLINT CHECK (height_cm BETWEEN 50 AND 260),
-    fitness_level        VARCHAR(20)  NOT NULL DEFAULT 'BEGINNER',   -- BEGINNER / INTERMEDIATE / ADVANCED
-    role                 VARCHAR(20)  NOT NULL DEFAULT 'USER',       -- USER / ADMIN
+    fitness_level        VARCHAR(20)  NOT NULL DEFAULT 'BEGINNER' CHECK (fitness_level IN ('BEGINNER','INTERMEDIATE','ADVANCED')),
+    role                 VARCHAR(20)  NOT NULL DEFAULT 'USER' CHECK (role IN ('USER','ADMIN')),
     enabled              BOOLEAN      NOT NULL DEFAULT TRUE,
     -- túlterhelési küszöbök (a profilban módosíthatók)
     load_ratio_threshold NUMERIC(4,2) NOT NULL DEFAULT 1.30,
@@ -30,9 +30,9 @@ CREATE TABLE exercises (
     id                BIGSERIAL PRIMARY KEY,
     owner_id          BIGINT REFERENCES users(id) ON DELETE CASCADE,  -- NULL = közös gyakorlat
     name              VARCHAR(120) NOT NULL,
-    category          VARCHAR(20)  NOT NULL,                          -- WEIGHTS / CARDIO / BODYWEIGHT
-    primary_muscle    VARCHAR(40),
-    secondary_muscles VARCHAR(200),
+    category          VARCHAR(20)  NOT NULL CHECK (category IN ('WEIGHTS','CARDIO','BODYWEIGHT')),
+    primary_muscle    VARCHAR(40) CHECK (primary_muscle IN ('CHEST','BACK','SHOULDERS','BICEPS','TRICEPS','FOREARMS','ABS','QUADS','HAMSTRINGS','GLUTES','CALVES','FULL_BODY')),
+    cardio_type       VARCHAR(20) CHECK (cardio_type IN ('RUNNING','CYCLING','OTHER')),  -- csak kardiónál: RUNNING = tempó (perc/km), CYCLING = sebesség (km/h)
     description       TEXT,
     tracks_weight     BOOLEAN NOT NULL DEFAULT FALSE,
     tracks_reps       BOOLEAN NOT NULL DEFAULT FALSE,
@@ -40,15 +40,26 @@ CREATE TABLE exercises (
     tracks_distance   BOOLEAN NOT NULL DEFAULT FALSE,
     tracks_heart_rate BOOLEAN NOT NULL DEFAULT FALSE,
     archived          BOOLEAN NOT NULL DEFAULT FALSE,
-    version           BIGINT  NOT NULL DEFAULT 0
+    version           BIGINT  NOT NULL DEFAULT 0,
+    CONSTRAINT ck_exercises_cardio_type CHECK ((category = 'CARDIO') = (cardio_type IS NOT NULL))
 );
 CREATE INDEX idx_exercises_owner ON exercises(owner_id);
 CREATE INDEX idx_exercises_category ON exercises(category);
+-- A közös gyakorlatok neve egyedi (kis- és nagybetűtől függetlenül), a privátoké felhasználónként
+CREATE UNIQUE INDEX ux_exercises_shared_name ON exercises (lower(name)) WHERE owner_id IS NULL;
+CREATE UNIQUE INDEX ux_exercises_private_name ON exercises (owner_id, lower(name)) WHERE owner_id IS NOT NULL;
+
+-- Másodlagos izomcsoportok: ellenőrzött értékek, szövegkeresés helyett pontos egyezés
+CREATE TABLE exercise_secondary_muscles (
+    exercise_id BIGINT      NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+    muscle      VARCHAR(40) NOT NULL CHECK (muscle IN ('CHEST','BACK','SHOULDERS','BICEPS','TRICEPS','FOREARMS','ABS','QUADS','HAMSTRINGS','GLUTES','CALVES','FULL_BODY')),
+    PRIMARY KEY (exercise_id, muscle)
+);
 
 CREATE TABLE goals (
     id           BIGSERIAL PRIMARY KEY,
     user_id      BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    goal_type    VARCHAR(20)  NOT NULL,                  -- MUSCLE_GAIN / WEIGHT_LOSS / ENDURANCE / STRENGTH
+    goal_type    VARCHAR(20)  NOT NULL CHECK (goal_type IN ('MUSCLE_GAIN','WEIGHT_LOSS','ENDURANCE','STRENGTH')),
     exercise_id  BIGINT REFERENCES exercises(id),        -- pl. guggolás célhoz
     target_value NUMERIC(8,2),                           -- pl. 80 (kg) vagy 100 (kg)
     deadline     DATE,
@@ -64,7 +75,8 @@ CREATE TABLE workouts (
     ended_at   TIMESTAMPTZ,
     fatigue    SMALLINT CHECK (fatigue BETWEEN 1 AND 10),
     notes      TEXT,
-    version    BIGINT       NOT NULL DEFAULT 0
+    version    BIGINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_workouts_closed CHECK (ended_at IS NULL OR (ended_at > started_at AND fatigue IS NOT NULL))
 );
 CREATE INDEX idx_workouts_user_started ON workouts(user_id, started_at);
 
@@ -104,14 +116,16 @@ CREATE TABLE template_exercises (
     position        SMALLINT NOT NULL,
     planned_sets    SMALLINT NOT NULL DEFAULT 3,
     planned_reps    SMALLINT,
-    planned_weight_kg NUMERIC(5,1)
+    planned_weight_kg NUMERIC(5,1),
+    planned_duration_sec INTEGER CHECK (planned_duration_sec > 0),
+    planned_distance_m   INTEGER CHECK (planned_distance_m > 0)
 );
 
 CREATE TABLE personal_records (
     id             BIGSERIAL PRIMARY KEY,
     user_id        BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     exercise_id    BIGINT       NOT NULL REFERENCES exercises(id),
-    record_type    VARCHAR(30)  NOT NULL,   -- MAX_WEIGHT_AT_REPS / ESTIMATED_1RM / SET_VOLUME / BEST_PACE
+    record_type    VARCHAR(30)  NOT NULL CHECK (record_type IN ('MAX_WEIGHT_AT_REPS','ESTIMATED_1RM','SET_VOLUME','BEST_PACE')),
     reps           SMALLINT,                -- MAX_WEIGHT_AT_REPS esetén
     distance_band  VARCHAR(20),             -- BEST_PACE esetén (pl. 5K, 10K)
     value          NUMERIC(10,2) NOT NULL,
@@ -124,7 +138,7 @@ CREATE TABLE overload_warnings (
     id           BIGSERIAL PRIMARY KEY,
     user_id      BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     workout_id   BIGINT REFERENCES workouts(id) ON DELETE CASCADE,
-    rule_code    VARCHAR(30)  NOT NULL,     -- WEEKLY_LOAD / MUSCLE_SETS / HIGH_FATIGUE
+    rule_code    VARCHAR(30)  NOT NULL CHECK (rule_code IN ('WEEKLY_LOAD','MUSCLE_SETS','HIGH_FATIGUE')),
     message      VARCHAR(300) NOT NULL,
     acknowledged BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT now()

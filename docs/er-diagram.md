@@ -1,6 +1,6 @@
 # RepTrack ER-diagram
 
-A `V1__init.sql` migrációból generálva (jelmagyarázat: PK = elsődleges kulcs, FK = idegen kulcs, UK = egyedi; `?` a PNG-ben: nullázható).
+A Flyway migrációkból generálva (`python3 docs/generate-er.py`). Jelmagyarázat: PK = elsődleges kulcs, FK = idegen kulcs, UQ/UK = egyedi; `?` a PNG-ben: nullázható.
 
 ![ER-diagram](er-diagram.png)
 
@@ -34,7 +34,7 @@ erDiagram
         VARCHAR_120 name
         VARCHAR_20 category
         VARCHAR_40 primary_muscle
-        VARCHAR_200 secondary_muscles
+        VARCHAR_20 cardio_type
         TEXT description
         BOOLEAN tracks_weight
         BOOLEAN tracks_reps
@@ -43,6 +43,10 @@ erDiagram
         BOOLEAN tracks_heart_rate
         BOOLEAN archived
         BIGINT version
+    }
+    exercise_secondary_muscles {
+        BIGINT exercise_id PK
+        VARCHAR_40 muscle PK
     }
     goals {
         BIGINT id PK
@@ -95,6 +99,8 @@ erDiagram
         SMALLINT planned_sets
         SMALLINT planned_reps
         NUMERIC_5_1 planned_weight_kg
+        INTEGER planned_duration_sec
+        INTEGER planned_distance_m
     }
     personal_records {
         BIGINT id PK
@@ -118,6 +124,7 @@ erDiagram
     }
     users ||--o{ body_weight_entries : "user_id"
     users ||--o{ exercises : "owner_id"
+    exercises ||--o{ exercise_secondary_muscles : "exercise_id"
     users ||--o{ goals : "user_id"
     exercises ||--o{ goals : "exercise_id"
     users ||--o{ workouts : "user_id"
