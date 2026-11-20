@@ -48,9 +48,9 @@ class WorkoutListFilterTest extends IntegrationTestBase {
     void setUp() {
         alice = users.save(user("alice@example.com"));
         bob = users.save(user("bob@example.com"));
-        squat = exercise("Guggolás", ExerciseCategory.WEIGHTS, true, true, false);
-        run = exercise("Futás", ExerciseCategory.CARDIO, false, false, true);
-        bike = exercise("Kerékpár", ExerciseCategory.CARDIO, false, false, true);
+        squat = exercise("Teszt guggolás", ExerciseCategory.WEIGHTS, true, true, false);
+        run = exercise("Teszt futás", ExerciseCategory.CARDIO, false, false, true);
+        bike = exercise("Teszt kerékpár", ExerciseCategory.CARDIO, false, false, true);
 
         // alice: W-old (guggolás, 10 napja), W-run (futás, 5 napja), W-mix (guggolás + futás + kerékpár, 1 napja)
         workout(alice, "W-old", 10, squat);
@@ -74,7 +74,7 @@ class WorkoutListFilterTest extends IntegrationTestBase {
         e.setName(name);
         e.setCategory(category);
         if (category == ExerciseCategory.CARDIO) {
-            e.setCardioType(name.equals("Kerékpár") ? CardioType.CYCLING : CardioType.RUNNING);
+            e.setCardioType(name.equals("Teszt kerékpár") ? CardioType.CYCLING : CardioType.RUNNING);
         }
         e.setTracksWeight(weight);
         e.setTracksReps(reps);

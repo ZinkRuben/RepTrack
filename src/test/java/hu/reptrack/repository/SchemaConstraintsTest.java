@@ -80,7 +80,7 @@ class SchemaConstraintsTest extends IntegrationTestBase {
 
     @Test
     void misspelledCategoryIsRejectedByDatabase() {
-        assertThatThrownBy(() -> insertExercise("Guggolás", "WEIGTHS", null, null))
+        assertThatThrownBy(() -> insertExercise("Teszt guggolás", "WEIGTHS", null, null))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
@@ -93,8 +93,8 @@ class SchemaConstraintsTest extends IntegrationTestBase {
 
     @Test
     void unknownSecondaryMuscleIsRejectedByDatabase() {
-        insertExercise("Guggolás", "WEIGHTS", null, null);
-        Long id = jdbc.queryForObject("select id from exercises where name = 'Guggolás'", Long.class);
+        insertExercise("Teszt guggolás", "WEIGHTS", null, null);
+        Long id = jdbc.queryForObject("select id from exercises where name = 'Teszt guggolás'", Long.class);
         assertThatThrownBy(() -> jdbc.update(
                 "insert into exercise_secondary_muscles (exercise_id, muscle) values (?, 'LOWER_BACK')", id))
                 .isInstanceOf(DataIntegrityViolationException.class);
@@ -104,21 +104,22 @@ class SchemaConstraintsTest extends IntegrationTestBase {
 
     @Test
     void cardioExerciseMustHaveCardioType() {
-        assertThatThrownBy(() -> insertExercise("Futás", "CARDIO", null, null))
+        assertThatThrownBy(() -> insertExercise("Teszt futás", "CARDIO", null, null))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     void nonCardioExerciseMustNotHaveCardioType() {
-        assertThatThrownBy(() -> insertExercise("Guggolás", "WEIGHTS", "RUNNING", null))
+        assertThatThrownBy(() -> insertExercise("Teszt guggolás", "WEIGHTS", "RUNNING", null))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     void cardioWithTypeIsAccepted() {
-        insertExercise("Futás", "CARDIO", "RUNNING", null);
-        insertExercise("Kerékpár", "CARDIO", "CYCLING", null);
-        assertThat(jdbc.queryForObject("select count(*) from exercises where cardio_type is not null", Integer.class))
+        insertExercise("Teszt futás", "CARDIO", "RUNNING", null);
+        insertExercise("Teszt kerékpár", "CARDIO", "CYCLING", null);
+        assertThat(jdbc.queryForObject(
+                "select count(*) from exercises where cardio_type is not null and name like 'Teszt %'", Integer.class))
                 .isEqualTo(2);
     }
 
@@ -126,8 +127,8 @@ class SchemaConstraintsTest extends IntegrationTestBase {
 
     @Test
     void sharedExerciseNamesAreUniqueCaseInsensitively() {
-        insertExercise("Guggolás", "WEIGHTS", null, null);
-        assertThatThrownBy(() -> insertExercise("guggolás", "WEIGHTS", null, null))
+        insertExercise("Teszt guggolás", "WEIGHTS", null, null);
+        assertThatThrownBy(() -> insertExercise("teszt guggolás", "WEIGHTS", null, null))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 

@@ -59,15 +59,17 @@ class ExerciseCatalogIntegrityTest extends IntegrationTestBase {
         owner.setDisplayName("A");
         users.save(owner);
 
-        Exercise deadlift = exercise("Felhúzás", MuscleGroup.HAMSTRINGS, MuscleGroup.BACK, MuscleGroup.GLUTES);
-        Exercise row = exercise("Evezés", MuscleGroup.BACK, MuscleGroup.BICEPS);
+        Exercise deadlift = exercise("Teszt felhúzás", MuscleGroup.HAMSTRINGS, MuscleGroup.BACK, MuscleGroup.GLUTES);
+        Exercise row = exercise("Teszt evezés", MuscleGroup.BACK, MuscleGroup.BICEPS);
         exercises.flush();
 
+        // a seed gyakorlatai is szerepelnek a találatok között, ezért csak a teszt saját gyakorlatait vizsgáljuk
         assertThat(exercises.findBySecondaryMuscle(MuscleGroup.BACK)).extracting(Exercise::getName)
-                .containsExactly("Felhúzás");
+                .contains("Teszt felhúzás").doesNotContain("Teszt evezés");
         assertThat(exercises.findBySecondaryMuscle(MuscleGroup.BICEPS)).extracting(Exercise::getName)
-                .containsExactly("Evezés");
-        assertThat(exercises.findBySecondaryMuscle(MuscleGroup.CHEST)).isEmpty();
+                .contains("Teszt evezés").doesNotContain("Teszt felhúzás");
+        assertThat(exercises.findBySecondaryMuscle(MuscleGroup.CHEST)).extracting(Exercise::getName)
+                .doesNotContain("Teszt felhúzás", "Teszt evezés");
         assertThat(deadlift.getSecondaryMuscles()).containsExactlyInAnyOrder(MuscleGroup.BACK, MuscleGroup.GLUTES);
         assertThat(row.getCardioType()).isNull();
     }
@@ -75,7 +77,7 @@ class ExerciseCatalogIntegrityTest extends IntegrationTestBase {
     @Test
     void cardioTypeIsPersisted() {
         Exercise run = new Exercise();
-        run.setName("Futás");
+        run.setName("Teszt futás");
         run.setCategory(ExerciseCategory.CARDIO);
         run.setCardioType(CardioType.RUNNING);
         exercises.saveAndFlush(run);

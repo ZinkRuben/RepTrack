@@ -45,7 +45,7 @@ class WorkoutRepositoryTest extends IntegrationTestBase {
     void setUp() {
         owner = users.save(user("owner@example.com"));
         squat = new Exercise();
-        squat.setName("Guggolás");
+        squat.setName("Teszt guggolás");
         squat.setCategory(ExerciseCategory.WEIGHTS);
         squat.setPrimaryMuscle(MuscleGroup.QUADS);
         squat.setSecondaryMuscles(new java.util.LinkedHashSet<>(java.util.List.of(MuscleGroup.GLUTES, MuscleGroup.HAMSTRINGS)));
@@ -94,7 +94,7 @@ class WorkoutRepositoryTest extends IntegrationTestBase {
         Workout loaded = workouts.findByIdAndUserId(id, owner.getId()).orElseThrow();
         assertThat(loaded.getExercises()).hasSize(1);
         WorkoutExercise we = loaded.getExercises().get(0);
-        assertThat(we.getExercise().getName()).isEqualTo("Guggolás");
+        assertThat(we.getExercise().getName()).isEqualTo("Teszt guggolás");
         assertThat(we.getSets()).extracting(WorkoutSet::getPosition).containsExactly((short) 1, (short) 2);
         assertThat(we.getSets().get(0).getWeightKg()).isEqualByComparingTo("100.0");
         assertThat(loaded.getVersion()).isNotNull();

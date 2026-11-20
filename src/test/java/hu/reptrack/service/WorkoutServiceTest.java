@@ -51,9 +51,9 @@ class WorkoutServiceTest extends IntegrationTestBase {
     void setUp() {
         alice = users.save(user("alice@example.com"));
         bob = users.save(user("bob@example.com"));
-        squat = exercise("Guggolás", ExerciseCategory.WEIGHTS, true, true, false, false, false, null);
-        run = exercise("Futás", ExerciseCategory.CARDIO, false, false, true, true, true, null);
-        pullUp = exercise("Húzódzkodás", ExerciseCategory.BODYWEIGHT, true, true, false, false, false, null);
+        squat = exercise("Teszt guggolás", ExerciseCategory.WEIGHTS, true, true, false, false, false, null);
+        run = exercise("Teszt futás", ExerciseCategory.CARDIO, false, false, true, true, true, null);
+        pullUp = exercise("Teszt húzódzkodás", ExerciseCategory.BODYWEIGHT, true, true, false, false, false, null);
     }
 
     // ---- segédek ----
@@ -110,7 +110,7 @@ class WorkoutServiceTest extends IntegrationTestBase {
 
         WorkoutView loaded = service.get(alice.getId(), view.id());
         assertThat(loaded.exercises()).extracting(WorkoutView.ExerciseView::exerciseName)
-                .containsExactly("Guggolás", "Futás");
+                .containsExactly("Teszt guggolás", "Teszt futás");
         assertThat(loaded.exercises()).extracting(WorkoutView.ExerciseView::position)
                 .containsExactly((short) 1, (short) 2);
         assertThat(loaded.exercises().get(0).sets()).extracting(WorkoutView.SetView::position)
@@ -269,7 +269,7 @@ class WorkoutServiceTest extends IntegrationTestBase {
         WorkoutView updated = service.update(alice.getId(), created.id(), change);
 
         assertThat(updated.title()).isEqualTo("Új cím");
-        assertThat(updated.exercises()).extracting(WorkoutView.ExerciseView::exerciseName).containsExactly("Húzódzkodás");
+        assertThat(updated.exercises()).extracting(WorkoutView.ExerciseView::exerciseName).containsExactly("Teszt húzódzkodás");
         assertThat(updated.version()).isGreaterThan(created.version());
     }
 
