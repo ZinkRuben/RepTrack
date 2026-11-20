@@ -1,0 +1,16 @@
+# Fejlesztői adatbázis: docker-compose up -d
+services:
+  db:
+    image: postgres:16
+    container_name: reptrack-db
+    environment:
+      POSTGRES_DB: reptrack
+      POSTGRES_USER: reptrack
+      POSTGRES_PASSWORD: reptrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - reptrack-db-data:/var/lib/postgresql/data
+
+volumes:
+  reptrack-db-data:
