@@ -10,6 +10,7 @@ import hu.reptrack.dto.ExerciseCategory;
 import hu.reptrack.dto.NotFoundException;
 import hu.reptrack.dto.StaleDataException;
 import hu.reptrack.dto.WorkoutExerciseRequest;
+import hu.reptrack.dto.WorkoutFilter;
 import hu.reptrack.dto.WorkoutRequest;
 import hu.reptrack.dto.WorkoutSetRequest;
 import hu.reptrack.dto.WorkoutSummary;
@@ -46,6 +47,7 @@ import org.springframework.validation.annotation.Validated;
 public class WorkoutService {
 
     private static final Duration MAX_DURATION = Duration.ofHours(24);
+    private static final Set<String> SORTABLE = Set.of("startedAt", "title", "fatigue");
 
     private final WorkoutRepository workouts;
     private final ExerciseRepository exercises;
@@ -125,13 +127,30 @@ public class WorkoutService {
         return toView(workouts.save(copy));
     }
 
-    /** A felhasználó edzéseinek listája, alapértelmezetten a legújabb elöl. */
+    /** A felhasználó edzéseinek listája szűrés nélkül, alapértelmezetten a legújabb elöl. */
     @Transactional(readOnly = true)
     public Page<WorkoutSummary> list(Long userId, Pageable pageable) {
+        return list(userId, WorkoutFilter.none(), pageable);
+    }
+
+    /**
+     * Szűrt lista (időszak, gyakorlat, kategória). Rendezni csak {@code startedAt}, {@code title} és
+     * {@code fatigue} szerint lehet; rendezés nélkül a legújabb edzés van elöl.
+     */
+    @Transactional(readOnly = true)
+    public Page<WorkoutSummary> list(Long userId, WorkoutFilter filter, Pageable pageable) {
+        if (filter.from() != null && filter.to() != null && !filter.from().isBefore(filter.to())) {
+            throw new BusinessRuleException("A szűrő kezdő időpontja a záró időpont előtt kell legyen.");
+        }
+        for (Sort.Order order : pageable.getSort()) {
+            if (!SORTABLE.contains(order.getProperty())) {
+                throw new BusinessRuleException("Erre a mezőre nem lehet rendezni: " + order.getProperty());
+            }
+        }
         Pageable effective = pageable.getSort().isUnsorted()
                 ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "startedAt"))
                 : pageable;
-        return workouts.findSummariesByUserId(userId, effective);
+        return workouts.search(userId, filter, effective);
     }
 
     // ---- belső segédek ----
