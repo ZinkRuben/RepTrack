@@ -1,5 +1,6 @@
 package hu.reptrack.domain;
 
+import hu.reptrack.dto.DistanceBand;
 import hu.reptrack.dto.RecordType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -38,7 +39,8 @@ public class PersonalRecord {
 
     private Short reps;
 
-    private String distanceBand;
+    @Enumerated(EnumType.STRING)
+    private DistanceBand distanceBand;
 
     private BigDecimal value;
 
@@ -92,11 +94,11 @@ public class PersonalRecord {
         this.reps = reps;
     }
 
-    public String getDistanceBand() {
+    public DistanceBand getDistanceBand() {
         return distanceBand;
     }
 
-    public void setDistanceBand(String distanceBand) {
+    public void setDistanceBand(DistanceBand distanceBand) {
         this.distanceBand = distanceBand;
     }
 

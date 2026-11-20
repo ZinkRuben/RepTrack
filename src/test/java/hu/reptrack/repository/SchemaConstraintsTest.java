@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import hu.reptrack.IntegrationTestBase;
 import hu.reptrack.dto.CardioType;
+import hu.reptrack.dto.DistanceBand;
 import hu.reptrack.dto.ExerciseCategory;
 import hu.reptrack.dto.FitnessLevel;
 import hu.reptrack.dto.GoalType;
@@ -76,6 +77,7 @@ class SchemaConstraintsTest extends IntegrationTestBase {
         assertCheckMatches("goals", "goal_type", GoalType.class);
         assertCheckMatches("personal_records", "record_type", RecordType.class);
         assertCheckMatches("overload_warnings", "rule_code", OverloadRule.class);
+        assertCheckMatches("personal_records", "distance_band", DistanceBand.class);
     }
 
     @Test
@@ -167,5 +169,60 @@ class SchemaConstraintsTest extends IntegrationTestBase {
         Long user = insertUser("alice@example.com");
         jdbc.update("insert into workouts (user_id, title, started_at) values (?, 'E', now())", user);
         assertThat(jdbc.queryForObject("select count(*) from workouts", Integer.class)).isEqualTo(1);
+    }
+
+    // ---- egyéni csúcsok ----
+
+    private Long prExercise() {
+        insertExercise("Teszt PR gyakorlat", "WEIGHTS", null, null);
+        return jdbc.queryForObject("select id from exercises where name = 'Teszt PR gyakorlat'", Long.class);
+    }
+
+    private void insertRecord(Long user, Long exercise, String type, Integer reps, String band) {
+        jdbc.update("insert into personal_records (user_id, exercise_id, record_type, reps, distance_band, value, achieved_on) "
+                + "values (?, ?, ?, ?, ?, 100, current_date)", user, exercise, type, reps, band);
+    }
+
+    @Test
+    void validPersonalRecordShapesAreAccepted() {
+        Long user = insertUser("pr@example.com");
+        Long exercise = prExercise();
+        insertRecord(user, exercise, "MAX_WEIGHT_AT_REPS", 5, null);
+        insertRecord(user, exercise, "ESTIMATED_1RM", null, null);
+        insertRecord(user, exercise, "SET_VOLUME", null, null);
+        insertRecord(user, exercise, "BEST_PACE", null, "FIVE_K");
+        assertThat(jdbc.queryForObject("select count(*) from personal_records", Integer.class)).isEqualTo(4);
+    }
+
+    @Test
+    void weightAtRepsRecordRequiresReps() {
+        Long user = insertUser("pr@example.com");
+        Long exercise = prExercise();
+        assertThatThrownBy(() -> insertRecord(user, exercise, "MAX_WEIGHT_AT_REPS", null, null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void oneRepMaxRecordMustNotHaveReps() {
+        Long user = insertUser("pr@example.com");
+        Long exercise = prExercise();
+        assertThatThrownBy(() -> insertRecord(user, exercise, "ESTIMATED_1RM", 5, null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void paceRecordRequiresDistanceBand() {
+        Long user = insertUser("pr@example.com");
+        Long exercise = prExercise();
+        assertThatThrownBy(() -> insertRecord(user, exercise, "BEST_PACE", null, null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void misspelledDistanceBandIsRejected() {
+        Long user = insertUser("pr@example.com");
+        Long exercise = prExercise();
+        assertThatThrownBy(() -> insertRecord(user, exercise, "BEST_PACE", null, "5K"))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

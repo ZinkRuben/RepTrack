@@ -2,6 +2,7 @@ package hu.reptrack.repository;
 
 import hu.reptrack.dto.BodyWeightPoint;
 import hu.reptrack.dto.ExerciseCategory;
+import hu.reptrack.dto.RecordSet;
 import hu.reptrack.dto.SetRecord;
 import hu.reptrack.dto.WorkoutRow;
 import jakarta.persistence.EntityManager;
@@ -67,6 +68,18 @@ public class StatisticsRepository {
         }
         jpql.append(" order by w.startedAt, w.id, we.position, s.position");
         return run(jpql, params, SetRecord.class);
+    }
+
+    /** Egy gyakorlat szettjei a felhasználó lezárt edzéseiből, időrendben (a PR-felismerés bemenete). */
+    public List<RecordSet> findRecordSets(Long userId, Long exerciseId) {
+        return em.createQuery("select new hu.reptrack.dto.RecordSet(s.id, w.id, w.startedAt, e.category, e.cardioType, "
+                        + "s.weightKg, s.reps, s.durationSec, s.distanceM) "
+                        + "from WorkoutSet s join s.workoutExercise we join we.workout w join we.exercise e "
+                        + "where w.user.id = :userId and e.id = :exerciseId and w.endedAt is not null "
+                        + "order by w.startedAt, w.id, s.id", RecordSet.class)
+                .setParameter("userId", userId)
+                .setParameter("exerciseId", exerciseId)
+                .getResultList();
     }
 
     /** A felhasználó összes testtömeg-mérése időrendben (a számításokhoz az időszak előtti mérések is kellenek). */

@@ -39,7 +39,7 @@ import org.springframework.validation.annotation.Validated;
  * Az edzésnapló használati esetei (UC7, UC8, UC9): edzés rögzítése, módosítása, törlése, másolása és listázása.
  *
  * <p>Minden művelet a bejelentkezett felhasználó azonosítójával dolgozik, és csak a saját adatait éri el.
- * A mentés utáni kiértékelés (PR-ek, túlterhelés, UC16) később ide kapcsolódik.
+ * Mentés, módosítás és törlés után a PR-ek újraszámolódnak; a túlterhelési szabályok (UC16) később ide kapcsolódnak.
  */
 @Service
 @Validated
@@ -52,11 +52,14 @@ public class WorkoutService {
     private final WorkoutRepository workouts;
     private final ExerciseRepository exercises;
     private final UserRepository users;
+    private final PersonalRecordService personalRecords;
 
-    public WorkoutService(WorkoutRepository workouts, ExerciseRepository exercises, UserRepository users) {
+    public WorkoutService(WorkoutRepository workouts, ExerciseRepository exercises, UserRepository users,
+                          PersonalRecordService personalRecords) {
         this.workouts = workouts;
         this.exercises = exercises;
         this.users = users;
+        this.personalRecords = personalRecords;
     }
 
     /** Új edzés rögzítése. A gyakorlatok és szettek sorrendjét a listák sorrendje adja. */
@@ -65,7 +68,9 @@ public class WorkoutService {
         Workout workout = new Workout();
         workout.setUser(user);
         apply(workout, userId, request);
-        return toView(workouts.save(workout));
+        workouts.saveAndFlush(workout);
+        personalRecords.recalculate(userId, exerciseIdsOf(workout));
+        return toView(workout);
     }
 
     @Transactional(readOnly = true)
@@ -82,14 +87,21 @@ public class WorkoutService {
         if (!request.version().equals(workout.getVersion())) {
             throw new StaleDataException("Az edzést közben máshol módosították. Töltsd újra, és mentsd újra a módosításaidat.");
         }
+        Set<Long> affected = exerciseIdsOf(workout);       // a módosítás előtti gyakorlatok is érintettek
         apply(workout, userId, request);
         // flush: a visszaadott nézet a módosítás utáni (megnövelt) verziószámot tartalmazza
         workouts.flush();
+        affected.addAll(exerciseIdsOf(workout));
+        personalRecords.recalculate(userId, affected);
         return toView(workout);
     }
 
     public void delete(Long userId, Long workoutId) {
-        workouts.delete(load(userId, workoutId));
+        Workout workout = load(userId, workoutId);
+        Set<Long> affected = exerciseIdsOf(workout);
+        workouts.delete(workout);
+        workouts.flush();
+        personalRecords.recalculate(userId, affected);
     }
 
     /**
@@ -154,6 +166,14 @@ public class WorkoutService {
     }
 
     // ---- belső segédek ----
+
+    private Set<Long> exerciseIdsOf(Workout workout) {
+        Set<Long> ids = new HashSet<>();
+        for (WorkoutExercise we : workout.getExercises()) {
+            ids.add(we.getExercise().getId());
+        }
+        return ids;
+    }
 
     private Workout load(Long userId, Long workoutId) {
         return workouts.findByIdAndUserId(workoutId, userId)
