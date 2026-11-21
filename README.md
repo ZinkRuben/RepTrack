@@ -11,10 +11,29 @@ Java 21, Spring Boot 4.1, Spring Data JPA, Thymeleaf, PostgreSQL, Flyway.
 
 ## Indítás
 
+### Fejlesztéshez (helyi JDK, sima HTTP)
+
 ```bash
-docker-compose up -d        # PostgreSQL (localhost:5432, reptrack/reptrack)
+docker compose up -d db     # csak a PostgreSQL (localhost:5432, reptrack/reptrack)
 ./mvnw spring-boot:run      # alkalmazás: http://localhost:8080
 ```
+
+### Teljes rendszer Dockerben (HTTPS)
+
+```bash
+docker compose up -d --build   # alkalmazás + adatbázis: https://localhost:8443
+```
+
+- A kép többlépcsős `Dockerfile`-ból épül (JDK-val fordít, JRE-vel fut, nem root felhasználóval). A tesztek a
+  képépítéskor nem futnak, előtte: `./mvnw verify`.
+- **HTTPS önaláírt tanúsítvánnyal:** első induláskor a konténer készíti el (véletlen jelszóval) a `reptrack-certs`
+  kötetbe, így újraindítás után is ugyanaz marad. A böngésző első alkalommal figyelmeztet: el kell fogadni.
+  Tanúsítvány és jelszó nem kerül a repóba.
+- A `http://localhost:8080` a HTTPS-címre irányít át. Ha fut mellette a fejlesztői `./mvnw spring-boot:run` is, az is
+  a 8080-at használná: ilyenkor az egyiket állítsd le, vagy adj meg más portot a `.env`-ben (`HTTP_PORT`, `HTTPS_PORT`).
+- Beállítások a `.env`-ből: az első admin (`REPTRACK_ADMIN_*`, lásd lent), a portok, és az adatbázis jelszava
+  (`DB_PASSWORD`; csak az adatbázis első létrehozása előtt változtatható).
+- Leállítás: `docker compose down` (az adatok és a tanúsítvány megmaradnak), mindent törölve: `docker compose down -v`.
 
 ### Első adminisztrátor
 

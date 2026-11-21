@@ -7,6 +7,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -106,5 +107,14 @@ class SecurityRulesTest extends IntegrationTestBase {
     void logoutNeedsCsrfToken() throws Exception {
         mvc.perform(post("/logout")).andExpect(status().isForbidden());
         mvc.perform(post("/logout").with(csrf())).andExpect(redirectedUrl("/login?logout"));
+    }
+
+    // ---- HTTPS nélkül (fejlesztés): nincs átirányítás, a HSTS alapértelmezés szerint működik ----
+
+    @Test
+    void withoutSslPlainHttpIsServedAndSecureRequestsGetHsts() throws Exception {
+        mvc.perform(get("/login")).andExpect(status().isOk());
+        mvc.perform(get("/login").secure(true))
+                .andExpect(header().exists("Strict-Transport-Security"));
     }
 }

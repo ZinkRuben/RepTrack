@@ -1,16 +1,63 @@
-# Fejlesztői adatbázis: docker-compose up -d
+# RepTrack: alkalmazás + adatbázis.
+#
+#   Teljes rendszer:   docker compose up -d --build   ->  https://localhost:8443  (a http://localhost:8080 átirányít)
+#   Csak adatbázis:    docker compose up -d db         ->  fejlesztéshez, a ./mvnw spring-boot:run mellé
+#   Leállítás:         docker compose down             (az adatok és a tanúsítvány a kötetekben megmaradnak)
+#
+# Beállítások a .env fájlból (minta: .env.example): az első admin (REPTRACK_ADMIN_*), a portok (HTTPS_PORT, HTTP_PORT)
+# és az adatbázis jelszava (DB_PASSWORD; csak az első indítás előtt változtatható, utána a kötetben lévő érvényes).
+# A tanúsítvány önaláírt: a böngésző első alkalommal figyelmeztet, ezt el kell fogadni.
+
 services:
   db:
     image: postgres:16
     container_name: reptrack-db
     environment:
       POSTGRES_DB: reptrack
-      POSTGRES_USER: reptrack
-      POSTGRES_PASSWORD: reptrack
+      POSTGRES_USER: ${DB_USER:-reptrack}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-reptrack}
     ports:
       - "5432:5432"
     volumes:
       - reptrack-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d reptrack"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    build: .
+    image: reptrack:latest
+    container_name: reptrack-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/reptrack
+      DB_USER: ${DB_USER:-reptrack}
+      DB_PASSWORD: ${DB_PASSWORD:-reptrack}
+      REPTRACK_ADMIN_EMAIL: ${REPTRACK_ADMIN_EMAIL:-}
+      REPTRACK_ADMIN_PASSWORD: ${REPTRACK_ADMIN_PASSWORD:-}
+      REPTRACK_ADMIN_NAME: ${REPTRACK_ADMIN_NAME:-Adminisztrátor}
+      # a HTTP -> HTTPS átirányításhoz: a gazdagépen látható portok
+      REPTRACK_PUBLIC_HTTP_PORT: ${HTTP_PORT:-8080}
+      REPTRACK_PUBLIC_HTTPS_PORT: ${HTTPS_PORT:-8443}
+      REPTRACK_HTTPS_HSTS: ${REPTRACK_HTTPS_HSTS:-false}
+    ports:
+      - "${HTTPS_PORT:-8443}:8443"
+      - "${HTTP_PORT:-8080}:8080"
+    volumes:
+      - reptrack-certs:/certs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider --no-check-certificate https://localhost:8443/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   reptrack-db-data:
+  reptrack-certs:

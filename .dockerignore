@@ -1,0 +1,11 @@
+# Ami nem kell a konténerkép építéséhez. A .env titkokat tartalmazhat: soha ne kerüljön a képbe.
+.env
+.git
+.github
+.idea
+.vscode
+*.iml
+target
+docs
+*.log
+HELP.md
