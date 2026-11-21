@@ -52,6 +52,11 @@
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
+                        <a class="dropdown-item" th:href="@{/profile}">
+                            <i class="bi bi-person-gear" aria-hidden="true"></i> Profil és célok
+                        </a>
+                    </li>
+                    <li>
                         <form th:action="@{/logout}" method="post">
                             <button class="dropdown-item text-danger" type="submit">
                                 <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Kijelentkezés

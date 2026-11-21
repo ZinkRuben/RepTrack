@@ -162,7 +162,7 @@
     <div class="card mb-4" th:if="${bodyWeightData == null}">
         <div class="card-body empty-state">
             <div class="empty-state-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></div>
-            <p class="mb-0 text-body-secondary">Még nincs rögzített testtömeg-mérésed.</p>
+            <p class="mb-0 text-body-secondary">Még nincs rögzített testtömeg-mérésed. <a th:href="@{/profile#testtomeg}">Rögzítsd az elsőt!</a></p>
         </div>
     </div>
     <div class="card mb-4" th:if="${bodyWeightData != null}">

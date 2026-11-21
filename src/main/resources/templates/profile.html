@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title>Profil és célok – RepTrack</title></head>
+<body>
+
+<main class="container py-4 py-lg-5">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Profil és célok</h1>
+            <p class="page-subtitle" th:text="${profile.email()}">felhasznalo@example.com</p>
+        </div>
+    </div>
+
+    <!-- a legutóbbi mérés és a testtömegindex -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></div>
+                <div>
+                    <div class="stat-label">Legutóbbi testtömeg</div>
+                    <div class="stat-value"
+                         th:text="${profile.latestWeightKg() != null} ? ${profile.latestWeightKg().stripTrailingZeros().toPlainString()} + ' kg' : '–'">84 kg</div>
+                    <div class="small text-body-secondary" th:if="${profile.latestWeightDate() != null}"
+                         th:text="${#temporals.format(profile.latestWeightDate(), 'yyyy. MM. dd.')}">2026. 11. 21.</div>
+                </div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-rulers" aria-hidden="true"></i></div>
+                <div>
+                    <div class="stat-label">Testtömegindex</div>
+                    <div class="stat-value" th:text="${profile.bmi() != null} ? ${profile.bmi()} : '–'">24,5</div>
+                    <div class="small text-body-secondary" th:if="${profile.bmi() == null}">magasság és mérés kell hozzá</div>
+                </div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- személyes adatok és küszöbök -->
+        <div class="col-12 col-lg-7">
+            <form method="post" th:action="@{/profile}" class="card">
+                <input type="hidden" name="version" th:value="${form.version}">
+                <div class="card-header">Személyes adatok</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="displayName">Név</label>
+                            <input class="form-control" id="displayName" name="displayName" type="text" maxlength="100" required
+                                   th:value="${form.displayName}">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="fitnessLevel">Edzettségi szint</label>
+                            <select class="form-select" id="fitnessLevel" name="fitnessLevel" required>
+                                <option th:each="l : ${fitnessLevels}" th:value="${l}"
+                                        th:text="${#messages.msg('level.' + l)}" th:selected="${l == form.fitnessLevel}">Kezdő</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="birthDate">Születési dátum</label>
+                            <input class="form-control" id="birthDate" name="birthDate" type="date" th:max="${today}"
+                                   th:value="${form.birthDate}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="heightCm">Magasság (cm)</label>
+                            <input class="form-control" id="heightCm" name="heightCm" type="number" min="50" max="260" step="1"
+                                   th:value="${form.heightCm}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-header border-top">Túlterhelési figyelmeztetések küszöbei</div>
+                <div class="card-body">
+                    <p class="text-body-secondary small">
+                        A rendszer ezek alapján figyelmeztet a túl nagy terhelésre. Az alapértékek: 130%, 6 szett, 8-as fáradtság.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="weeklyLoadPercent">Heti terhelés (%)</label>
+                            <input class="form-control" id="weeklyLoadPercent" name="weeklyLoadPercent" type="number"
+                                   min="105" max="300" step="1" required th:value="${form.weeklyLoadPercent}">
+                            <div class="form-text">Az előző 4 hét átlagához képest.</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="muscleSetsThreshold">Szett naponta</label>
+                            <input class="form-control" id="muscleSetsThreshold" name="muscleSetsThreshold" type="number"
+                                   min="1" max="30" step="1" required th:value="${form.muscleSetsThreshold}">
+                            <div class="form-text">Ugyanarra az izomcsoportra, 3 egymást követő napon.</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="fatigueThreshold">Fáradtság (1–10)</label>
+                            <input class="form-control" id="fatigueThreshold" name="fatigueThreshold" type="number"
+                                   min="1" max="10" step="1" required th:value="${form.fatigueThreshold}">
+                            <div class="form-text">3 egymást követő edzésen.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-check2" aria-hidden="true"></i> Mentés</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- testtömeg-napló -->
+        <div class="col-12 col-lg-5" id="testtomeg">
+            <div class="card">
+                <div class="card-header">Testtömeg-napló</div>
+                <div class="card-body">
+                    <form class="row g-2 align-items-end" method="post" th:action="@{/profile/body-weight}">
+                        <div class="col-5">
+                            <label class="form-label small mb-1" for="bwDate">Dátum</label>
+                            <input class="form-control" id="bwDate" name="date" type="date" required th:max="${today}" th:value="${today}">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-1" for="bwKg">Testtömeg (kg)</label>
+                            <input class="form-control" id="bwKg" name="weightKg" type="number" min="20" max="500" step="any" required
+                                   th:value="${profile.latestWeightKg() != null} ? ${profile.latestWeightKg().stripTrailingZeros().toPlainString()}">
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-primary w-100" type="submit">Rögzít</button>
+                        </div>
+                    </form>
+                    <div class="form-text mb-3">Az adott napra már rögzített mérést felülírja.</div>
+
+                    <p class="text-body-secondary mb-0" th:if="${weights.isEmpty()}">Még nincs mérésed.</p>
+                    <table class="table table-sm align-middle mb-0" th:unless="${weights.isEmpty()}">
+                        <tbody>
+                        <tr th:each="w : ${weights}">
+                            <td th:text="${#temporals.format(w.date(), 'yyyy. MM. dd.')}">2026. 11. 21.</td>
+                            <td class="fw-semibold" th:text="${w.weightKg().stripTrailingZeros().toPlainString()} + ' kg'">84 kg</td>
+                            <td class="text-end">
+                                <form class="d-inline" method="post" th:action="@{/profile/body-weight/{id}/delete(id=${w.id()})}"
+                                      onsubmit="return confirm('Törlöd ezt a mérést?');">
+                                    <button class="btn btn-sm btn-outline-danger btn-icon" type="submit" title="Törlés"
+                                            aria-label="Mérés törlése"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="small text-body-secondary mt-2" th:if="${weightCount > weights.size()}"
+                         th:text="|Az utolsó ${weights.size()} mérés látszik, összesen ${weightCount} van. A teljes alakulás a statisztikán.|">
+                        Az utolsó 10 mérés látszik.</div>
+                    <a class="btn btn-sm btn-outline-secondary mt-3" th:href="@{/stats}"><i class="bi bi-graph-up" aria-hidden="true"></i> Diagram a statisztikán</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- edzéscélok -->
+    <div class="card mt-4" id="celok">
+        <div class="card-header">Edzéscélok</div>
+        <div class="card-body">
+            <p class="text-body-secondary mb-3" th:if="${goals.isEmpty()}">Még nincs edzéscélod. Vegyél fel egyet lent, és a haladás a statisztikán és itt is látszik.</p>
+
+            <div class="vstack gap-3 mb-4" th:unless="${goals.isEmpty()}">
+                <div class="border rounded-3 p-3" th:each="g : ${goals}"
+                     th:with="p=${progress.get(g.id())}">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                        <div>
+                            <div class="fw-semibold" th:text="${#messages.msg('goal.' + g.type())}">Fogyás</div>
+                            <div class="text-body-secondary small">
+                                <span th:if="${g.exerciseName() != null}" th:text="${g.exerciseName()}">Guggolás</span>
+                                <span th:if="${g.targetValue() != null}"
+                                      th:text="(${g.exerciseName() != null} ? ' · ' : '') + 'cél: ' + ${g.targetValue().stripTrailingZeros().toPlainString()} + ' kg'">cél: 80 kg</span>
+                                <span th:if="${g.deadline() != null}"
+                                      th:text="' · határidő: ' + ${#temporals.format(g.deadline(), 'yyyy. MM. dd.')}">határidő</span>
+                                <span th:if="${g.exerciseName() == null and g.targetValue() == null and g.deadline() == null}">nincs célérték</span>
+                            </div>
+                        </div>
+                        <form method="post" th:action="@{/profile/goals/{id}/delete(id=${g.id()})}"
+                              onsubmit="return confirm('Törlöd ezt az edzéscélt?');">
+                            <button class="btn btn-sm btn-outline-danger btn-icon" type="submit" title="Törlés"
+                                    aria-label="Cél törlése"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                        </form>
+                    </div>
+                    <div class="mt-2" th:if="${p != null and p.percent() != null}">
+                        <div class="progress" role="progressbar" aria-label="Haladás" style="height: .6rem;">
+                            <div class="progress-bar" th:style="'width: ' + ${p.percent()} + '%'"></div>
+                        </div>
+                        <div class="small text-body-secondary mt-1"
+                             th:text="${p.percent().stripTrailingZeros().toPlainString()} + '%'
+                                    + (${p.current() != null} ? ' · jelenleg ' + ${p.current().stripTrailingZeros().toPlainString()} + ' kg' : '')">
+                            50% · jelenleg 85 kg</div>
+                    </div>
+                    <div class="small text-body-secondary mt-2" th:if="${p == null or p.percent() == null}">
+                        A haladás nem számítható: a célhoz célérték, és hozzá testtömeg-mérés vagy edzés kell
+                        (az állóképességi célnál a haladás számítása még nincs kész).
+                    </div>
+                </div>
+            </div>
+
+            <form class="row g-2 align-items-end" method="post" th:action="@{/profile/goals}">
+                <div class="col-12 col-md-3">
+                    <label class="form-label small mb-1" for="goalType">Cél típusa</label>
+                    <select class="form-select" id="goalType" name="type" required>
+                        <option th:each="t : ${goalTypes}" th:value="${t}" th:text="${#messages.msg('goal.' + t)}">Fogyás</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small mb-1" for="goalExercise">Gyakorlat (erő-célnál)</label>
+                    <select class="form-select" id="goalExercise" name="exerciseId">
+                        <option value="">–</option>
+                        <option th:each="o : ${exerciseOptions}" th:value="${o.id()}" th:text="${o.name()}">Guggolás</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="goalTarget">Célérték (kg)</label>
+                    <input class="form-control" id="goalTarget" name="targetValue" type="number" min="0.01" max="1000" step="any">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="goalDeadline">Határidő</label>
+                    <input class="form-control" id="goalDeadline" name="deadline" type="date" th:min="${today}">
+                </div>
+                <div class="col-12 col-md-2">
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg" aria-hidden="true"></i> Felvesz</button>
+                </div>
+                <div class="col-12 form-text">
+                    Testtömeg-célnál (tömegnövelés, fogyás) a célérték a cél testtömeg, erő-célnál a gyakorlatban elérni kívánt súly.
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>
