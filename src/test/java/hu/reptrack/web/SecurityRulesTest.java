@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import hu.reptrack.IntegrationTestBase;
+import hu.reptrack.TestPrincipals;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -46,7 +47,7 @@ class SecurityRulesTest extends IntegrationTestBase {
     @Test
     @WithMockUser(roles = "ADMIN")
     void adminCanOpenUserPagesThroughTheHierarchy() throws Exception {
-        mvc.perform(get("/exercises")).andExpect(status().isOk());
+        mvc.perform(get("/exercises").with(TestPrincipals.anyAdmin())).andExpect(status().isOk());
     }
 
     @Test

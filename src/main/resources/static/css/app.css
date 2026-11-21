@@ -181,6 +181,13 @@ a {
     --bs-btn-bg: var(--rt-surface);
 }
 
+/* kiválasztható gombok (pl. kategória, izomcsoport-címkék): a kijelölt állapot jól látható legyen */
+.btn-check:checked + .btn-outline-secondary {
+    color: var(--bs-primary-text-emphasis);
+    background-color: var(--bs-primary-bg-subtle);
+    border-color: rgba(var(--bs-primary-rgb), .55);
+}
+
 /* ikon-gomb és átlátszó gomb a navigációs sávhoz */
 .btn-ghost {
     --bs-btn-color: var(--bs-secondary-color);

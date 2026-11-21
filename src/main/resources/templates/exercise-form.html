@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<!--
+  Gyakorlat felvétele és szerkesztése; a saját (/exercises) és a közös (/admin/exercises) gyakorlatokhoz is.
+  Modell: form (ExerciseRequest), formAction, shared, editing, locked (használatban van: a kategória és a rögzíthető
+  mezők nem módosíthatók, rejtett mezőkben mennek vissza), categories, cardioTypes, muscles.
+-->
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title th:text="${editing} ? 'Gyakorlat szerkesztése – RepTrack' : 'Új gyakorlat – RepTrack'">Gyakorlat – RepTrack</title></head>
+<body>
+
+<main class="container py-4 py-lg-5" style="max-width: 56rem;">
+    <a th:href="@{/exercises(source=${shared} ? 'SHARED' : 'OWN')}" class="back-link">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Gyakorlatok</a>
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"
+                th:text="${editing} ? (${shared} ? 'Közös gyakorlat szerkesztése' : 'Gyakorlat szerkesztése')
+                                    : (${shared} ? 'Új közös gyakorlat' : 'Új saját gyakorlat')">Új saját gyakorlat</h1>
+            <p class="page-subtitle"
+               th:text="${shared} ? 'Közös gyakorlat: minden felhasználó látja és használhatja.'
+                                  : 'Saját gyakorlat: csak te látod, és az edzéseidben a közösek mellett választhatod.'">
+                Saját gyakorlat: csak te látod.</p>
+        </div>
+        <span class="badge rounded-pill text-bg-warning" th:if="${shared}">Adminisztrátor</span>
+    </div>
+
+    <form th:action="@{${formAction}}" th:object="${form}" method="post" novalidate>
+        <input type="hidden" th:field="*{version}" th:if="${editing}">
+
+        <!-- alapadatok -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2 py-3">
+                <i class="bi bi-info-circle text-body-secondary" aria-hidden="true"></i> Alapadatok
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label" for="name">Név</label>
+                    <input class="form-control" type="text" th:field="*{name}" th:errorclass="is-invalid"
+                           maxlength="120" placeholder="pl. Ferde pados kézisúlyzós nyomás" required>
+                    <div class="invalid-feedback" th:errors="*{name}">Add meg a gyakorlat nevét.</div>
+                </div>
+                <div>
+                    <label class="form-label" for="description">Leírás <span class="text-body-secondary fw-normal">(nem kötelező)</span></label>
+                    <textarea class="form-control" th:field="*{description}" th:errorclass="is-invalid" rows="3"
+                              maxlength="2000" placeholder="A helyes végrehajtás röviden"></textarea>
+                    <div class="invalid-feedback" th:errors="*{description}">Túl hosszú.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- izomcsoportok -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2 py-3">
+                <i class="bi bi-person-arms-up text-body-secondary" aria-hidden="true"></i> Izomcsoportok
+            </div>
+            <div class="card-body">
+                <div class="mb-3" style="max-width: 22rem;">
+                    <label class="form-label" for="primaryMuscle">Elsődleges izomcsoport</label>
+                    <select class="form-select" th:field="*{primaryMuscle}" th:errorclass="is-invalid">
+                        <option value="">Válassz…</option>
+                        <option th:each="m : ${muscles}" th:value="${m}" th:text="${#messages.msg('muscle.' + m)}">Mell</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{primaryMuscle}">Válassz elsődleges izomcsoportot.</div>
+                </div>
+                <div class="form-label mb-2">Másodlagos izomcsoportok <span class="text-body-secondary fw-normal">(nem kötelező)</span></div>
+                <div class="d-flex flex-wrap gap-2">
+                    <th:block th:each="m : ${muscles}">
+                        <input class="btn-check" type="checkbox" name="secondaryMuscles" autocomplete="off"
+                               th:id="|secondary-${m}|" th:value="${m}" th:checked="${form.secondaryMuscles.contains(m)}">
+                        <label class="btn btn-sm btn-outline-secondary rounded-pill" th:for="|secondary-${m}|"
+                               th:text="${#messages.msg('muscle.' + m)}">Tricepsz</label>
+                    </th:block>
+                    <input type="hidden" name="_secondaryMuscles" value="on">
+                </div>
+            </div>
+        </div>
+
+        <!-- kategória és rögzíthető mezők -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2 py-3">
+                <i class="bi bi-sliders text-body-secondary" aria-hidden="true"></i> Kategória és mérés
+            </div>
+            <div class="card-body">
+
+                <!-- használatban: csak megjelenítés, az értékek rejtett mezőkben mennek vissza -->
+                <th:block th:if="${locked}">
+                    <div class="alert alert-info">
+                        <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                        <span>A gyakorlat már szerepel edzésben, sablonban vagy célban, ezért a kategóriája és a
+                            rögzíthető mezői nem módosíthatók (a korábbi szettek így érvényesek maradnak).</span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-1">
+                        <span th:replace="~{fragments/ui :: categoryBadge(${form.category})}"></span>
+                        <span class="chip" th:if="${form.tracksWeight}">súly</span>
+                        <span class="chip" th:if="${form.tracksReps}">ismétlés</span>
+                        <span class="chip" th:if="${form.tracksDuration}">időtartam</span>
+                        <span class="chip" th:if="${form.tracksDistance}">táv</span>
+                        <span class="chip" th:if="${form.tracksHeartRate}">pulzus</span>
+                        <span class="chip" th:if="${form.cardioType != null}"
+                              th:text="|Mérés: ${#messages.msg('cardio.' + form.cardioType)}|">Mérés: tempó</span>
+                    </div>
+                    <input type="hidden" name="category" th:value="${form.category}">
+                    <input type="hidden" name="cardioType" th:value="${form.cardioType}" th:if="${form.cardioType != null}">
+                    <input type="hidden" name="tracksWeight" th:value="${form.tracksWeight}">
+                    <input type="hidden" name="tracksReps" th:value="${form.tracksReps}">
+                    <input type="hidden" name="tracksDuration" th:value="${form.tracksDuration}">
+                    <input type="hidden" name="tracksDistance" th:value="${form.tracksDistance}">
+                    <input type="hidden" name="tracksHeartRate" th:value="${form.tracksHeartRate}">
+                </th:block>
+
+                <th:block th:unless="${locked}">
+                    <div class="form-label mb-2">Kategória</div>
+                    <div class="d-flex flex-wrap gap-2 mb-3" role="radiogroup" aria-label="Kategória">
+                        <th:block th:each="c : ${categories}">
+                            <input class="btn-check" type="radio" name="category" autocomplete="off"
+                                   th:id="|category-${c}|" th:value="${c}" th:checked="${form.category == c}">
+                            <label class="btn btn-outline-secondary" th:for="|category-${c}|">
+                                <i class="bi" aria-hidden="true"
+                                   th:classappend="${c.name() == 'CARDIO'} ? 'bi-heart-pulse'
+                                                 : (${c.name() == 'BODYWEIGHT'} ? 'bi-person-arms-up' : 'bi-lightning-charge-fill')"></i>
+                                <span th:text="${#messages.msg('category.' + c)}">Súlyzós</span>
+                            </label>
+                        </th:block>
+                    </div>
+                    <div class="text-danger small mb-3" th:if="${#fields.hasErrors('category')}" th:errors="*{category}">Válassz kategóriát.</div>
+
+                    <div class="mb-3" id="cardio-type-group" style="max-width: 22rem;">
+                        <label class="form-label" for="cardioType">Mérés módja</label>
+                        <select class="form-select" th:field="*{cardioType}"
+                                th:classappend="${#fields.hasErrors('cardioTypeGiven')} ? 'is-invalid'">
+                            <option value="">Válassz…</option>
+                            <option value="RUNNING">Tempó (perc/km) – pl. futás</option>
+                            <option value="CYCLING">Sebesség (km/h) – pl. kerékpár</option>
+                            <option value="OTHER">Idő és táv – pl. úszás</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{cardioTypeGiven}">Add meg, hogyan mérjük.</div>
+                    </div>
+
+                    <div class="form-label mb-2">Rögzíthető mezők szettenként</div>
+                    <div class="row row-cols-2 row-cols-md-3 g-2" id="tracking-fields">
+                        <div class="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="tracksWeight"
+                                       name="tracksWeight" value="true" th:checked="${form.tracksWeight}">
+                                <input type="hidden" name="_tracksWeight" value="on">
+                                <label class="form-check-label" for="tracksWeight">Súly / külső terhelés</label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="tracksReps"
+                                       name="tracksReps" value="true" th:checked="${form.tracksReps}">
+                                <input type="hidden" name="_tracksReps" value="on">
+                                <label class="form-check-label" for="tracksReps">Ismétlésszám</label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="tracksDuration"
+                                       name="tracksDuration" value="true" th:checked="${form.tracksDuration}">
+                                <input type="hidden" name="_tracksDuration" value="on">
+                                <label class="form-check-label" for="tracksDuration">Időtartam</label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="tracksDistance"
+                                       name="tracksDistance" value="true" th:checked="${form.tracksDistance}">
+                                <input type="hidden" name="_tracksDistance" value="on">
+                                <label class="form-check-label" for="tracksDistance">Táv</label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="tracksHeartRate"
+                                       name="tracksHeartRate" value="true" th:checked="${form.tracksHeartRate}">
+                                <input type="hidden" name="_tracksHeartRate" value="on">
+                                <label class="form-check-label" for="tracksHeartRate">Pulzus</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-text">
+                        Súlyzósnál súly és ismétlés; saját testsúlyosnál ismétlés vagy időtartam (a külső terhelés
+                        opcionális); kardiónál időtartam, tempóhoz és sebességhez táv is.
+                    </div>
+
+                    <!-- a rögzíthető mezőkre vonatkozó szabályok hibái -->
+                    <div class="alert alert-danger mt-3 mb-0"
+                         th:if="${#fields.hasErrors('anythingTracked') or #fields.hasErrors('weightsTrackingValid')
+                                 or #fields.hasErrors('bodyweightTrackingValid') or #fields.hasErrors('cardioTrackingValid')}">
+                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                        <div>
+                            <div th:each="f : ${ {'anythingTracked', 'weightsTrackingValid', 'bodyweightTrackingValid', 'cardioTrackingValid'} }">
+                                <div th:each="err : ${#fields.errors(f)}" th:text="${err}">Hiba.</div>
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+
+        <div class="form-actions d-flex gap-2">
+            <button class="btn btn-primary btn-lg flex-grow-1 flex-sm-grow-0" type="submit">
+                <i class="bi bi-check2" aria-hidden="true"></i> Mentés</button>
+            <a class="btn btn-outline-secondary btn-lg" th:href="@{/exercises(source=${shared} ? 'SHARED' : 'OWN')}">Mégse</a>
+        </div>
+    </form>
+
+    <!-- kategóriaváltáskor: a kardió mérési módja csak kardiónál látszik, és a rögzíthető mezők a kategória
+         szokásos beállítását kapják (utána tetszés szerint módosíthatók) -->
+    <script th:unless="${locked}">
+        (function () {
+            var defaults = {
+                WEIGHTS: { tracksWeight: true, tracksReps: true, tracksDuration: false, tracksDistance: false, tracksHeartRate: false },
+                BODYWEIGHT: { tracksWeight: true, tracksReps: true, tracksDuration: false, tracksDistance: false, tracksHeartRate: false },
+                CARDIO: { tracksWeight: false, tracksReps: false, tracksDuration: true, tracksDistance: true, tracksHeartRate: true }
+            };
+            var cardioGroup = document.getElementById('cardio-type-group');
+
+            function selected() {
+                var checked = document.querySelector('input[name="category"]:checked');
+                return checked ? checked.value : null;
+            }
+
+            function showCardio() {
+                cardioGroup.style.display = selected() === 'CARDIO' ? '' : 'none';
+            }
+
+            document.querySelectorAll('input[name="category"]').forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    var preset = defaults[radio.value];
+                    Object.keys(preset).forEach(function (id) {
+                        document.getElementById(id).checked = preset[id];
+                    });
+                    showCardio();
+                });
+            });
+            showCardio();
+        })();
+    </script>
+</main>
+</body>
+</html>

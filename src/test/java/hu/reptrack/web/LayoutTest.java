@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import hu.reptrack.IntegrationTestBase;
+import hu.reptrack.TestPrincipals;
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.NotFoundException;
 import hu.reptrack.dto.StaleDataException;
@@ -79,7 +80,7 @@ class LayoutTest extends IntegrationTestBase {
     @Test
     @WithMockUser
     void currentPageIsMarkedActive() throws Exception {
-        mvc.perform(get("/exercises")).andExpect(content().string(allOf(
+        mvc.perform(get("/exercises").with(TestPrincipals.anyUser())).andExpect(content().string(allOf(
                 containsString("class=\"nav-link active\""), containsString("aria-current=\"page\""))));
         mvc.perform(get("/")).andExpect(content().string(not(containsString("nav-link active"))));
     }
@@ -96,7 +97,7 @@ class LayoutTest extends IntegrationTestBase {
     @Test
     @WithMockUser
     void successAndErrorMessagesAreShown() throws Exception {
-        mvc.perform(get("/exercises")
+        mvc.perform(get("/exercises").with(TestPrincipals.anyUser())
                         .flashAttr(FlashMessages.SUCCESS, "Az edzés mentve.")
                         .flashAttr(FlashMessages.ERROR, "A sablon nem törölhető."))
                 .andExpect(content().string(allOf(
@@ -107,7 +108,7 @@ class LayoutTest extends IntegrationTestBase {
     @Test
     @WithMockUser
     void noMessageBoxWithoutMessages() throws Exception {
-        mvc.perform(get("/exercises")).andExpect(content().string(allOf(
+        mvc.perform(get("/exercises").with(TestPrincipals.anyUser())).andExpect(content().string(allOf(
                 not(containsString("alert-success")), not(containsString("alert-danger")))));
     }
 
