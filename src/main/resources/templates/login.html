@@ -4,33 +4,35 @@
 <head><title>Bejelentkezés – RepTrack</title></head>
 <body>
 <main class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-7 col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h1 class="h4 mb-4">Bejelentkezés</h1>
+    <div class="auth-card">
+        <div class="text-center mb-4">
+            <span class="brand-mark brand-mark-lg mb-3"><i class="bi bi-activity" aria-hidden="true"></i></span>
+            <h1 class="h3 fw-bold mb-1">Bejelentkezés</h1>
+            <p class="text-body-secondary mb-0">Jó újra látni! Folytasd ott, ahol abbahagytad.</p>
+        </div>
 
-                    <!-- A POST /login-t a Spring Security dolgozza fel; a CSRF-tokent a th:action teszi bele. -->
-                    <form th:action="@{/login}" method="post" novalidate>
-                        <div class="mb-3">
-                            <label class="form-label" for="email">E-mail-cím</label>
-                            <input class="form-control" id="email" name="email" type="email" th:value="${email}"
-                                   autocomplete="username" required autofocus>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label" for="password">Jelszó</label>
-                            <input class="form-control" id="password" name="password" type="password"
-                                   autocomplete="current-password" required>
-                        </div>
-                        <button class="btn btn-primary w-100" type="submit">Bejelentkezés</button>
-                    </form>
-
-                    <p class="small text-body-secondary text-center mt-4 mb-0">
-                        Még nincs fiókod? <a th:href="@{/register}">Regisztrálj!</a>
-                    </p>
-                </div>
+        <div class="card">
+            <div class="card-body p-4">
+                <!-- A POST /login-t a Spring Security dolgozza fel; a CSRF-tokent a th:action teszi bele. -->
+                <form th:action="@{/login}" method="post" novalidate>
+                    <div class="form-floating mb-3">
+                        <input class="form-control" id="email" name="email" type="email" th:value="${email}"
+                               placeholder="nev@pelda.hu" autocomplete="username" required autofocus>
+                        <label for="email">E-mail-cím</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input class="form-control" id="password" name="password" type="password"
+                               placeholder="Jelszó" autocomplete="current-password" required>
+                        <label for="password">Jelszó</label>
+                    </div>
+                    <button class="btn btn-primary btn-lg w-100" type="submit">Bejelentkezés</button>
+                </form>
             </div>
         </div>
+
+        <p class="small text-body-secondary text-center mt-4 mb-0">
+            Még nincs fiókod? <a class="fw-semibold" th:href="@{/register}">Regisztrálj!</a>
+        </p>
     </div>
 </main>
 </body>

@@ -3,22 +3,103 @@
       th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
 <head><title>RepTrack</title></head>
 <body>
-<main class="container py-5">
-    <h1 class="display-5 fw-semibold">RepTrack</h1>
-    <p class="lead text-body-secondary">
-        Edzéskövető és elemző alkalmazás: rögzítsd az edzéseidet, kövesd a fejlődésedet, és nézd meg a statisztikáidat.
-    </p>
+<main class="container">
 
-    <div class="d-flex flex-wrap gap-2 mt-4" sec:authorize="!isAuthenticated()">
-        <a class="btn btn-primary btn-lg" th:href="@{/register}">Regisztráció</a>
-        <a class="btn btn-outline-secondary btn-lg" th:href="@{/login}">Bejelentkezés</a>
-    </div>
+    <!-- vendég: bemutatkozás -->
+    <th:block sec:authorize="!isAuthenticated()">
+        <section class="hero">
+            <span class="hero-eyebrow"><i class="bi bi-activity" aria-hidden="true"></i> Edzéskövető és elemző alkalmazás</span>
+            <h1 class="hero-title">Edz okosabban.<br><span class="text-gradient">Lásd a fejlődésed.</span></h1>
+            <p class="hero-lead">
+                Rögzítsd az edzéseidet telefonról is, kövesd a csúcsaidat, és kapj figyelmeztetést, mielőtt túlterhelnéd
+                magad.
+            </p>
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a class="btn btn-primary btn-lg" th:href="@{/register}">Regisztráció <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                <a class="btn btn-outline-secondary btn-lg" th:href="@{/login}">Bejelentkezés</a>
+            </div>
+        </section>
 
-    <div class="d-flex flex-wrap gap-2 mt-4" sec:authorize="isAuthenticated()">
-        <a class="btn btn-primary btn-lg" th:href="@{/workouts/new}">+ Új edzés</a>
-        <a class="btn btn-outline-primary btn-lg" th:href="@{/workouts}">Edzésnapló</a>
-        <a class="btn btn-outline-secondary btn-lg" th:href="@{/exercises}">Gyakorlatok</a>
-    </div>
+        <section class="row g-3 pb-5">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100"><div class="card-body p-4">
+                    <div class="feature-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></div>
+                    <h2 class="h6 fw-semibold">Edzésnapló</h2>
+                    <p class="small text-body-secondary mb-0">Súlyzós, kardió és saját testsúlyos edzések szettenként, sablonból vagy korábbi edzés másolataként.</p>
+                </div></div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100"><div class="card-body p-4">
+                    <div class="feature-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                    <h2 class="h6 fw-semibold">Egyéni csúcsok</h2>
+                    <p class="small text-body-secondary mb-0">A rendszer mentéskor felismeri az új rekordokat: legnagyobb súly, becsült 1RM, volumen, futótempó.</p>
+                </div></div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100"><div class="card-body p-4">
+                    <div class="feature-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
+                    <h2 class="h6 fw-semibold">Statisztikák</h2>
+                    <p class="small text-body-secondary mb-0">Fejlődési görbék, heti és havi összesítők, testtömeg és az edzéscél felé tett haladás.</p>
+                </div></div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100"><div class="card-body p-4">
+                    <div class="feature-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></div>
+                    <h2 class="h6 fw-semibold">Túlterhelés-figyelés</h2>
+                    <p class="small text-body-secondary mb-0">Jelzés, ha a heti terhelés vagy a fáradtság a megszokotthoz képest túl gyorsan nő.</p>
+                </div></div>
+            </div>
+        </section>
+    </th:block>
+
+    <!-- bejelentkezett felhasználó: gyors műveletek -->
+    <th:block sec:authorize="isAuthenticated()">
+        <div class="page-header pt-4 pt-lg-5">
+            <div>
+                <h1 class="page-title">Üdv újra! 👋</h1>
+                <p class="page-subtitle">Mit csinálunk ma?</p>
+            </div>
+        </div>
+
+        <div class="row g-3 pb-5">
+            <div class="col-12 col-md-6 col-xl-3">
+                <a class="card action-card action-card-primary" th:href="@{/workouts/new}">
+                    <div class="card-body p-4">
+                        <div class="feature-icon"><i class="bi bi-plus-lg" aria-hidden="true"></i></div>
+                        <h2 class="h5 fw-semibold mb-1">Új edzés</h2>
+                        <p class="small text-body-secondary mb-0">Kezdj el rögzíteni egy edzést.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <a class="card action-card" th:href="@{/workouts}">
+                    <div class="card-body p-4">
+                        <div class="feature-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></div>
+                        <h2 class="h5 fw-semibold mb-1">Edzésnapló</h2>
+                        <p class="small text-body-secondary mb-0">Korábbi edzéseid, szűrés és másolás.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <a class="card action-card" th:href="@{/exercises}">
+                    <div class="card-body p-4">
+                        <div class="feature-icon"><i class="bi bi-collection" aria-hidden="true"></i></div>
+                        <h2 class="h5 fw-semibold mb-1">Gyakorlatok</h2>
+                        <p class="small text-body-secondary mb-0">Gyakorlat-adatbázis izomcsoportok szerint.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <a class="card action-card" th:href="@{/records}">
+                    <div class="card-body p-4">
+                        <div class="feature-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                        <h2 class="h5 fw-semibold mb-1">Csúcsok</h2>
+                        <p class="small text-body-secondary mb-0">Egyéni rekordjaid időrendben.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </th:block>
 </main>
 </body>
 </html>

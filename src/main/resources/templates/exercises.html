@@ -4,78 +4,97 @@
 <head><title>Gyakorlatok – RepTrack</title></head>
 <body>
 
-<main class="container py-4">
-    <h1 class="h3 mb-3">Gyakorlatok</h1>
+<main class="container py-4 py-lg-5">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Gyakorlatok</h1>
+            <p class="page-subtitle">Keress névre, vagy szűrj kategóriára és izomcsoportra.</p>
+        </div>
+    </div>
 
     <!-- Szűrők: GET kérés, így a szűrt lista linkként megosztható -->
-    <form class="row g-2 align-items-end mb-3" method="get" th:action="@{/exercises}">
-        <div class="col-12 col-md-4">
-            <label class="form-label small mb-1" for="name">Név</label>
-            <input class="form-control" id="name" name="name" type="search" placeholder="pl. guggolás"
-                   th:value="${filter.name()}">
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row g-2 align-items-end" method="get" th:action="@{/exercises}">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small mb-1" for="name">Név</label>
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute top-50 translate-middle-y text-body-secondary"
+                           style="left: .85rem;" aria-hidden="true"></i>
+                        <input class="form-control ps-5" id="name" name="name" type="search" placeholder="pl. guggolás"
+                               th:value="${filter.name()}">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small mb-1" for="category">Kategória</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">Mind</option>
+                        <option th:each="c : ${categories}" th:value="${c}"
+                                th:text="${#messages.msg('category.' + c)}"
+                                th:selected="${c == filter.category()}">Súlyzós</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small mb-1" for="muscle">Izomcsoport</label>
+                    <select class="form-select" id="muscle" name="muscle">
+                        <option value="">Mind</option>
+                        <option th:each="m : ${muscles}" th:value="${m}"
+                                th:text="${#messages.msg('muscle.' + m)}"
+                                th:selected="${m == filter.muscle()}">Mell</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button class="btn btn-primary flex-grow-1" type="submit"><i class="bi bi-funnel" aria-hidden="true"></i> Szűrés</button>
+                    <a class="btn btn-outline-secondary btn-icon" th:href="@{/exercises}" title="Szűrők törlése"
+                       aria-label="Szűrők törlése"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+                </div>
+            </form>
         </div>
-        <div class="col-6 col-md-3">
-            <label class="form-label small mb-1" for="category">Kategória</label>
-            <select class="form-select" id="category" name="category">
-                <option value="">Mind</option>
-                <option th:each="c : ${categories}" th:value="${c}"
-                        th:text="${#messages.msg('category.' + c)}"
-                        th:selected="${c == filter.category()}">Súlyzós</option>
-            </select>
-        </div>
-        <div class="col-6 col-md-3">
-            <label class="form-label small mb-1" for="muscle">Izomcsoport</label>
-            <select class="form-select" id="muscle" name="muscle">
-                <option value="">Mind</option>
-                <option th:each="m : ${muscles}" th:value="${m}"
-                        th:text="${#messages.msg('muscle.' + m)}"
-                        th:selected="${m == filter.muscle()}">Mell</option>
-            </select>
-        </div>
-        <div class="col-12 col-md-2 d-flex gap-2">
-            <button class="btn btn-primary flex-grow-1" type="submit">Szűrés</button>
-            <a class="btn btn-outline-secondary" th:href="@{/exercises}" title="Szűrők törlése">✕</a>
-        </div>
-    </form>
+    </div>
 
-    <p class="text-body-secondary small mb-3" th:text="|${exercises.size()} gyakorlat|">50 gyakorlat</p>
+    <p class="text-body-secondary small fw-semibold mb-3" th:text="|${exercises.size()} gyakorlat|">50 gyakorlat</p>
 
-    <div class="alert alert-info" th:if="${exercises.isEmpty()}">Nincs a szűrésnek megfelelő gyakorlat.</div>
+    <div class="card" th:if="${exercises.isEmpty()}">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon"><i class="bi bi-search" aria-hidden="true"></i></div>
+            <h2 class="h5 fw-semibold">Nincs a szűrésnek megfelelő gyakorlat.</h2>
+            <p class="text-body-secondary mb-3">Próbálj rövidebb névrészletet, vagy töröld a szűrőket.</p>
+            <a class="btn btn-outline-secondary" th:href="@{/exercises}">Szűrők törlése</a>
+        </div>
+    </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
         <div class="col" th:each="e : ${exercises}">
-            <article class="card h-100 shadow-sm">
+            <article class="card h-100 accent-card" th:classappend="|accent-${e.category()}|">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                        <h2 class="h5 card-title mb-0" th:text="${e.name()}">Fekvenyomás</h2>
-                        <span class="badge flex-shrink-0"
-                              th:classappend="${e.category().name() == 'WEIGHTS'} ? 'text-bg-primary'
-                                            : (${e.category().name() == 'CARDIO'} ? 'text-bg-danger' : 'text-bg-success')"
-                              th:text="${#messages.msg('category.' + e.category())}">Súlyzós</span>
+                        <h2 class="h6 fw-semibold card-title mb-0" th:text="${e.name()}">Fekvenyomás</h2>
+                        <span th:replace="~{fragments/ui :: categoryBadge(${e.category()})}"></span>
                     </div>
 
                     <p class="small mb-2">
-                        <strong th:text="${#messages.msg('muscle.' + e.primaryMuscle())}">Mell</strong>
+                        <span class="fw-semibold" th:text="${#messages.msg('muscle.' + e.primaryMuscle())}">Mell</span>
                         <span class="text-body-secondary" th:unless="${e.secondaryMuscles().isEmpty()}">
                             · <span th:each="m, it : ${e.secondaryMuscles()}"
                                     th:text="${#messages.msg('muscle.' + m)} + (${it.last} ? '' : ', ')">Tricepsz</span>
                         </span>
                     </p>
 
-                    <p class="card-text small mb-0" th:text="${e.description()}">Leírás</p>
+                    <p class="card-text small text-body-secondary mb-0" th:text="${e.description()}">Leírás</p>
                 </div>
 
-                <div class="card-footer bg-transparent small text-body-secondary">
-                    Rögzíthető:
-                    <span th:if="${e.tracksWeight()}"
-                          th:text="${e.category().name() == 'BODYWEIGHT'} ? 'külső terhelés (opcionális)' : 'súly'"
-                          class="badge text-bg-light border fw-normal">súly</span>
-                    <span th:if="${e.tracksReps()}" class="badge text-bg-light border fw-normal">ismétlés</span>
-                    <span th:if="${e.tracksDuration()}" class="badge text-bg-light border fw-normal">időtartam</span>
-                    <span th:if="${e.tracksDistance()}" class="badge text-bg-light border fw-normal">táv</span>
-                    <span th:if="${e.tracksHeartRate()}" class="badge text-bg-light border fw-normal">pulzus</span>
-                    <div th:if="${e.cardioType() != null}" class="mt-1"
-                         th:text="|Mérés: ${#messages.msg('cardio.' + e.cardioType())}|">Mérés: tempó (perc/km)</div>
+                <div class="card-footer small text-body-secondary d-flex flex-wrap align-items-center gap-1">
+                    <span class="me-1">Rögzíthető:</span>
+                    <span th:if="${e.tracksWeight()}" class="chip"
+                          th:text="${e.category().name() == 'BODYWEIGHT'} ? 'külső terhelés (opcionális)' : 'súly'">súly</span>
+                    <span th:if="${e.tracksReps()}" class="chip">ismétlés</span>
+                    <span th:if="${e.tracksDuration()}" class="chip">időtartam</span>
+                    <span th:if="${e.tracksDistance()}" class="chip">táv</span>
+                    <span th:if="${e.tracksHeartRate()}" class="chip">pulzus</span>
+                    <div th:if="${e.cardioType() != null}" class="w-100 mt-1">
+                        <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                        <span th:text="|Mérés: ${#messages.msg('cardio.' + e.cardioType())}|">Mérés: tempó (perc/km)</span>
+                    </div>
                 </div>
             </article>
         </div>

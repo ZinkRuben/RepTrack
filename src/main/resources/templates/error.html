@@ -8,38 +8,48 @@
       th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
 <head><title>Hiba – RepTrack</title></head>
 <body>
-<main class="container py-5 text-center">
-    <p class="display-1 fw-bold text-body-secondary mb-2" th:text="${status}">404</p>
+<main class="container py-5">
+    <div class="card mx-auto" style="max-width: 34rem;">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon" th:switch="${status}">
+                <i th:case="403" class="bi bi-shield-lock" aria-hidden="true"></i>
+                <i th:case="404" class="bi bi-compass" aria-hidden="true"></i>
+                <i th:case="409" class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                <i th:case="*" class="bi bi-exclamation-octagon" aria-hidden="true"></i>
+            </div>
+            <p class="text-body-secondary fw-semibold mb-1" th:text="|Hiba ${status}|">Hiba 404</p>
 
-    <th:block th:switch="${status}">
-        <th:block th:case="400">
-            <h1 class="h3">Hibás kérés</h1>
-            <p class="text-body-secondary">A kérés nem dolgozható fel. Ellenőrizd a megadott adatokat.</p>
-        </th:block>
-        <th:block th:case="403">
-            <h1 class="h3">Nincs jogosultságod</h1>
-            <p class="text-body-secondary">Ehhez az oldalhoz nincs hozzáférésed.</p>
-        </th:block>
-        <th:block th:case="404">
-            <h1 class="h3">Az oldal nem található</h1>
-            <p class="text-body-secondary">A keresett oldal vagy adat nem létezik, vagy nincs hozzá hozzáférésed.</p>
-        </th:block>
-        <th:block th:case="409">
-            <h1 class="h3">Ütköző módosítás</h1>
-            <p class="text-body-secondary">Az adatot közben máshol módosították.</p>
-        </th:block>
-        <th:block th:case="*">
-            <h1 class="h3">Váratlan hiba történt</h1>
-            <p class="text-body-secondary">A kérés feldolgozása nem sikerült. Próbáld újra később.</p>
-        </th:block>
-    </th:block>
+            <th:block th:switch="${status}">
+                <th:block th:case="400">
+                    <h1 class="h3 fw-bold">Hibás kérés</h1>
+                    <p class="text-body-secondary">A kérés nem dolgozható fel. Ellenőrizd a megadott adatokat.</p>
+                </th:block>
+                <th:block th:case="403">
+                    <h1 class="h3 fw-bold">Nincs jogosultságod</h1>
+                    <p class="text-body-secondary">Ehhez az oldalhoz nincs hozzáférésed.</p>
+                </th:block>
+                <th:block th:case="404">
+                    <h1 class="h3 fw-bold">Az oldal nem található</h1>
+                    <p class="text-body-secondary">A keresett oldal vagy adat nem létezik, vagy nincs hozzá hozzáférésed.</p>
+                </th:block>
+                <th:block th:case="409">
+                    <h1 class="h3 fw-bold">Ütköző módosítás</h1>
+                    <p class="text-body-secondary">Az adatot közben máshol módosították.</p>
+                </th:block>
+                <th:block th:case="*">
+                    <h1 class="h3 fw-bold">Váratlan hiba történt</h1>
+                    <p class="text-body-secondary">A kérés feldolgozása nem sikerült. Próbáld újra később.</p>
+                </th:block>
+            </th:block>
 
-    <!-- csak a saját kivételeink üzenete kerül ide (GlobalExceptionHandler), a váratlan hibáké nem -->
-    <p class="alert alert-warning d-inline-block" th:if="${message != null and !#strings.isEmpty(message)}"
-       th:text="${message}">A gyakorlat nem található.</p>
+            <!-- csak a saját kivételeink üzenete kerül ide (GlobalExceptionHandler), a váratlan hibáké nem -->
+            <div class="alert alert-warning text-start" th:if="${message != null and !#strings.isEmpty(message)}">
+                <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                <span th:text="${message}">A gyakorlat nem található.</span>
+            </div>
 
-    <div class="mt-4">
-        <a class="btn btn-primary" th:href="@{/}">Vissza a kezdőlapra</a>
+            <a class="btn btn-primary mt-2" th:href="@{/}"><i class="bi bi-house" aria-hidden="true"></i> Vissza a kezdőlapra</a>
+        </div>
     </div>
 </main>
 </body>

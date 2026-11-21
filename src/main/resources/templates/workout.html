@@ -4,111 +4,134 @@
 <head><title th:text="|${workout.title()} – RepTrack|">Edzés – RepTrack</title></head>
 <body>
 
-<main class="container py-4">
-    <nav aria-label="Navigáció" class="mb-2 small">
-        <a th:href="@{/workouts}" class="text-decoration-none">← Edzésnapló</a>
-    </nav>
+<main class="container py-4 py-lg-5">
+    <a th:href="@{/workouts}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Edzésnapló</a>
 
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div class="page-header">
         <div>
-            <h1 class="h3 mb-1">
+            <h1 class="page-title d-flex flex-wrap align-items-center gap-2">
                 <span th:text="${workout.title()}">Lábnap</span>
-                <span class="badge text-bg-secondary align-middle fs-6" th:if="${workout.endedAt() == null}">nyitott</span>
+                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis fs-6 fw-semibold"
+                      th:if="${workout.endedAt() == null}">nyitott</span>
             </h1>
-            <div class="text-body-secondary" th:text="${#temporals.format(startedAt, 'yyyy. MM. dd. HH:mm')}
-                    + (${endedAt != null} ? ' – ' + ${#temporals.format(endedAt, 'HH:mm')} : '')">2026. 11. 21. 18:00 – 19:00</div>
+            <p class="page-subtitle">
+                <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+                <span th:text="${#temporals.format(startedAt, 'yyyy. MM. dd. HH:mm')}
+                        + (${endedAt != null} ? ' – ' + ${#temporals.format(endedAt, 'HH:mm')} : '')">2026. 11. 21. 18:00 – 19:00</span>
+            </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-primary" th:href="@{/workouts/{id}/edit(id=${workout.id()})}"
-               th:text="${workout.endedAt() == null} ? 'Szerkesztés / lezárás' : 'Szerkesztés'">Szerkesztés</a>
-            <form th:action="@{/workouts/{id}/copy(id=${workout.id()})}" method="post">
-                <button class="btn btn-outline-secondary" type="submit">Másolás</button>
-            </form>
             <form th:action="@{/workouts/{id}/delete(id=${workout.id()})}" method="post"
                   onsubmit="return confirm('Biztosan törlöd ezt az edzést? A művelet nem vonható vissza.');">
-                <button class="btn btn-outline-danger" type="submit">Törlés</button>
+                <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash3" aria-hidden="true"></i> Törlés</button>
             </form>
+            <form th:action="@{/workouts/{id}/copy(id=${workout.id()})}" method="post">
+                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-copy" aria-hidden="true"></i> Másolás</button>
+            </form>
+            <a class="btn btn-primary" th:href="@{/workouts/{id}/edit(id=${workout.id()})}">
+                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                <span th:text="${workout.endedAt() == null} ? 'Szerkesztés / lezárás' : 'Szerkesztés'">Szerkesztés</span>
+            </a>
         </div>
     </div>
 
-    <div class="row g-3 mb-3">
-        <div class="col-6 col-md-3">
-            <div class="card h-100"><div class="card-body py-2">
-                <div class="small text-body-secondary">Időtartam</div>
-                <div class="fs-5" th:text="${minutes != null} ? |${minutes} perc| : '–'">60 perc</div>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-stopwatch" aria-hidden="true"></i></div>
+                <div>
+                    <div class="stat-label">Időtartam</div>
+                    <div class="stat-value" th:text="${minutes != null} ? |${minutes} perc| : '–'">60 perc</div>
+                </div>
             </div></div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card h-100"><div class="card-body py-2">
-                <div class="small text-body-secondary">Fáradtság</div>
-                <div class="fs-5" th:text="${workout.fatigue() != null} ? |${workout.fatigue()} / 10| : '–'">7 / 10</div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-fire" aria-hidden="true"></i></div>
+                <div>
+                    <div class="stat-label">Fáradtság</div>
+                    <div class="stat-value" th:text="${workout.fatigue() != null} ? |${workout.fatigue()} / 10| : '–'">7 / 10</div>
+                </div>
             </div></div>
         </div>
-        <div class="col-12 col-md-6" th:if="${workout.notes() != null}">
-            <div class="card h-100"><div class="card-body py-2">
-                <div class="small text-body-secondary">Megjegyzés</div>
-                <div th:text="${workout.notes()}" style="white-space: pre-line;">Jó nap volt.</div>
+        <div class="col-12 col-lg-6" th:if="${workout.notes() != null}">
+            <div class="card h-100"><div class="stat-tile align-items-start">
+                <div class="stat-icon"><i class="bi bi-chat-left-text" aria-hidden="true"></i></div>
+                <div>
+                    <div class="stat-label">Megjegyzés</div>
+                    <div th:text="${workout.notes()}" style="white-space: pre-line;">Jó nap volt.</div>
+                </div>
             </div></div>
         </div>
     </div>
 
     <!-- az edzésben elért egyéni csúcsok -->
-    <div class="card border-success mb-3" th:unless="${records.isEmpty()}">
-        <div class="card-header bg-success-subtle fw-semibold">🏆 Egyéni csúcsok ebben az edzésben</div>
+    <div class="card border-success-subtle mb-4" th:unless="${records.isEmpty()}">
+        <div class="card-header bg-success-subtle text-success-emphasis d-flex align-items-center gap-2">
+            <i class="bi bi-trophy-fill" aria-hidden="true"></i> Egyéni csúcsok ebben az edzésben
+        </div>
         <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2" th:each="r : ${records}">
-                <span><strong th:text="${r.exerciseName()}">Guggolás</strong> · <span th:text="${r.label()}">Becsült 1RM</span></span>
+            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2 py-3" th:each="r : ${records}">
+                <span><strong th:text="${r.exerciseName()}">Guggolás</strong> <span class="text-body-secondary">·</span> <span th:text="${r.label()}">Becsült 1RM</span></span>
                 <span class="fw-semibold" th:text="${r.value()}">122,5 kg</span>
             </li>
         </ul>
     </div>
 
     <!-- túlterhelési figyelmeztetések -->
-    <div class="card border-warning mb-3" th:unless="${warnings.isEmpty()}">
-        <div class="card-header bg-warning-subtle fw-semibold">⚠ Figyelmeztetések</div>
+    <div class="card border-warning-subtle mb-4" th:unless="${warnings.isEmpty()}">
+        <div class="card-header bg-warning-subtle text-warning-emphasis d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Figyelmeztetések
+        </div>
         <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2" th:each="w : ${warnings}">
+            <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2 py-3" th:each="w : ${warnings}">
                 <span th:text="${w.message()}" th:classappend="${w.acknowledged()} ? 'text-body-secondary'">Figyelmeztetés.</span>
-                <span class="badge text-bg-secondary" th:if="${w.acknowledged()}">nyugtázva</span>
+                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis" th:if="${w.acknowledged()}">nyugtázva</span>
                 <form th:unless="${w.acknowledged()}" th:action="@{/warnings/{id}/acknowledge(id=${w.id()})}" method="post">
                     <input type="hidden" name="back" th:value="|/workouts/${workout.id()}|">
-                    <button class="btn btn-sm btn-outline-dark" type="submit">Nyugtázom</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-check2" aria-hidden="true"></i> Nyugtázom</button>
                 </form>
             </li>
         </ul>
     </div>
 
-    <div class="alert alert-info" th:if="${workout.exercises().isEmpty()}">
-        Ebben az edzésben még nincs gyakorlat.
-        <a th:href="@{/workouts/{id}/edit(id=${workout.id()})}">Adj hozzá egyet!</a>
+    <div class="card" th:if="${workout.exercises().isEmpty()}">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon"><i class="bi bi-list-check" aria-hidden="true"></i></div>
+            <h2 class="h5 fw-semibold">Ebben az edzésben még nincs gyakorlat.</h2>
+            <a class="btn btn-primary mt-2" th:href="@{/workouts/{id}/edit(id=${workout.id()})}">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Adj hozzá egyet!</a>
+        </div>
     </div>
 
-    <article class="card shadow-sm mb-3" th:each="e : ${workout.exercises()}">
-        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h2 class="h5 mb-0" th:text="${e.exerciseName()}">Guggolás</h2>
-            <span class="badge"
-                  th:classappend="${e.category().name() == 'WEIGHTS'} ? 'text-bg-primary'
-                                : (${e.category().name() == 'CARDIO'} ? 'text-bg-danger' : 'text-bg-success')"
-                  th:text="${#messages.msg('category.' + e.category())}">Súlyzós</span>
+    <article class="card accent-card mb-3" th:each="e : ${workout.exercises()}" th:classappend="|accent-${e.category()}|">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+            <h2 class="h6 fw-semibold mb-0" th:text="${e.exerciseName()}">Guggolás</h2>
+            <span th:replace="~{fragments/ui :: categoryBadge(${e.category()})}"></span>
         </div>
-        <div class="card-body">
-            <p class="text-body-secondary small" th:if="${e.notes() != null}" th:text="${e.notes()}">Megjegyzés</p>
+        <div class="card-body pt-2">
+            <p class="text-body-secondary small mb-2" th:if="${e.notes() != null}">
+                <i class="bi bi-chat-left-text me-1" aria-hidden="true"></i><span th:text="${e.notes()}">Megjegyzés</span>
+            </p>
             <p class="text-body-secondary mb-0" th:if="${e.sets().isEmpty()}">Nincs rögzített szett.</p>
-            <table class="table table-sm mb-0" th:unless="${e.sets().isEmpty()}">
+            <table class="table table-sm table-sets align-middle mb-0" th:unless="${e.sets().isEmpty()}">
                 <thead><tr><th style="width: 4rem;">Szett</th><th>Eredmény</th></tr></thead>
                 <tbody>
                 <tr th:each="s : ${e.sets()}">
-                    <td th:text="${s.position()}">1</td>
+                    <td class="text-body-secondary fw-semibold" th:text="${s.position()}">1</td>
                     <td>
-                        <span th:if="${s.weightKg() != null}" class="me-3"
+                        <span th:if="${s.weightKg() != null}" class="fw-semibold me-3"
                               th:text="${s.weightKg().stripTrailingZeros().toPlainString()} + ' kg'">100 kg</span>
                         <span th:if="${s.reps() != null}" class="me-3" th:text="|× ${s.reps()}|">× 5</span>
                         <span th:if="${s.durationSec() != null}" class="me-3"
                               th:text="|${s.durationSec() / 60}:${#numbers.formatInteger(s.durationSec() % 60, 2)} perc|">25:00 perc</span>
                         <span th:if="${s.distanceM() != null}" class="me-3"
                               th:text="${#numbers.formatDecimal(s.distanceM() / 1000.0, 1, 2)} + ' km'">5,00 km</span>
-                        <span th:if="${s.avgHeartRate() != null or s.maxHeartRate() != null}" class="text-body-secondary"
-                              th:text="'pulzus: ' + ${s.avgHeartRate() != null ? s.avgHeartRate() : '–'} + ' / ' + ${s.maxHeartRate() != null ? s.maxHeartRate() : '–'}">pulzus: 140 / 165</span>
+                        <span th:if="${s.avgHeartRate() != null or s.maxHeartRate() != null}" class="text-body-secondary text-nowrap"
+                              title="Átlagos / maximális pulzus">
+                            <i class="bi bi-heart-pulse" aria-hidden="true"></i><span class="visually-hidden">pulzus:</span>
+                            <span th:text="${s.avgHeartRate() != null ? s.avgHeartRate() : '–'} + ' / ' + ${s.maxHeartRate() != null ? s.maxHeartRate() : '–'}">140 / 165</span>
+                        </span>
                     </td>
                 </tr>
                 </tbody>

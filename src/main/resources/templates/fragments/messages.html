@@ -7,13 +7,15 @@
   jeleníti meg (a nevek a FlashMessages osztályban). Átirányítás után flash attribútumként, azonos kérésben
   modellattribútumként adható át.
 -->
-<div th:fragment="messages" class="container pt-3" th:if="${successMessage != null or errorMessage != null}">
+<div th:fragment="messages" class="container pt-4" th:if="${successMessage != null or errorMessage != null}">
     <div class="alert alert-success alert-dismissible fade show mb-0" role="status" th:if="${successMessage != null}">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
         <span th:text="${successMessage}">Sikeres mentés.</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Bezárás"></button>
     </div>
     <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert" th:if="${errorMessage != null}"
          th:classappend="${successMessage != null} ? 'mt-2'">
+        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
         <span th:text="${errorMessage}">Hiba történt.</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Bezárás"></button>
     </div>

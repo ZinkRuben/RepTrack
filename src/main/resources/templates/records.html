@@ -4,34 +4,47 @@
 <head><title>Egyéni csúcsok – RepTrack</title></head>
 <body>
 
-<main class="container py-4">
-    <h1 class="h3 mb-3">Egyéni csúcsok</h1>
-    <p class="text-body-secondary small">
-        Egy eredmény akkor csúcs, ha szigorúan jobb a korábbiaknál; az első eredmény nem számít csúcsnak.
-    </p>
-
-    <div class="alert alert-info" th:if="${records.isEmpty()}">
-        Még nincs egyéni csúcsod. Rögzíts több edzést, és amint megdöntöd egy korábbi eredményedet, itt látod.
+<main class="container py-4 py-lg-5">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Egyéni csúcsok</h1>
+            <p class="page-subtitle">
+                Egy eredmény akkor csúcs, ha szigorúan jobb a korábbiaknál; az első eredmény nem számít csúcsnak.
+            </p>
+        </div>
     </div>
 
-    <div class="table-responsive" th:unless="${records.isEmpty()}">
-        <table class="table table-hover align-middle bg-body">
-            <thead>
-            <tr><th>Dátum</th><th>Gyakorlat</th><th>Csúcs</th><th class="text-end">Eredmény</th><th></th></tr>
-            </thead>
-            <tbody>
-            <tr th:each="r : ${records}">
-                <td class="text-nowrap" th:text="${#temporals.format(r.date(), 'yyyy. MM. dd.')}">2026. 11. 21.</td>
-                <td class="fw-semibold" th:text="${r.exerciseName()}">Guggolás</td>
-                <td th:text="${r.label()}">Becsült 1RM</td>
-                <td class="text-end fw-semibold" th:text="${r.value()}">122,5 kg</td>
-                <td class="text-end">
-                    <a class="btn btn-sm btn-outline-secondary" th:if="${r.workoutId() != null}"
-                       th:href="@{/workouts/{id}(id=${r.workoutId()})}">Edzés</a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    <div class="card" th:if="${records.isEmpty()}">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+            <h2 class="h5 fw-semibold">Még nincs egyéni csúcsod</h2>
+            <p class="text-body-secondary mb-3">
+                Rögzíts több edzést, és amint megdöntöd egy korábbi eredményedet, itt látod.
+            </p>
+            <a class="btn btn-primary" th:href="@{/workouts/new}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Új edzés</a>
+        </div>
+    </div>
+
+    <div class="card card-table" th:unless="${records.isEmpty()}">
+        <div class="table-responsive">
+            <table class="table table-modern table-hover align-middle">
+                <thead>
+                <tr><th>Dátum</th><th>Gyakorlat</th><th>Csúcs</th><th class="text-end">Eredmény</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${records}">
+                    <td class="text-nowrap text-body-secondary" th:text="${#temporals.format(r.date(), 'yyyy. MM. dd.')}">2026. 11. 21.</td>
+                    <td class="fw-semibold" th:text="${r.exerciseName()}">Guggolás</td>
+                    <td><span class="chip"><i class="bi bi-trophy-fill text-warning" aria-hidden="true"></i><span th:text="${r.label()}">Becsült 1RM</span></span></td>
+                    <td class="text-end fw-semibold text-nowrap" th:text="${r.value()}">122,5 kg</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" th:if="${r.workoutId() != null}"
+                           th:href="@{/workouts/{id}(id=${r.workoutId()})}">Edzés <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
 </body>

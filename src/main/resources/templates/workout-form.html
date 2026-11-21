@@ -4,19 +4,25 @@
 <head><title th:text="${workoutId == null} ? 'Új edzés – RepTrack' : 'Edzés szerkesztése – RepTrack'">Edzés – RepTrack</title></head>
 <body>
 
-<main class="container py-4">
-    <nav aria-label="Navigáció" class="mb-2 small">
-        <a th:href="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}"
-           class="text-decoration-none">← Vissza</a>
-    </nav>
-    <h1 class="h3 mb-3" th:text="${workoutId == null} ? 'Új edzés' : 'Edzés szerkesztése'">Új edzés</h1>
+<main class="container py-4 py-lg-5">
+    <a th:href="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}" class="back-link">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Vissza</a>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${workoutId == null} ? 'Új edzés' : 'Edzés szerkesztése'">Új edzés</h1>
+            <p class="page-subtitle">Add meg az alapadatokat, majd vedd fel a gyakorlatokat és a szetteket.</p>
+        </div>
+    </div>
 
     <form id="workout-form" method="post"
           th:action="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}">
         <input type="hidden" name="version" th:if="${form.version != null}" th:value="${form.version}">
 
         <!-- az edzés alapadatai -->
-        <div class="card mb-3">
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2 py-3">
+                <i class="bi bi-info-circle text-body-secondary" aria-hidden="true"></i> Alapadatok
+            </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
@@ -51,22 +57,30 @@
         </div>
 
         <!-- gyakorlatok -->
-        <h2 class="h5">Gyakorlatok</h2>
+        <h2 class="h5 fw-semibold mb-3">Gyakorlatok</h2>
         <div id="blocks"></div>
-        <p id="empty-hint" class="text-body-secondary">Még nincs gyakorlat. Válassz egyet lent, és add hozzá.</p>
+        <div id="empty-hint" class="card mb-3">
+            <div class="card-body empty-state py-4">
+                <div class="empty-state-icon"><i class="bi bi-list-check" aria-hidden="true"></i></div>
+                <p class="text-body-secondary mb-0">Még nincs gyakorlat. Válassz egyet lent, és add hozzá.</p>
+            </div>
+        </div>
 
         <div class="card mb-3">
             <div class="card-body">
                 <label class="form-label" for="exercise-picker">Gyakorlat hozzáadása</label>
                 <div class="input-group">
                     <select class="form-select" id="exercise-picker"></select>
-                    <button class="btn btn-outline-primary" type="button" id="add-exercise">+ Hozzáadás</button>
+                    <button class="btn btn-primary" type="button" id="add-exercise">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Hozzáadás</button>
                 </div>
             </div>
         </div>
 
-        <div class="d-flex gap-2 mb-5">
-            <button class="btn btn-primary btn-lg" type="submit">Mentés</button>
+        <!-- mobilon is kézre eső mentés: az oldal aljára tapad -->
+        <div class="form-actions d-flex gap-2">
+            <button class="btn btn-primary btn-lg flex-grow-1 flex-sm-grow-0" type="submit">
+                <i class="bi bi-check2" aria-hidden="true"></i> Mentés</button>
             <a class="btn btn-outline-secondary btn-lg"
                th:href="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}">Mégse</a>
         </div>
@@ -171,7 +185,8 @@
                     if (value !== null && value !== undefined) { input.value = value; }
                     row.appendChild(el('td', {}, [input]));
                 });
-                const remove = el('button', { 'class': 'btn btn-sm btn-outline-danger', type: 'button', title: 'Szett törlése', text: '✕' });
+                const remove = el('button', { 'class': 'btn btn-sm btn-ghost btn-icon text-danger', type: 'button',
+                    title: 'Szett törlése', 'aria-label': 'Szett törlése' }, [el('i', { 'class': 'bi bi-x-lg' })]);
                 remove.addEventListener('click', function () { row.remove(); refresh(); });
                 row.appendChild(el('td', { 'class': 'text-end' }, [remove]));
                 tbody.appendChild(row);
@@ -182,12 +197,15 @@
             function addBlock(exerciseId, data) {
                 const ex = byId[exerciseId];
                 if (!ex) { return; }
-                const block = el('div', { 'class': 'ex-block card shadow-sm mb-3' });
+                const block = el('div', { 'class': 'ex-block card accent-card accent-' + ex.category + ' mb-3' });
                 const idInput = el('input', { type: 'hidden', 'data-field': 'exerciseId', value: ex.id });
 
-                const up = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-up', type: 'button', title: 'Feljebb', text: '↑' });
-                const down = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-down', type: 'button', title: 'Lejjebb', text: '↓' });
-                const remove = el('button', { 'class': 'btn btn-sm btn-outline-danger', type: 'button', title: 'Gyakorlat törlése', text: 'Törlés' });
+                const up = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-up', type: 'button', title: 'Feljebb',
+                    'aria-label': 'Feljebb' }, [el('i', { 'class': 'bi bi-arrow-up' })]);
+                const down = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-down', type: 'button', title: 'Lejjebb',
+                    'aria-label': 'Lejjebb' }, [el('i', { 'class': 'bi bi-arrow-down' })]);
+                const remove = el('button', { 'class': 'btn btn-sm btn-outline-danger', type: 'button', title: 'Gyakorlat törlése',
+                    'aria-label': 'Gyakorlat törlése' }, [el('i', { 'class': 'bi bi-trash3' })]);
                 up.addEventListener('click', function () {
                     if (block.previousElementSibling) { blocksEl.insertBefore(block, block.previousElementSibling); refresh(); }
                 });
@@ -198,10 +216,10 @@
                     if (confirm('Törlöd a(z) ' + ex.name + ' gyakorlatot a szettjeivel együtt?')) { block.remove(); refresh(); }
                 });
 
-                const header = el('div', { 'class': 'card-header d-flex flex-wrap justify-content-between align-items-center gap-2' }, [
-                    el('div', {}, [
+                const header = el('div', { 'class': 'card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3' }, [
+                    el('div', { 'class': 'd-flex flex-wrap align-items-center gap-2' }, [
                         el('strong', { text: ex.name }),
-                        el('span', { 'class': 'badge text-bg-secondary ms-2', text: ex.categoryLabel })
+                        el('span', { 'class': 'cat-badge cat-' + ex.category, text: ex.categoryLabel })
                     ]),
                     el('div', { 'class': 'btn-group' }, [up, down, remove])
                 ]);
@@ -213,7 +231,7 @@
                 const headRow = el('tr', {}, [el('th', { text: '#', style: 'width: 2.5rem;' })]);
                 fieldsFor(ex).forEach(function (f) { headRow.appendChild(el('th', { 'class': 'small fw-normal', text: f.label })); });
                 headRow.appendChild(el('th', {}));
-                const table = el('table', { 'class': 'table table-sm align-middle mb-2' }, [
+                const table = el('table', { 'class': 'table table-sm table-sets align-middle mb-2' }, [
                     el('thead', {}, [headRow]), el('tbody', {})
                 ]);
 

@@ -4,57 +4,59 @@
 <head><title>Regisztráció – RepTrack</title></head>
 <body>
 <main class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-7 col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h1 class="h4 mb-4">Regisztráció</h1>
+    <div class="auth-card">
+        <div class="text-center mb-4">
+            <span class="brand-mark brand-mark-lg mb-3"><i class="bi bi-activity" aria-hidden="true"></i></span>
+            <h1 class="h3 fw-bold mb-1">Fiók létrehozása</h1>
+            <p class="text-body-secondary mb-0">Pár adat, és már rögzítheted is az első edzésed.</p>
+        </div>
 
-                    <!-- novalidate: a hibákat a szerver ellenőrzi és magyarul jelzi a mezők alatt -->
-                    <form th:action="@{/register}" th:object="${form}" method="post" novalidate>
-                        <div class="mb-3">
-                            <label class="form-label" for="displayName">Név</label>
-                            <input class="form-control" type="text" th:field="*{displayName}" th:errorclass="is-invalid"
-                                   autocomplete="name" maxlength="100" required autofocus>
-                            <div class="invalid-feedback" th:errors="*{displayName}">Add meg a neved.</div>
-                        </div>
+        <div class="card">
+            <div class="card-body p-4">
+                <!-- novalidate: a hibákat a szerver ellenőrzi és magyarul jelzi a mezők alatt -->
+                <form th:action="@{/register}" th:object="${form}" method="post" novalidate>
+                    <div class="form-floating mb-3">
+                        <input class="form-control" type="text" th:field="*{displayName}" th:errorclass="is-invalid"
+                               placeholder="Név" autocomplete="name" maxlength="100" required autofocus>
+                        <label for="displayName">Név</label>
+                        <div class="invalid-feedback" th:errors="*{displayName}">Add meg a neved.</div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="email">E-mail-cím</label>
-                            <input class="form-control" type="email" th:field="*{email}" th:errorclass="is-invalid"
-                                   autocomplete="email" maxlength="255" required>
-                            <div class="invalid-feedback" th:errors="*{email}">Érvénytelen e-mail-cím.</div>
-                        </div>
+                    <div class="form-floating mb-3">
+                        <input class="form-control" type="email" th:field="*{email}" th:errorclass="is-invalid"
+                               placeholder="nev@pelda.hu" autocomplete="email" maxlength="255" required>
+                        <label for="email">E-mail-cím</label>
+                        <div class="invalid-feedback" th:errors="*{email}">Érvénytelen e-mail-cím.</div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="password">Jelszó</label>
-                            <input class="form-control" type="password" th:field="*{password}"
-                                   th:classappend="${#fields.hasErrors('password') or #fields.hasErrors('passwordWithinLimit')} ? 'is-invalid'"
-                                   autocomplete="new-password" required>
-                            <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}"
-                                 th:errors="*{password}">A jelszó legalább 8 karakter legyen.</div>
-                            <div class="invalid-feedback" th:if="${#fields.hasErrors('passwordWithinLimit')}"
-                                 th:errors="*{passwordWithinLimit}">A jelszó túl hosszú.</div>
-                            <div class="form-text">Legalább 8 karakter.</div>
-                        </div>
+                    <div class="form-floating mb-1">
+                        <input class="form-control" type="password" th:field="*{password}" placeholder="Jelszó"
+                               th:classappend="${#fields.hasErrors('password') or #fields.hasErrors('passwordWithinLimit')} ? 'is-invalid'"
+                               autocomplete="new-password" required>
+                        <label for="password">Jelszó</label>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}"
+                             th:errors="*{password}">A jelszó legalább 8 karakter legyen.</div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('passwordWithinLimit')}"
+                             th:errors="*{passwordWithinLimit}">A jelszó túl hosszú.</div>
+                    </div>
+                    <div class="form-text mb-3">Legalább 8 karakter.</div>
 
-                        <div class="mb-4">
-                            <label class="form-label" for="passwordConfirm">Jelszó még egyszer</label>
-                            <input class="form-control" type="password" th:field="*{passwordConfirm}"
-                                   th:classappend="${#fields.hasErrors('passwordConfirmed')} ? 'is-invalid'"
-                                   autocomplete="new-password" required>
-                            <div class="invalid-feedback" th:errors="*{passwordConfirmed}">A két jelszó nem egyezik.</div>
-                        </div>
+                    <div class="form-floating mb-4">
+                        <input class="form-control" type="password" th:field="*{passwordConfirm}" placeholder="Jelszó még egyszer"
+                               th:classappend="${#fields.hasErrors('passwordConfirmed')} ? 'is-invalid'"
+                               autocomplete="new-password" required>
+                        <label for="passwordConfirm">Jelszó még egyszer</label>
+                        <div class="invalid-feedback" th:errors="*{passwordConfirmed}">A két jelszó nem egyezik.</div>
+                    </div>
 
-                        <button class="btn btn-primary w-100" type="submit">Regisztráció</button>
-                    </form>
-
-                    <p class="small text-body-secondary text-center mt-4 mb-0">
-                        Van már fiókod? <a th:href="@{/login}">Jelentkezz be!</a>
-                    </p>
-                </div>
+                    <button class="btn btn-primary btn-lg w-100" type="submit">Regisztráció</button>
+                </form>
             </div>
         </div>
+
+        <p class="small text-body-secondary text-center mt-4 mb-0">
+            Van már fiókod? <a class="fw-semibold" th:href="@{/login}">Jelentkezz be!</a>
+        </p>
     </div>
 </main>
 </body>

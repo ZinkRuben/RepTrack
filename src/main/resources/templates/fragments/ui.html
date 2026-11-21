@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Kisebb, több oldalon használt darabok.
+
+  Kategória-címke (színes, ikonnal):
+    <span th:replace="~{fragments/ui :: categoryBadge(${e.category()})}"></span>
+-->
+<span th:fragment="categoryBadge(category)" class="cat-badge" th:classappend="|cat-${category}|">
+    <i class="bi" aria-hidden="true"
+       th:classappend="${category.name() == 'CARDIO'} ? 'bi-heart-pulse'
+                     : (${category.name() == 'BODYWEIGHT'} ? 'bi-person-arms-up' : 'bi-lightning-charge-fill')"></i>
+    <span th:text="${#messages.msg('category.' + category)}">Súlyzós</span>
+</span>
+
+</body>
+</html>

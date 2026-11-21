@@ -1,0 +1,727 @@
+/*
+ * RepTrack téma a Bootstrap 5 fölött: színek, betűtípus, felületek, sötét mód és néhány saját komponens.
+ * A Bootstrap osztályai változatlanul használhatók; ez a fájl csak a megjelenésüket finomítja.
+ * Saját komponensek: .app-navbar, .brand-mark, .page-header, .stat-tile, .empty-state, .table-modern,
+ * .cat-badge / .accent-*, .chip, .action-card, .hero, .auth-card, .form-actions.
+ */
+
+/* ---------- tokenek: világos téma ---------- */
+:root,
+[data-bs-theme=light] {
+    --rt-accent: #06b6d4;
+    --rt-primary-hover: #4338ca;
+    --rt-primary-active: #3730a3;
+    --rt-surface: #ffffff;
+    --rt-surface-rgb: 255, 255, 255;
+    --rt-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 3px rgba(16, 24, 40, .06);
+    --rt-shadow-lg: 0 16px 40px -16px rgba(16, 24, 40, .22);
+
+    --rt-weights: #4f46e5;
+    --rt-weights-bg: #eef2ff;
+    --rt-weights-text: #3730a3;
+    --rt-cardio: #e11d48;
+    --rt-cardio-bg: #fff1f2;
+    --rt-cardio-text: #9f1239;
+    --rt-bodyweight: #059669;
+    --rt-bodyweight-bg: #ecfdf5;
+    --rt-bodyweight-text: #065f46;
+
+    --bs-primary: #4f46e5;
+    --bs-primary-rgb: 79, 70, 229;
+    --bs-primary-bg-subtle: #eef2ff;
+    --bs-primary-border-subtle: #c7d2fe;
+    --bs-primary-text-emphasis: #3730a3;
+    --bs-link-color: #4f46e5;
+    --bs-link-color-rgb: 79, 70, 229;
+    --bs-link-hover-color: #3730a3;
+    --bs-link-hover-color-rgb: 55, 48, 163;
+    --bs-focus-ring-color: rgba(79, 70, 229, .25);
+
+    --bs-body-bg: #f5f6fa;
+    --bs-body-bg-rgb: 245, 246, 250;
+    --bs-tertiary-bg: #eef0f5;
+    --bs-tertiary-bg-rgb: 238, 240, 245;
+    --bs-border-color: #e3e6ed;
+    --bs-border-color-translucent: rgba(16, 24, 40, .1);
+}
+
+/* ---------- tokenek: sötét téma ---------- */
+[data-bs-theme=dark] {
+    --rt-accent: #22d3ee;
+    --rt-primary-hover: #818cf8;
+    --rt-primary-active: #a5b4fc;
+    --rt-surface: #131720;
+    --rt-surface-rgb: 19, 23, 32;
+    --rt-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 1px 3px rgba(0, 0, 0, .25);
+    --rt-shadow-lg: 0 16px 40px -16px rgba(0, 0, 0, .6);
+
+    --rt-weights: #818cf8;
+    --rt-weights-bg: rgba(99, 102, 241, .16);
+    --rt-weights-text: #c7d2fe;
+    --rt-cardio: #fb7185;
+    --rt-cardio-bg: rgba(244, 63, 94, .16);
+    --rt-cardio-text: #fecdd3;
+    --rt-bodyweight: #34d399;
+    --rt-bodyweight-bg: rgba(16, 185, 129, .16);
+    --rt-bodyweight-text: #a7f3d0;
+
+    --bs-primary: #6366f1;
+    --bs-primary-rgb: 99, 102, 241;
+    --bs-primary-bg-subtle: rgba(99, 102, 241, .16);
+    --bs-primary-border-subtle: #3730a3;
+    --bs-primary-text-emphasis: #c7d2fe;
+    --bs-link-color: #a5b4fc;
+    --bs-link-color-rgb: 165, 180, 252;
+    --bs-link-hover-color: #c7d2fe;
+    --bs-link-hover-color-rgb: 199, 210, 254;
+    --bs-focus-ring-color: rgba(129, 140, 248, .35);
+
+    --bs-body-bg: #0b0e14;
+    --bs-body-bg-rgb: 11, 14, 20;
+    --bs-secondary-bg: #1a1f2b;
+    --bs-tertiary-bg: #161a24;
+    --bs-tertiary-bg-rgb: 22, 26, 36;
+    --bs-border-color: #252b38;
+    --bs-border-color-translucent: rgba(255, 255, 255, .08);
+}
+
+/* ---------- alapok ---------- */
+:root {
+    --bs-body-font-family: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --bs-body-font-size: .9375rem;
+    --bs-border-radius: .625rem;
+    --bs-border-radius-sm: .5rem;
+    --bs-border-radius-lg: .875rem;
+    --bs-border-radius-xl: 1.125rem;
+}
+
+body {
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-weight: 650;
+    letter-spacing: -.015em;
+}
+
+::selection {
+    background: rgba(var(--bs-primary-rgb), .2);
+}
+
+a {
+    text-underline-offset: .2em;
+}
+
+/* ---------- gombok ---------- */
+.btn {
+    --bs-btn-font-weight: 550;
+    --bs-btn-padding-x: .95rem;
+    letter-spacing: -.005em;
+}
+
+.btn-lg {
+    --bs-btn-padding-x: 1.35rem;
+}
+
+.btn .bi {
+    line-height: 1;
+}
+
+/* ikonos gomb: az ikon és a szöveg között egyenletes köz */
+.btn:has(> .bi) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--rt-primary-hover);
+    --bs-btn-hover-border-color: var(--rt-primary-hover);
+    --bs-btn-active-bg: var(--rt-primary-active);
+    --bs-btn-active-border-color: var(--rt-primary-active);
+    --bs-btn-disabled-bg: var(--bs-primary);
+    --bs-btn-disabled-border-color: var(--bs-primary);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .12), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-primary-text-emphasis);
+    --bs-btn-border-color: var(--bs-primary-border-subtle);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--rt-primary-hover);
+    --bs-btn-active-border-color: var(--rt-primary-hover);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+
+/* semleges, felületszínű gomb (a Bootstrap szürke körvonalas gombja helyett) */
+.btn-outline-secondary {
+    --bs-btn-color: var(--bs-body-color);
+    --bs-btn-bg: var(--rt-surface);
+    --bs-btn-border-color: var(--bs-border-color);
+    --bs-btn-hover-color: var(--bs-emphasis-color);
+    --bs-btn-hover-bg: var(--bs-tertiary-bg);
+    --bs-btn-hover-border-color: var(--bs-border-color);
+    --bs-btn-active-color: var(--bs-emphasis-color);
+    --bs-btn-active-bg: var(--bs-tertiary-bg);
+    --bs-btn-active-border-color: var(--bs-border-color);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+    box-shadow: var(--rt-shadow);
+}
+
+.btn-outline-danger {
+    --bs-btn-bg: var(--rt-surface);
+}
+
+/* ikon-gomb és átlátszó gomb a navigációs sávhoz */
+.btn-ghost {
+    --bs-btn-color: var(--bs-secondary-color);
+    --bs-btn-hover-color: var(--bs-emphasis-color);
+    --bs-btn-hover-bg: var(--bs-tertiary-bg);
+    --bs-btn-active-color: var(--bs-emphasis-color);
+    --bs-btn-active-bg: var(--bs-tertiary-bg);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-border-color: transparent;
+}
+
+.btn-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+}
+
+/* ---------- űrlapok ---------- */
+.form-control,
+.form-select {
+    background-color: var(--rt-surface);
+    border-color: var(--bs-border-color);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(var(--bs-primary-rgb), .65);
+    box-shadow: 0 0 0 .25rem var(--bs-focus-ring-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.form-check-input:focus {
+    border-color: rgba(var(--bs-primary-rgb), .65);
+    box-shadow: 0 0 0 .25rem var(--bs-focus-ring-color);
+}
+
+.form-label {
+    font-weight: 550;
+    font-size: .875rem;
+}
+
+.form-floating > .form-control,
+.form-floating > .form-select {
+    background-color: var(--rt-surface);
+}
+
+.form-floating > label {
+    color: var(--bs-secondary-color);
+}
+
+/* a lebegő címke háttere a mező színe legyen (a Bootstrap az oldal hátterét adná, ami szürke foltként látszik) */
+.form-floating > .form-control:focus ~ label::after,
+.form-floating > .form-control:not(:placeholder-shown) ~ label::after,
+.form-floating > .form-select ~ label::after {
+    background-color: var(--rt-surface);
+}
+
+/* ---------- kártyák, listák, táblázatok ---------- */
+.card {
+    --bs-card-bg: var(--rt-surface);
+    --bs-card-border-color: var(--bs-border-color);
+    --bs-card-border-radius: var(--bs-border-radius-xl);
+    --bs-card-inner-border-radius: calc(var(--bs-border-radius-xl) - 1px);
+    --bs-card-cap-bg: transparent;
+    --bs-card-cap-padding-y: .875rem;
+    --bs-card-spacer-x: 1.25rem;
+    box-shadow: var(--rt-shadow);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+.list-group {
+    --bs-list-group-bg: transparent;
+    --bs-list-group-border-color: var(--bs-border-color);
+}
+
+.card-table {
+    overflow: hidden;
+}
+
+/* kártyán belül a táblázat a kártya színét veszi át (a Bootstrap alapból az oldal háttérszínét adná) */
+.card .table {
+    --bs-table-bg: transparent;
+}
+
+.table-modern {
+    --bs-table-bg: transparent;
+    --bs-table-hover-bg: rgba(var(--bs-primary-rgb), .04);
+    margin-bottom: 0;
+}
+
+.table-modern > thead > tr > th {
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: .7rem 1rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.table-modern > tbody > tr > td {
+    padding: .85rem 1rem;
+    border-color: var(--bs-border-color);
+}
+
+.table-modern > tbody > tr:last-child > td {
+    border-bottom: 0;
+}
+
+.table-sets > thead > tr > th {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+/* ---------- navigációs sáv ---------- */
+.app-navbar {
+    background: rgba(var(--rt-surface-rgb), .82);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid var(--bs-border-color);
+    --bs-navbar-padding-y: .6rem;
+}
+
+.app-navbar .navbar-brand {
+    font-weight: 750;
+    letter-spacing: -.03em;
+    color: var(--bs-emphasis-color);
+}
+
+.app-navbar .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 550;
+    color: var(--bs-secondary-color);
+    border-radius: var(--bs-border-radius);
+    padding: .45rem .8rem !important;
+    transition: color .15s ease, background-color .15s ease;
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link:focus-visible {
+    color: var(--bs-emphasis-color);
+    background: var(--bs-tertiary-bg);
+}
+
+.app-navbar .nav-link.active {
+    color: var(--bs-primary-text-emphasis);
+    background: var(--bs-primary-bg-subtle);
+}
+
+.app-navbar .navbar-toggler {
+    border: 0;
+    padding: .4rem .5rem;
+}
+
+.app-navbar .navbar-toggler:focus {
+    box-shadow: 0 0 0 .2rem var(--bs-focus-ring-color);
+}
+
+.brand-mark {
+    width: 2rem;
+    height: 2rem;
+    border-radius: .65rem;
+    display: inline-grid;
+    place-items: center;
+    color: #fff;
+    background: linear-gradient(135deg, var(--bs-primary), var(--rt-accent));
+    box-shadow: 0 4px 12px -4px rgba(var(--bs-primary-rgb), .6);
+    font-size: 1.05rem;
+}
+
+.brand-mark-lg {
+    width: 3rem;
+    height: 3rem;
+    border-radius: .9rem;
+    font-size: 1.5rem;
+}
+
+.avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-weight: 650;
+    font-size: .85rem;
+    color: var(--bs-primary-text-emphasis);
+    background: var(--bs-primary-bg-subtle);
+    border: 1px solid var(--bs-primary-border-subtle);
+}
+
+.dropdown-menu {
+    --bs-dropdown-bg: var(--rt-surface);
+    --bs-dropdown-border-color: var(--bs-border-color);
+    --bs-dropdown-border-radius: var(--bs-border-radius-lg);
+    --bs-dropdown-link-active-bg: var(--bs-primary-bg-subtle);
+    --bs-dropdown-link-active-color: var(--bs-primary-text-emphasis);
+    --bs-dropdown-item-border-radius: var(--bs-border-radius-sm);
+    --bs-dropdown-padding-x: .375rem;
+    --bs-dropdown-padding-y: .375rem;
+    box-shadow: var(--rt-shadow-lg);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    border-radius: var(--bs-border-radius-sm);
+    font-weight: 500;
+    padding-top: .45rem;
+    padding-bottom: .45rem;
+}
+
+/* ---------- üzenetek ---------- */
+.alert {
+    --bs-alert-border-radius: var(--bs-border-radius-lg);
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    box-shadow: var(--rt-shadow);
+}
+
+.alert > .bi {
+    font-size: 1.1rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+
+/* ---------- oldalfej ---------- */
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: clamp(1.5rem, 1.25rem + .9vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -.025em;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--bs-secondary-color);
+    margin: .3rem 0 0;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--bs-secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: .875rem;
+    margin-bottom: .75rem;
+}
+
+.back-link:hover {
+    color: var(--bs-emphasis-color);
+}
+
+/* ---------- statisztika-csempe ---------- */
+.stat-tile {
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+    padding: 1rem 1.125rem;
+}
+
+.stat-icon {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: .8rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: 1.15rem;
+    color: var(--bs-primary-text-emphasis);
+    background: var(--bs-primary-bg-subtle);
+}
+
+.stat-label {
+    font-size: .8rem;
+    color: var(--bs-secondary-color);
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 650;
+    letter-spacing: -.01em;
+    color: var(--bs-emphasis-color);
+}
+
+/* ---------- üres állapot ---------- */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.empty-state-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 1rem;
+    border-radius: 1rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    color: var(--bs-secondary-color);
+    background: var(--bs-tertiary-bg);
+}
+
+/* ---------- kategóriák ---------- */
+.cat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .28rem .6rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 650;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.cat-WEIGHTS {
+    color: var(--rt-weights-text);
+    background: var(--rt-weights-bg);
+}
+
+.cat-CARDIO {
+    color: var(--rt-cardio-text);
+    background: var(--rt-cardio-bg);
+}
+
+.cat-BODYWEIGHT {
+    color: var(--rt-bodyweight-text);
+    background: var(--rt-bodyweight-bg);
+}
+
+.accent-WEIGHTS {
+    --rt-cat: var(--rt-weights);
+}
+
+.accent-CARDIO {
+    --rt-cat: var(--rt-cardio);
+}
+
+.accent-BODYWEIGHT {
+    --rt-cat: var(--rt-bodyweight);
+}
+
+.accent-card {
+    border-top: 3px solid var(--rt-cat, var(--bs-border-color));
+}
+
+/* kis, semleges címke (pl. rögzíthető mezők) */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .18rem .55rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 550;
+    color: var(--bs-secondary-color);
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+}
+
+/* ---------- kezdőlap ---------- */
+.hero {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(3rem, 2rem + 5vw, 6rem) 0 clamp(2rem, 1.5rem + 3vw, 4rem);
+}
+
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: -4rem -50vw auto;
+    height: 32rem;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(40% 55% at 30% 20%, rgba(var(--bs-primary-rgb), .18), transparent 70%),
+        radial-gradient(35% 50% at 75% 10%, rgba(6, 182, 212, .14), transparent 70%);
+}
+
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .3rem .75rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--bs-primary-text-emphasis);
+    background: var(--bs-primary-bg-subtle);
+    border: 1px solid var(--bs-primary-border-subtle);
+}
+
+.hero-title {
+    font-size: clamp(2.25rem, 1.5rem + 3.6vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -.04em;
+    line-height: 1.05;
+    margin: 1.25rem 0 1rem;
+}
+
+.hero-lead {
+    font-size: clamp(1rem, .95rem + .35vw, 1.2rem);
+    color: var(--bs-secondary-color);
+    max-width: 38rem;
+}
+
+.text-gradient {
+    background: linear-gradient(120deg, var(--bs-primary), var(--rt-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.feature-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: .85rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--bs-primary-text-emphasis);
+    background: var(--bs-primary-bg-subtle);
+}
+
+.action-card {
+    display: block;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.action-card:hover,
+.action-card:focus-visible {
+    color: inherit;
+    transform: translateY(-2px);
+    box-shadow: var(--rt-shadow-lg);
+    border-color: var(--bs-primary-border-subtle);
+}
+
+.action-card-primary {
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--bs-primary), #7c3aed);
+}
+
+.action-card-primary:hover,
+.action-card-primary:focus-visible {
+    color: #fff;
+    border-color: transparent;
+}
+
+.action-card-primary .feature-icon {
+    color: #fff;
+    background: rgba(255, 255, 255, .18);
+}
+
+.action-card-primary .text-body-secondary {
+    color: rgba(255, 255, 255, .8) !important;
+}
+
+/* ---------- bejelentkezés, regisztráció ---------- */
+.auth-card {
+    max-width: 27rem;
+    margin: 0 auto;
+}
+
+/* ---------- edzés űrlap: mentés gombok mobilon is kézre esnek ---------- */
+.form-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    padding: .9rem 0 1rem;
+    background: linear-gradient(to top, var(--bs-body-bg) 65%, rgba(var(--bs-body-bg-rgb), 0));
+}
+
+/* ---------- lapozó ---------- */
+.pagination {
+    --bs-pagination-bg: var(--rt-surface);
+    --bs-pagination-color: var(--bs-body-color);
+    --bs-pagination-border-color: var(--bs-border-color);
+    --bs-pagination-hover-bg: var(--bs-tertiary-bg);
+    --bs-pagination-hover-color: var(--bs-emphasis-color);
+    --bs-pagination-hover-border-color: var(--bs-border-color);
+    --bs-pagination-active-bg: var(--bs-primary);
+    --bs-pagination-active-border-color: var(--bs-primary);
+    --bs-pagination-disabled-bg: var(--rt-surface);
+    --bs-pagination-focus-box-shadow: 0 0 0 .25rem var(--bs-focus-ring-color);
+    gap: .35rem;
+}
+
+.pagination .page-link {
+    border-radius: var(--bs-border-radius) !important;
+}
+
+/* ---------- lábléc ---------- */
+.app-footer {
+    border-top: 1px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    font-size: .85rem;
+}
+
+/* ---------- mozgás csökkentése ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .action-card,
+    .app-navbar .nav-link {
+        transition: none;
+    }
+
+    .action-card:hover {
+        transform: none;
+    }
+}

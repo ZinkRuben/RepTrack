@@ -3,47 +3,84 @@
 <body>
 
 <!--
-  Navigációs sáv: bejelentkezve a menüpontok, a felhasználó neve és a kijelentkezés; vendégként bejelentkezés és
-  regisztráció. Mobilon összecsukható (a Bootstrap JS-t a layout tölti be).
+  Navigációs sáv: logó, menüpontok (bejelentkezve), témaváltó, felhasználói menü (név, kijelentkezés) vagy
+  vendégként bejelentkezés és regisztráció. Görgetéskor fent marad; mobilon a menü összecsukható.
 
-  Új menüpont (az aktív állapotot az URL eleje alapján kapja):
-    <li th:replace="~{fragments/navbar :: navLink('/workouts', 'Edzésnapló')}"></li>
+  Új menüpont (az aktív állapotot az URL eleje alapján kapja; az ikon a Bootstrap Icons neve):
+    <li th:replace="~{fragments/navbar :: navLink('/workouts', 'Edzésnapló', 'bi-journal-text')}"></li>
   Csak adminisztrátornak: tegyétek egy sec:authorize="hasRole('ADMIN')" elem belsejébe.
 -->
-<nav th:fragment="navbar" class="navbar navbar-expand-md bg-dark border-bottom" data-bs-theme="dark">
+<nav th:fragment="navbar" class="navbar navbar-expand-lg sticky-top app-navbar">
     <div class="container">
-        <a class="navbar-brand fw-semibold" th:href="@{/}">RepTrack</a>
+        <a class="navbar-brand d-inline-flex align-items-center gap-2" th:href="@{/}">
+            <span class="brand-mark"><i class="bi bi-activity" aria-hidden="true"></i></span>
+            <span>RepTrack</span>
+        </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-                aria-controls="mainNav" aria-expanded="false" aria-label="Menü megnyitása">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="mainNav">
-            <!-- hasRole('USER'): a szerepkör-hierarchia miatt az adminisztrátor is látja -->
-            <ul class="navbar-nav me-auto" sec:authorize="hasRole('USER')">
-                <li th:replace="~{fragments/navbar :: navLink('/workouts', 'Edzésnapló')}"></li>
-                <li th:replace="~{fragments/navbar :: navLink('/exercises', 'Gyakorlatok')}"></li>
-                <li th:replace="~{fragments/navbar :: navLink('/records', 'Csúcsok')}"></li>
-            </ul>
+        <!-- jobb oldal: mobilon is látszik (a menü csak bejelentkezve csukódik össze) -->
+        <div class="d-flex align-items-center gap-1 order-lg-last ms-auto">
+            <!-- témaváltó -->
+            <div class="dropdown">
+                <button class="btn btn-ghost btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        aria-label="Téma váltása" title="Téma">
+                    <i class="bi bi-circle-half" data-theme-icon aria-hidden="true"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" type="button" data-theme-value="light">
+                        <i class="bi bi-sun-fill" aria-hidden="true"></i> Világos</button></li>
+                    <li><button class="dropdown-item" type="button" data-theme-value="dark">
+                        <i class="bi bi-moon-stars-fill" aria-hidden="true"></i> Sötét</button></li>
+                    <li><button class="dropdown-item" type="button" data-theme-value="auto">
+                        <i class="bi bi-circle-half" aria-hidden="true"></i> Rendszer szerint</button></li>
+                </ul>
+            </div>
 
             <!-- bejelentkezett felhasználó -->
-            <div class="d-flex flex-column flex-md-row align-items-md-center gap-2 ms-md-auto py-2 py-md-0"
-                 sec:authorize="isAuthenticated()">
-                <span class="navbar-text text-truncate" style="max-width: 16rem;">
-                    <span sec:authentication="name">felhasznalo@example.com</span>
-                    <span class="badge text-bg-warning ms-1" sec:authorize="hasRole('ADMIN')">Admin</span>
-                </span>
-                <form th:action="@{/logout}" method="post">
-                    <button class="btn btn-sm btn-outline-light" type="submit">Kijelentkezés</button>
-                </form>
+            <div class="dropdown" sec:authorize="isAuthenticated()">
+                <button class="btn btn-ghost d-inline-flex align-items-center gap-2 px-2" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Felhasználói menü">
+                    <span class="avatar" th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 1))}">A</span>
+                    <span class="d-none d-md-inline text-truncate text-body" style="max-width: 14rem;"
+                          sec:authentication="name">felhasznalo@example.com</span>
+                    <span class="badge rounded-pill text-bg-warning" sec:authorize="hasRole('ADMIN')">Admin</span>
+                    <i class="bi bi-chevron-down small" aria-hidden="true"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 15rem;">
+                    <li class="px-3 py-2">
+                        <div class="small text-body-secondary">Bejelentkezve</div>
+                        <div class="fw-semibold text-truncate" th:text="${#authentication.name}">felhasznalo@example.com</div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post">
+                            <button class="dropdown-item text-danger" type="submit">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Kijelentkezés
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
 
-            <!-- vendég -->
-            <div class="d-flex gap-2 ms-md-auto py-2 py-md-0" sec:authorize="!isAuthenticated()">
-                <a class="btn btn-sm btn-outline-light" th:href="@{/login}">Bejelentkezés</a>
-                <a class="btn btn-sm btn-primary" th:href="@{/register}">Regisztráció</a>
+            <!-- vendég (keskeny kijelzőn a bejelentkezés gomb az oldal tartalmában van, a sáv így egy sorban marad) -->
+            <div class="d-flex align-items-center gap-1" sec:authorize="!isAuthenticated()">
+                <a class="btn btn-ghost btn-sm d-none d-sm-inline-block" th:href="@{/login}">Bejelentkezés</a>
+                <a class="btn btn-primary btn-sm" th:href="@{/register}">Regisztráció</a>
             </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Menü megnyitása"
+                    sec:authorize="hasRole('USER')">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+
+        <!-- menüpontok; hasRole('USER'): a szerepkör-hierarchia miatt az adminisztrátor is látja -->
+        <div class="collapse navbar-collapse" id="mainNav" sec:authorize="hasRole('USER')">
+            <ul class="navbar-nav gap-lg-1 ms-lg-4 py-2 py-lg-0">
+                <li th:replace="~{fragments/navbar :: navLink('/workouts', 'Edzésnapló', 'bi-journal-text')}"></li>
+                <li th:replace="~{fragments/navbar :: navLink('/exercises', 'Gyakorlatok', 'bi-collection')}"></li>
+                <li th:replace="~{fragments/navbar :: navLink('/records', 'Csúcsok', 'bi-trophy')}"></li>
+            </ul>
         </div>
     </div>
 </nav>
@@ -52,10 +89,12 @@
   Egy menüpont; aktív, ha a kért út a megadott úttal kezdődik (pl. /exercises és /exercises/12).
   A currentPath-t a LayoutModelAdvice adja; ahol nincs (pl. kivételkezelő hibaoldala), egyik menüpont sem aktív.
 -->
-<li th:fragment="navLink(path, label)" class="nav-item"
+<li th:fragment="navLink(path, label, icon)" class="nav-item"
     th:with="active=${currentPath != null and #strings.startsWith(currentPath, path)}">
-    <a class="nav-link" th:href="@{${path}}" th:text="${label}"
-       th:classappend="${active} ? 'active'" th:attr="aria-current=${active} ? 'page' : null">Menüpont</a>
+    <a class="nav-link" th:href="@{${path}}"
+       th:classappend="${active} ? 'active'" th:attr="aria-current=${active} ? 'page' : null">
+        <i class="bi" th:classappend="${icon}" aria-hidden="true"></i><span th:text="${label}">Menüpont</span>
+    </a>
 </li>
 
 </body>
