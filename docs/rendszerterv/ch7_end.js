@@ -23,6 +23,7 @@ module.exports = function (c) {
     ["HTTPS", "A Docker-futtatás a 8443-as porton HTTPS-t szolgál ki önaláírt tanúsítvánnyal (első induláskor készül, véletlen jelszóval, kötetben marad). A 8080-as porton érkező HTTP-kérések HTTPS-re irányítódnak. A HSTS fejléc kapcsolható (önaláírt tanúsítványnál alapból ki van kapcsolva). A tanúsítvány és a jelszava nem kerül a tárolóba."],
   ], [2000, 7026], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
+  out.push(p("A biztonsági megoldásokat külön automatizált tesztek ellenőrzik (9. fejezet): a tulajdonos-ellenőrzés minden adattípusra, az, hogy minden végpont be van sorolva és védett (új végpont felvételekor a teszt addig bukik, amíg a besorolás hiányzik), a szerepkörök, a regisztráció és a munkamenet-azonosító cseréje bejelentkezéskor."));
   out.push(note("Ismert korlát: a CDN-ről töltött Chart.js-hez még nincs Subresource Integrity (SRI) hash megadva, és az önaláírt tanúsítványt a böngésző első alkalommal figyelmeztetéssel fogadja; éles üzemben hiteles tanúsítvány kell."));
 
   // ------------------------------------------------------------------------------------------------ 8.
@@ -54,13 +55,14 @@ module.exports = function (c) {
   // ------------------------------------------------------------------------------------------------ 9.
   out.push(h1("9. Tesztelés"));
   out.push(p("A tesztstratégia a rétegekhez igazodik. A tiszta szabály-komponenseket adatbázis nélkül, gyorsan teszteljük; minden más (szolgáltatások, adatelérés, séma) **valódi PostgreSQL-lel** fut Testcontainers segítségével. A tesztek egyetlen, közös PostgreSQL 16 konténert használnak (`IntegrationTestBase`), így a Flyway-migrációk, a megszorítások és a lekérdezések a tesztekben is a valós sémán futnak."));
-  out.push(tcap("A tesztek összetétele (255 teszt a dokumentum készítésekor)"));
+  out.push(tcap("A tesztek összetétele (278 teszt a dokumentum készítésekor)"));
   out.push(table(["Réteg", "Mit ellenőriznek", "Eszköz", "Darab"], [
     ["Szabályok (`rules`)", "PR-felismerés, túlterhelési szabályok, statisztikák, képletek (határesetekkel); tiszta egységtesztek", "JUnit 5", "69"],
     ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése", "Spring Boot Test, Testcontainers", "87"],
     ["Adatelérés és séma (`repository`)", "a CHECK, UNIQUE és idegen kulcs megszorítások tényleges kikényszerítése, a 50 gyakorlatos alapadat épsége, lekérdezések", "Testcontainers", "37"],
     ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, HTTP→HTTPS átirányítás", "MockMvc, Spring Security Test", "49"],
     ["Konfiguráció (`config`)", "az első adminisztrátor létrehozása indulásnál, a `.env` beolvasása", "JUnit 5, Spring Boot Test", "12"],
+    ["Biztonság (`security`)", "tulajdonos-ellenőrzés (idegen adat 404, az adminisztrátor sem látja), minden végpont besorolása és védelme, szerepkörök, regisztráció és munkamenet, session fixation elleni védelem valódi Tomcat-tal", "MockMvc, valódi szerver", "23"],
     ["Alkalmazás indulása", "a Spring-kontextus hiba nélkül betöltődik", "Spring Boot Test", "1"],
   ], [2300, 4300, 1700, 726], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
