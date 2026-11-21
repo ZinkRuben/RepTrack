@@ -2,6 +2,7 @@ package hu.reptrack.repository;
 
 import hu.reptrack.dto.BodyWeightPoint;
 import hu.reptrack.dto.ExerciseCategory;
+import hu.reptrack.dto.ExerciseOption;
 import hu.reptrack.dto.MuscleSetCount;
 import hu.reptrack.dto.RecordSet;
 import hu.reptrack.dto.SetRecord;
@@ -89,6 +90,17 @@ public class StatisticsRepository {
                         + "from WorkoutSet s join s.workoutExercise we join we.workout w join we.exercise e "
                         + "where w.user.id = :userId and w.endedAt is not null and e.primaryMuscle is not null "
                         + "group by w.id, w.startedAt, e.primaryMuscle", MuscleSetCount.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    /** Azok a gyakorlatok, amelyekből a felhasználónak van rögzített szettje (a fejlődési görbe választójához). */
+    public List<ExerciseOption> findUsedExercises(Long userId) {
+        return em.createQuery("select distinct new hu.reptrack.dto.ExerciseOption(e.id, e.name, e.category, e.tracksWeight, "
+                        + "e.tracksReps, e.tracksDuration, e.tracksDistance, e.tracksHeartRate, "
+                        + "case when e.owner is null then true else false end) "
+                        + "from WorkoutSet s join s.workoutExercise we join we.workout w join we.exercise e "
+                        + "where w.user.id = :userId order by e.name", ExerciseOption.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }

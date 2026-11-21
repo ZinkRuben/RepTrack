@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title>Statisztika – RepTrack</title></head>
+<body>
+
+<main class="container py-4 py-lg-5">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Statisztika</h1>
+            <p class="page-subtitle"
+               th:text="|${#temporals.format(from, 'yyyy. MM. dd.')} – ${#temporals.format(to, 'yyyy. MM. dd.')}|">
+                2026. 09. 01. – 2026. 11. 21.</p>
+        </div>
+    </div>
+
+    <!-- szűrők: GET kérés, így a nézet linkként megosztható -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row g-2 align-items-end" method="get" th:action="@{/stats}">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="granularity">Bontás</label>
+                    <select class="form-select" id="granularity" name="granularity">
+                        <option value="WEEK" th:selected="${granularity.name() == 'WEEK'}">Heti</option>
+                        <option value="MONTH" th:selected="${granularity.name() == 'MONTH'}">Havi</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="from">Ettől</label>
+                    <input class="form-control" id="from" name="from" type="date" th:value="${from}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" for="to">Eddig</label>
+                    <input class="form-control" id="to" name="to" type="date" th:value="${to}">
+                </div>
+                <div class="col-6 col-md-4">
+                    <label class="form-label small mb-1" for="exerciseId">Gyakorlat fejlődése</label>
+                    <select class="form-select" id="exerciseId" name="exerciseId">
+                        <option value="">Nincs kiválasztva</option>
+                        <option th:each="o : ${usedExercises}" th:value="${o.id()}" th:text="${o.name()}"
+                                th:selected="${o.id() == exerciseId}">Guggolás</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button class="btn btn-primary flex-grow-1" type="submit"><i class="bi bi-bar-chart" aria-hidden="true"></i> Mutat</button>
+                    <a class="btn btn-outline-secondary btn-icon" th:href="@{/stats}" title="Alaphelyzet"
+                       aria-label="Alaphelyzet"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- az időszak összesen -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-journal-check" aria-hidden="true"></i></div>
+                <div><div class="stat-label">Edzés</div><div class="stat-value" th:text="${totals.workouts()}">12</div></div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-stopwatch" aria-hidden="true"></i></div>
+                <div><div class="stat-label">Edzésidő</div>
+                    <div class="stat-value" th:text="|${#numbers.formatDecimal(totals.minutes() / 60, 1, 1)} óra|">12,5 óra</div></div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-bar-chart-steps" aria-hidden="true"></i></div>
+                <div><div class="stat-label">Volumen</div>
+                    <div class="stat-value" th:text="|${#numbers.formatInteger(totals.volumeKg(), 1, 'WHITESPACE')} kg|">12 500 kg</div></div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-signpost-split" aria-hidden="true"></i></div>
+                <div><div class="stat-label">Táv</div>
+                    <div class="stat-value" th:text="|${#numbers.formatDecimal(totals.distanceKm(), 1, 1)} km|">25,0 km</div></div>
+            </div></div>
+        </div>
+        <div class="col-12 col-lg">
+            <div class="card h-100"><div class="stat-tile">
+                <div class="stat-icon"><i class="bi bi-fire" aria-hidden="true"></i></div>
+                <div><div class="stat-label">Edzésterhelés</div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(totals.load(), 1, 'WHITESPACE')}">3 400</div></div>
+            </div></div>
+        </div>
+    </div>
+
+    <!-- heti / havi összesítő és kategóriák -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span th:text="${granularity.name() == 'WEEK'} ? 'Heti összesítő' : 'Havi összesítő'">Heti összesítő</span>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Mutató" id="metric-buttons"></div>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 18rem;"><canvas id="summary-chart"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">Szettek kategóriánként</div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div style="position: relative; height: 18rem; width: 100%;"><canvas id="category-chart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- egy gyakorlat fejlődése -->
+    <h2 class="h5 mb-3">Gyakorlat fejlődése</h2>
+    <div class="card mb-4" th:if="${progressData == null}">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
+            <p class="mb-0 text-body-secondary" th:if="${usedExercises.isEmpty()}">
+                Még nincs rögzített edzésed, ezért nincs mit ábrázolni. <a th:href="@{/workouts/new}">Rögzítsd az elsőt!</a>
+            </p>
+            <p class="mb-0 text-body-secondary" th:unless="${usedExercises.isEmpty()}">
+                Válassz egy gyakorlatot fent, hogy lásd a fejlődési görbéjét. Az egyéni csúcsok 🏆-vel vannak jelölve.
+            </p>
+        </div>
+    </div>
+    <div th:if="${progressData != null}">
+        <p class="text-body-secondary mb-3">
+            <strong th:text="${progressData.get('name')}">Guggolás</strong>
+            <span>· a csillagok az egyéni csúcsot hozó edzések</span>
+        </p>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-6" id="card-strength" hidden>
+                <div class="card h-100"><div class="card-header">Súly és becsült 1RM (kg)</div>
+                    <div class="card-body"><div style="position: relative; height: 16rem;"><canvas id="strength-chart"></canvas></div></div></div>
+            </div>
+            <div class="col-12 col-lg-6" id="card-volume" hidden>
+                <div class="card h-100"><div class="card-header">Volumen (kg)</div>
+                    <div class="card-body"><div style="position: relative; height: 16rem;"><canvas id="volume-chart"></canvas></div></div></div>
+            </div>
+            <div class="col-12 col-lg-6" id="card-relative" hidden>
+                <div class="card h-100"><div class="card-header">Relatív erő (becsült 1RM / testtömeg)</div>
+                    <div class="card-body"><div style="position: relative; height: 16rem;"><canvas id="relative-chart"></canvas></div></div></div>
+            </div>
+            <div class="col-12 col-lg-6" id="card-pace" hidden>
+                <div class="card h-100"><div class="card-header">Tempó (perc/km, lejjebb jobb)</div>
+                    <div class="card-body"><div style="position: relative; height: 16rem;"><canvas id="pace-chart"></canvas></div></div></div>
+            </div>
+            <div class="col-12 col-lg-6" id="card-speed" hidden>
+                <div class="card h-100"><div class="card-header">Sebesség (km/h)</div>
+                    <div class="card-body"><div style="position: relative; height: 16rem;"><canvas id="speed-chart"></canvas></div></div></div>
+            </div>
+            <div class="col-12" id="card-none" hidden>
+                <div class="card"><div class="card-body text-body-secondary">
+                    Ehhez a gyakorlathoz még nincs ábrázolható eredmény.</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- testtömeg -->
+    <h2 class="h5 mb-3">Testtömeg</h2>
+    <div class="card mb-4" th:if="${bodyWeightData == null}">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></div>
+            <p class="mb-0 text-body-secondary">Még nincs rögzített testtömeg-mérésed.</p>
+        </div>
+    </div>
+    <div class="card mb-4" th:if="${bodyWeightData != null}">
+        <div class="card-header">Testtömeg alakulása (kg)</div>
+        <div class="card-body"><div style="position: relative; height: 16rem;"><canvas id="bodyweight-chart"></canvas></div></div>
+    </div>
+
+    <!-- a szkript adatai -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.STATS = {
+            summary: /*[[${summaryData}]]*/ {},
+            progress: /*[[${progressData}]]*/ null,
+            bodyWeight: /*[[${bodyWeightData}]]*/ null
+        };
+        /*]]>*/
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script th:inline="none">
+        (function () {
+            if (typeof Chart === 'undefined') { return; }
+            const data = window.STATS;
+            const css = getComputedStyle(document.documentElement);
+            const color = function (name, fallback) { return (css.getPropertyValue(name) || fallback).trim() || fallback; };
+            const text = color('--bs-secondary-color', '#6b7280');
+            const grid = color('--bs-border-color', 'rgba(128,128,128,.25)');
+            const accent = color('--bs-primary', '#6366f1');
+            const palette = [accent, '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'];
+            const gold = '#f59e0b';
+
+            Chart.defaults.color = text;
+            Chart.defaults.borderColor = grid;
+            Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+            Chart.defaults.maintainAspectRatio = false;
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+            function chart(id, config) {
+                const canvas = document.getElementById(id);
+                return canvas ? new Chart(canvas, config) : null;
+            }
+            function hasValue(list) {
+                return (list || []).some(function (v) { return v !== null && v !== undefined; });
+            }
+            function show(id) { const e = document.getElementById(id); if (e) { e.hidden = false; } }
+            function clock(minutes) { // perc/km tizedesből perc:másodperc
+                const total = Math.round(minutes * 60);
+                return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
+            }
+
+            // ---- heti/havi összesítő, mutató-választóval ----
+            const summary = data.summary || {};
+            const metrics = [
+                { key: 'workouts', label: 'Edzés', unit: 'db' },
+                { key: 'minutes', label: 'Idő', unit: 'perc' },
+                { key: 'volume', label: 'Volumen', unit: 'kg' },
+                { key: 'distance', label: 'Táv', unit: 'km' },
+                { key: 'load', label: 'Terhelés', unit: '' }
+            ];
+            let current = metrics[0];
+            const summaryChart = chart('summary-chart', {
+                type: 'bar',
+                data: { labels: summary.labels || [], datasets: [{ label: current.label, data: summary[current.key] || [],
+                    backgroundColor: accent, borderRadius: 6 }] },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+            const buttons = document.getElementById('metric-buttons');
+            if (buttons && summaryChart) {
+                metrics.forEach(function (m, i) {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'btn ' + (i === 0 ? 'btn-primary' : 'btn-outline-secondary');
+                    b.textContent = m.label;
+                    b.addEventListener('click', function () {
+                        current = m;
+                        summaryChart.data.datasets[0].label = m.label + (m.unit ? ' (' + m.unit + ')' : '');
+                        summaryChart.data.datasets[0].data = summary[m.key] || [];
+                        summaryChart.update();
+                        buttons.querySelectorAll('button').forEach(function (x) {
+                            x.className = 'btn ' + (x === b ? 'btn-primary' : 'btn-outline-secondary');
+                        });
+                    });
+                    buttons.appendChild(b);
+                });
+            }
+
+            // ---- kategóriák ----
+            const catSets = summary.categorySets || [];
+            const total = catSets.reduce(function (a, b) { return a + b; }, 0);
+            if (total > 0) {
+                chart('category-chart', {
+                    type: 'doughnut',
+                    data: { labels: summary.categoryLabels, datasets: [{ data: catSets, backgroundColor: palette.slice(0, 3), borderWidth: 0 }] },
+                    options: { cutout: '62%', plugins: { legend: { position: 'bottom' } } }
+                });
+            } else {
+                const canvas = document.getElementById('category-chart');
+                if (canvas) { canvas.parentElement.innerHTML = '<p class="text-center text-body-secondary mb-0">Az időszakban nincs rögzített szett.</p>'; }
+            }
+
+            // ---- egy gyakorlat fejlődése ----
+            const p = data.progress;
+            if (p) {
+                const records = p.record || [];
+                // az egyéni csúcsot hozó edzések pontja nagyobb és arany
+                function line(label, values, base) {
+                    return {
+                        label: label, data: values, borderColor: base, backgroundColor: base, tension: .25, spanGaps: true,
+                        pointRadius: values.map(function (v, i) { return records[i] ? 7 : 3; }),
+                        pointStyle: values.map(function (v, i) { return records[i] ? 'star' : 'circle'; }),
+                        pointBackgroundColor: values.map(function (v, i) { return records[i] ? gold : base; }),
+                        pointBorderColor: values.map(function (v, i) { return records[i] ? gold : base; })
+                    };
+                }
+                let any = false;
+                if (hasValue(p.bestWeight) || hasValue(p.estimated1Rm)) {
+                    show('card-strength'); any = true;
+                    chart('strength-chart', { type: 'line',
+                        data: { labels: p.labels, datasets: [line('Legnagyobb súly', p.bestWeight, palette[0]), line('Becsült 1RM', p.estimated1Rm, palette[1])] },
+                        options: { scales: { y: { beginAtZero: false } } } });
+                }
+                if ((p.volume || []).some(function (v) { return v > 0; })) {
+                    show('card-volume'); any = true;
+                    chart('volume-chart', { type: 'bar',
+                        data: { labels: p.labels, datasets: [{ label: 'Volumen', data: p.volume, backgroundColor: palette[2], borderRadius: 6 }] },
+                        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+                }
+                if (hasValue(p.relativeStrength)) {
+                    show('card-relative'); any = true;
+                    chart('relative-chart', { type: 'line',
+                        data: { labels: p.labels, datasets: [line('Relatív erő', p.relativeStrength, palette[4])] },
+                        options: { plugins: { legend: { display: false } } } });
+                }
+                if (hasValue(p.pace)) {
+                    show('card-pace'); any = true;
+                    chart('pace-chart', { type: 'line',
+                        data: { labels: p.labels, datasets: [line('Tempó', p.pace, palette[3])] },
+                        options: { plugins: { legend: { display: false },
+                                       tooltip: { callbacks: { label: function (c) { return clock(c.parsed.y) + ' /km'; } } } },
+                                   scales: { y: { reverse: true, ticks: { callback: function (v) { return clock(v); } } } } } });
+                }
+                if (hasValue(p.speed)) {
+                    show('card-speed'); any = true;
+                    chart('speed-chart', { type: 'line',
+                        data: { labels: p.labels, datasets: [line('Sebesség', p.speed, palette[3])] },
+                        options: { plugins: { legend: { display: false } } } });
+                }
+                if (!any) { show('card-none'); }
+            }
+
+            // ---- testtömeg ----
+            if (data.bodyWeight) {
+                chart('bodyweight-chart', { type: 'line',
+                    data: { labels: data.bodyWeight.labels, datasets: [{ label: 'Testtömeg', data: data.bodyWeight.values,
+                        borderColor: palette[1], backgroundColor: palette[1], tension: .25, spanGaps: true }] },
+                    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } } });
+            }
+        })();
+    </script>
+</main>
+</body>
+</html>

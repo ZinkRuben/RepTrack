@@ -5,6 +5,7 @@ import hu.reptrack.domain.Goal;
 import hu.reptrack.dto.BodyWeightPoint;
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.ExerciseCategory;
+import hu.reptrack.dto.ExerciseOption;
 import hu.reptrack.dto.ExerciseProgressPoint;
 import hu.reptrack.dto.GoalProgress;
 import hu.reptrack.dto.GoalSnapshot;
@@ -93,6 +94,11 @@ public class StatisticsService {
             }
         }
         return StatisticsCalculator.goalProgress(snapshots, statistics.findBodyWeights(userId), sets);
+    }
+
+    /** A felhasználó gyakorlatai, amelyekből van szettje (a fejlődési görbe gyakorlatválasztójához). */
+    public List<ExerciseOption> usedExercises(Long userId) {
+        return statistics.findUsedExercises(userId);
     }
 
     // ---- segédek ----
