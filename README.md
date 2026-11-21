@@ -16,6 +16,20 @@ docker-compose up -d        # PostgreSQL (localhost:5432, reptrack/reptrack)
 ./mvnw spring-boot:run      # alkalmazás: http://localhost:8080
 ```
 
+### Első adminisztrátor
+
+Induláskor jön létre, ha még nincs adminisztrátor, a `REPTRACK_ADMIN_EMAIL`, `REPTRACK_ADMIN_PASSWORD`
+(és opcionálisan `REPTRACK_ADMIN_NAME`) környezeti változókból. Helyben a legegyszerűbb a `.env` fájl, amely nem kerül
+a repóba:
+
+```bash
+cp .env.example .env        # majd írd be a saját e-mail-címed és egy erős jelszót
+./mvnw spring-boot:run      # a naplóban: "Adminisztrátori fiók létrehozva: …"
+```
+
+Ha már van adminisztrátor, a változókat figyelmen kívül hagyja (a jelszavát sem írja át), így létrehozás után a jelszó
+törölhető a `.env`-ből. Hibás adatnál vagy ha a cím egy meglévő fiókhoz tartozik, az alkalmazás nem indul el.
+
 ## Tesztek
 
 ```bash

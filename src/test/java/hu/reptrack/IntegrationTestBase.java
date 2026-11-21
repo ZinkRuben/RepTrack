@@ -8,8 +8,11 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * Közös ős az integrációs teszteknek: a tesztek valódi PostgreSQL-lel, a Flyway migrációkkal futnak.
  * A konténer egyszer indul el az összes tesztosztályra (a Spring újrahasznosítja a kontextust,
  * ezért nem szabad osztályonként leállítani).
+ *
+ * <p>Az első admin adatai üresek: a fejlesztő saját .env fájlja így nem hoz létre adminisztrátort a tesztadatbázisban
+ * (az AdminBootstrap tesztjei a futtatót közvetlenül hívják, tranzakcióban).
  */
-@SpringBootTest
+@SpringBootTest(properties = {"reptrack.admin.email=", "reptrack.admin.password="})
 public abstract class IntegrationTestBase {
 
     @ServiceConnection
