@@ -20,7 +20,8 @@
         </button>
 
         <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav me-auto" sec:authorize="isAuthenticated()">
+            <!-- hasRole('USER'): a szerepkör-hierarchia miatt az adminisztrátor is látja -->
+            <ul class="navbar-nav me-auto" sec:authorize="hasRole('USER')">
                 <li th:replace="~{fragments/navbar :: navLink('/exercises', 'Gyakorlatok')}"></li>
             </ul>
 
