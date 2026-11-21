@@ -168,7 +168,8 @@ module.exports = function (c) {
 
   out.push(h2("4.6 Konfiguráció és indulás (`hu.reptrack.config`)"));
   out.push(...bullets([
-    "**`SecurityConfig`**: a szűrőlánc, az URL-szabályok, a szerepkör-hierarchia (ADMIN > USER), a BCrypt kódoló (7. fejezet).",
+    "**`SecurityConfig`**: a szűrőlánc, az URL-szabályok, a szerepkör-hierarchia (ADMIN > USER), a BCrypt kódoló, HTTPS esetén a HTTP→HTTPS átirányítás és a HSTS-beállítás (7. fejezet).",
+    "**`HttpsConfig`**: HTTPS esetén (docker profil) egy második, sima HTTP-csatlakozót nyit, amely csak az átirányításra való.",
     "**`ClockConfig`**: a `Clock` bean, amelyet az időfüggő szolgáltatások használnak.",
     "**`DotEnvEnvironmentPostProcessor`**: a `.env` fájl beolvasása a Spring környezetébe (a `META-INF/spring.factories` regisztrálja).",
     "**`AdminBootstrap`**: indulás után létrehozza az első adminisztrátort a `REPTRACK_ADMIN_*` változókból, ha még nincs adminisztrátor. Ha már van, nem történik semmi (a jelszót sem írja át); hibás adatnál az alkalmazás nem indul el; a jelszó nem kerül a naplóba.",

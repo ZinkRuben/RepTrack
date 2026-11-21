@@ -11,7 +11,7 @@ module.exports = function (c) {
     ["Hitelesítés", "Spring Security űrlapos bejelentkezés e-mail-címmel és jelszóval, saját `/login` oldalon. A felhasználót az `AccountDetailsService` tölti be az adatbázisból; a letiltott fiók (`enabled = false`) nem léphet be."],
     ["Jelszótárolás", "BCrypt hash a `password_hash` oszlopban; a jelszó legalább 8 karakter, legfeljebb 72 bájt (a BCrypt határa). A jelszó sehol nem kerül a naplóba."],
     ["Hibaüzenetek", "Hibás e-mail-címre és hibás jelszóra ugyanaz az üzenet jelenik meg, így nem derül ki, mely címek regisztráltak."],
-    ["Munkamenet", "Szerveroldali munkamenet; bejelentkezéskor új munkamenet-azonosító jön létre (session fixation elleni védelem, a Spring Security alapja). A kijelentkezés csak POST kéréssel és tokennel működik."],
+    ["Munkamenet", "Szerveroldali munkamenet; bejelentkezéskor új munkamenet-azonosító jön létre (session fixation elleni védelem, a Spring Security alapja). A süti HTTPS-en `secure` jelzésű. A kijelentkezés csak POST kéréssel és tokennel működik."],
     ["CSRF", "Bekapcsolva; minden `th:action` űrlap automatikusan megkapja a tokent, a token nélküli módosító kérés elutasításra kerül."],
     ["Jogosultság", "URL-szabályok: a nyitóoldal, a bejelentkezés, a regisztráció, a hibaoldal és a statikus fájlok nyilvánosak; az `/admin/**` ADMIN szerepkört kér; minden más USER-t. Szerepkör-hierarchia: ADMIN > USER. A közös gyakorlatokat kezelő szolgáltatásmetódusokat metódusszintű `@PreAuthorize(\"hasRole('ADMIN')\")` is védi (`@EnableMethodSecurity`)."],
     ["Tulajdonos-ellenőrzés", "Minden szolgáltatásművelet a bejelentkezett felhasználó azonosítójával dolgozik; idegen adat „nem található” (404). A testtömeg- és pulzusadatokat csak a tulajdonosuk éri el, az adminisztrátor sem (nincs ilyen funkció)."],
@@ -20,10 +20,10 @@ module.exports = function (c) {
     ["XSS", "A Thymeleaf `th:text` minden kimenetet escape-el; `th:utext` sehol nincs használatban."],
     ["Titkok", "Az adatbázis-jelszó és az első adminisztrátor adatai környezeti változóban vagy a tárolón kívüli `.env` fájlban vannak. Az adminisztrátor létrehozása után a jelszó törölhető a `.env`-ből."],
     ["Hibaoldalak", "Egységes hibaoldal; nem jelenít meg veremnyomot vagy technikai részleteket."],
-    ["HTTPS", "A specifikáció szerint kötelező. A fejlesztői üzemmód HTTP-n fut; éles üzemben a TLS-t a szerver előtti reverse proxy vagy a Spring Boot SSL-beállítása adja (tervezett, 11. fejezet)."],
+    ["HTTPS", "A Docker-futtatás a 8443-as porton HTTPS-t szolgál ki önaláírt tanúsítvánnyal (első induláskor készül, véletlen jelszóval, kötetben marad). A 8080-as porton érkező HTTP-kérések HTTPS-re irányítódnak. A HSTS fejléc kapcsolható (önaláírt tanúsítványnál alapból ki van kapcsolva). A tanúsítvány és a jelszava nem kerül a tárolóba."],
   ], [2000, 7026], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
-  out.push(note("Ismert korlát: a CDN-ről töltött Chart.js-hez még nincs Subresource Integrity (SRI) hash megadva, és a HTTPS beállítása még hátra van. Mindkettő a telepítési környezet véglegesítésekor zárható le."));
+  out.push(note("Ismert korlát: a CDN-ről töltött Chart.js-hez még nincs Subresource Integrity (SRI) hash megadva, és az önaláírt tanúsítványt a böngésző első alkalommal figyelmeztetéssel fogadja; éles üzemben hiteles tanúsítvány kell."));
 
   // ------------------------------------------------------------------------------------------------ 8.
   out.push(h1("8. Felhasználói felület és dizájn"));
@@ -54,12 +54,12 @@ module.exports = function (c) {
   // ------------------------------------------------------------------------------------------------ 9.
   out.push(h1("9. Tesztelés"));
   out.push(p("A tesztstratégia a rétegekhez igazodik. A tiszta szabály-komponenseket adatbázis nélkül, gyorsan teszteljük; minden más (szolgáltatások, adatelérés, séma) **valódi PostgreSQL-lel** fut Testcontainers segítségével. A tesztek egyetlen, közös PostgreSQL 16 konténert használnak (`IntegrationTestBase`), így a Flyway-migrációk, a megszorítások és a lekérdezések a tesztekben is a valós sémán futnak."));
-  out.push(tcap("A tesztek összetétele (250 teszt a dokumentum készítésekor)"));
+  out.push(tcap("A tesztek összetétele (255 teszt a dokumentum készítésekor)"));
   out.push(table(["Réteg", "Mit ellenőriznek", "Eszköz", "Darab"], [
     ["Szabályok (`rules`)", "PR-felismerés, túlterhelési szabályok, statisztikák, képletek (határesetekkel); tiszta egységtesztek", "JUnit 5", "69"],
     ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése", "Spring Boot Test, Testcontainers", "87"],
     ["Adatelérés és séma (`repository`)", "a CHECK, UNIQUE és idegen kulcs megszorítások tényleges kikényszerítése, a 50 gyakorlatos alapadat épsége, lekérdezések", "Testcontainers", "37"],
-    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés", "MockMvc, Spring Security Test", "44"],
+    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, HTTP→HTTPS átirányítás", "MockMvc, Spring Security Test", "49"],
     ["Konfiguráció (`config`)", "az első adminisztrátor létrehozása indulásnál, a `.env` beolvasása", "JUnit 5, Spring Boot Test", "12"],
     ["Alkalmazás indulása", "a Spring-kontextus hiba nélkül betöltődik", "Spring Boot Test", "1"],
   ], [2300, 4300, 1700, 726], { size: 18 }));
@@ -79,10 +79,11 @@ module.exports = function (c) {
     "Maven nem kell, a projekt Maven wrappert (`./mvnw`) tartalmaz.",
   ]));
   out.push(...code([
-    "docker-compose up -d        # PostgreSQL: localhost:5432",
-    "./mvnw spring-boot:run      # az alkalmazás: http://localhost:8080",
-    "./mvnw verify               # tesztek",
-    "./mvnw clean package        # futtatható JAR a target/ mappába",
+    "docker compose up -d --build   # teljes rendszer: https://localhost:8443",
+    "docker compose up -d db        # fejlesztéshez: csak a PostgreSQL (5432)",
+    "./mvnw spring-boot:run         # helyi indítás: http://localhost:8080",
+    "./mvnw verify                  # tesztek (Docker kell)",
+    "./mvnw clean package           # futtatható JAR a target/ mappába",
   ]));
   out.push(p("A telepítés részletes lépéseit a külön **Telepítési dokumentáció** írja le."));
 
@@ -93,7 +94,10 @@ module.exports = function (c) {
     ["`DB_USER`, `DB_PASSWORD`", "`reptrack`, `reptrack`", "adatbázis-hozzáférés (fejlesztési alapérték; éles üzemben felülírandó)"],
     ["`REPTRACK_ADMIN_EMAIL`, `REPTRACK_ADMIN_PASSWORD`", "(nincs)", "az első adminisztrátor adatai; csak akkor használja, ha még nincs adminisztrátor"],
     ["`REPTRACK_ADMIN_NAME`", "Adminisztrátor", "az első adminisztrátor megjelenített neve"],
-    ["`SERVER_PORT`", "8080", "a HTTP-port (Spring Boot szabványos beállítás)"],
+    ["`SERVER_PORT`", "8080", "a HTTP-port helyi indításnál (Spring Boot szabványos beállítás)"],
+    ["`HTTPS_PORT`, `HTTP_PORT`", "8443, 8080", "a Docker-futtatás gazdagépen kiadott portjai (az átirányítás is ezekre mutat)"],
+    ["`REPTRACK_HTTPS_HSTS`", "false", "a HSTS fejléc; valódi domainnél és tanúsítványnál kapcsolható be"],
+    ["`SERVER_SSL_KEY_STORE_PASSWORD`", "(a konténer készíti)", "saját tanúsítvány (`reptrack.p12`) esetén annak jelszava"],
     ["`reptrack.timezone`", "Europe/Budapest", "a hét- és hónaphatárok, a napi bontás időzónája"],
   ], [3100, 2900, 3026], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
@@ -113,7 +117,7 @@ module.exports = function (c) {
     ["Fiókkezelés (UC13)", "az adminisztrátori fiókkezelés (listázás, tiltás, jelszó-visszaállítás) még nem készült el", "fiókok kezelése az `/admin/**` alatt"],
     ["Fiók és adatok törlése (UC14)", "az adatbázis kaszkádolt törlése kész, a felület nincs meg", "megerősítéssel védett törlés"],
     ["Edzéssablonok (UC15)", "entitások és repository-k kész; szolgáltatás és felület hiányzik", "sablon mentése, szerkesztése, edzés indítása sablonból"],
-    ["HTTPS, Docker Compose", "a Compose csak az adatbázist indítja; HTTPS nincs beállítva", "teljes verem Compose-szal, TLS reverse proxyval"],
+    ["Tanúsítvány", "a HTTPS önaláírt tanúsítványt használ, a böngésző első alkalommal figyelmeztet", "hiteles tanúsítvány (pl. Let's Encrypt) valódi domainhez"],
     ["Demófelhasználó", "mintaadatokkal feltöltött felhasználó nincs", "bemutatható, több hónapnyi adat"],
     ["Állóképességi cél", "a haladása nincs definiálva, csak a célt jelenítjük meg", "távolság- vagy időalapú célérték"],
     ["Egyidejű mentés", "ha két kérés a verzióellenőrzés után, pontosan egyszerre ér az adatbázishoz, a JPA verzióütközése az általános hibaoldalon jelenik meg a 409-es üzenet helyett", "az ütközés kivételének leképezése 409-re"],
@@ -134,7 +138,7 @@ module.exports = function (c) {
   ]));
   out.push(h2("12.2 Technikai fejlesztések"));
   out.push(...bullets([
-    "**Üzemeltetés:** a teljes verem Docker Compose-szal, HTTPS reverse proxyval, folyamatos integráció (build és tesztek minden pull requestnél), Actuator-alapú állapot- és metrikavégpontok.",
+    "**Üzemeltetés:** hiteles tanúsítvány és domain, folyamatos integráció (build és tesztek minden pull requestnél), Actuator-alapú állapot- és metrikavégpontok.",
     "**REST API (JSON):** mobilalkalmazás vagy külső kliens számára; a szolgáltatási réteg változtatás nélkül újrahasznosítható, mert a webes réteg csak DTO-kat használ.",
     "**Teljesítmény:** a statisztikák gyorsítótárazása nagy adatmennyiségnél (az újraszámolás az edzésmentésre érvényteleníthető), nagyobb adatkészletekhez az összesítések adatbázis-oldali aggregálása.",
     "**Offline használat:** a statikus erőforrások helyi csomagolása, majd PWA-támogatás, hogy az edzés internet nélkül is rögzíthető legyen.",
@@ -152,7 +156,7 @@ module.exports = function (c) {
     "a **tulajdonos-ellenőrzés mint alapelv**: minden művelet a bejelentkezett felhasználó azonosítójával dolgozik;",
     "az **optimista zárolás** és az **egy tranzakcióban végzett mentés és kiértékelés**, amelyek a párhuzamos használatnál is konzisztensen tartják az adatot.",
   ]));
-  out.push(p("Néhány funkció még hátra van (fiókkezelés, fióktörlés, sablonok, HTTPS és a teljes Docker-csomagolás); ezeket a 11. fejezet sorolja fel. A rétegelt felépítés miatt ezek a meglévő kód módosítása nélkül, új szolgáltatásként és felületként illeszthetők be, a 12. fejezet pedig további irányokat mutat."));
+  out.push(p("Néhány funkció még hátra van (fiókkezelés, fióktörlés, sablonok és a demófelhasználó); ezeket a 11. fejezet sorolja fel. A rétegelt felépítés miatt ezek a meglévő kód módosítása nélkül, új szolgáltatásként és felületként illeszthetők be, a 12. fejezet pedig további irányokat mutat."));
 
   // ------------------------------------------------------------------------------------------------ függelék
   out.push(h1("Függelék: Képletek és definíciók"));

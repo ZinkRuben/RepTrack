@@ -402,12 +402,13 @@ def deployment():
     box(ax, 8, 75, 44, 17, "white", "Webböngésző", ["HTML, Bootstrap 5, Chart.js", "asztali gép vagy telefon"], tsize=12)
     zone(ax, 64, 72, 54, 27, "gray", "Külső tartalomszolgáltató (CDN)")
     box(ax, 70, 75, 42, 17, "white", "jsDelivr", ["Bootstrap, Bootstrap Icons,", "Chart.js, Inter betűtípus"], tsize=12)
-    zone(ax, 2, 33, 116, 33, "blue", "Alkalmazásszerver (Java 21 JVM)")
+    zone(ax, 2, 33, 116, 33, "blue", "Docker-konténer: reptrack-app (Java 21 JRE)")
     box(ax, 8, 36, 64, 22, "white", "reptrack – Spring Boot alkalmazás",
-        ["beágyazott Tomcat (HTTP, 8080-as port)", "web → service → repository rétegek", "Flyway: a séma migrálása induláskor"], tsize=12)
+        ["beágyazott Tomcat: HTTPS (8443-as port)", "HTTP (8080): átirányítás HTTPS-re", "web → service → repository, Flyway induláskor",
+         "önaláírt tanúsítvány: reptrack-certs kötet"], tsize=12, bsize=10)
     box(ax, 80, 36, 33, 22, "orange", ".env / környezeti változók",
-        ["DB_URL, DB_USER, DB_PASSWORD,", "REPTRACK_ADMIN_EMAIL,", "REPTRACK_ADMIN_PASSWORD"], tsize=11, bsize=9.5)
-    zone(ax, 2, 2, 116, 26, "green", "Adatbázis-szerver (Docker-konténer)")
+        ["DB_*, REPTRACK_ADMIN_*,", "HTTP_PORT, HTTPS_PORT,", "REPTRACK_HTTPS_HSTS"], tsize=11, bsize=9.5)
+    zone(ax, 2, 2, 116, 26, "green", "Docker-konténer: reptrack-db")
     box(ax, 8, 5, 64, 16, "white", "PostgreSQL 16", ["reptrack adatbázis (5432-es port)"], tsize=12)
     box(ax, 80, 5, 33, 16, "white", "Docker volume", ["reptrack-db-data"], tsize=11)
 
@@ -415,7 +416,7 @@ def deployment():
         arrowstyle="<|-|>", color="#333333", lw=1.8, linestyle="--" if dashed else "-", shrinkA=0, shrinkB=0,
         mutation_scale=16))
     arrow2((30, 75), (30, 58))
-    ax.text(32, 69, "HTTP(S): oldalak, űrlapok, válaszok", fontsize=10, style="italic", va="center")
+    ax.text(32, 69, "HTTPS (8443): oldalak, űrlapok, válaszok", fontsize=10, style="italic", va="center")
     arrow(ax, (52, 83.5), (70, 83.5), dashed=True)
     ax.text(61, 86, "statikus\nerőforrások", fontsize=9.5, style="italic", ha="center", va="bottom")
     arrow(ax, (80, 47), (72, 47), dashed=True)

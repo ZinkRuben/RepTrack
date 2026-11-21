@@ -92,7 +92,8 @@ module.exports = function (c) {
     ["Adatelérés", "Spring Data JPA (Hibernate 7), JPQL, Criteria API", "paraméterezett lekérdezések"],
     ["Adatbázis", "PostgreSQL 16", "fejlesztéskor Docker konténerben"],
     ["Séma-verziózás", "Flyway (V1–V4)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
-    ["Biztonság", "Spring Security 7", "űrlapos bejelentkezés, BCrypt, CSRF, szerepkör-hierarchia"],
+    ["Biztonság", "Spring Security 7", "űrlapos bejelentkezés, BCrypt, CSRF, szerepkör-hierarchia, HTTPS"],
+    ["Üzemeltetés", "Docker, Docker Compose", "többlépcsős Dockerfile; az alkalmazás és a PostgreSQL egy paranccsal indul"],
     ["Tesztelés", "JUnit 5, Spring Boot Test, Testcontainers, Spring Security Test", "valódi PostgreSQL a tesztekben"],
     ["Verziókezelés", "Git, GitHub", "feature-ágak, pull request és áttekintés"],
   ], [1700, 3700, 3626], { size: 19 }));
@@ -105,7 +106,6 @@ module.exports = function (c) {
     ["Diagramok adatai", "JSON végpontok", "a szerver az összesített adatsorokat JSON-ként beágyazza az oldalba", "egyetlen kérés, nincs külön REST-felület; ugyanaz a védelem, mint az oldalé"],
     ["Célhaladás helye", "a statisztikai oldalon", "a „Profil és célok” oldalon, a cél mellett", "a cél és a haladása egy helyen látszik"],
     ["A BLL tesztelése", "Mockito egységtesztek", "szabályok: tiszta egységtesztek; szolgáltatások: integrációs tesztek valódi PostgreSQL-lel", "a szolgáltatások logikája az adatbázishoz (megszorítások, lekérdezések) kötődik, ezt mock nem ellenőrzi"],
-    ["HTTPS, Docker Compose", "alkalmazás és adatbázis konténerben, HTTPS", "Docker Compose csak az adatbázist futtatja; HTTPS: tervezett", "lásd a 7. és 11. fejezetet"],
     ["Demófelhasználó", "néhány hónapnyi mintaadat", "tervezett", "az 50 gyakorlatos alapadatbázis már megvan"],
   ], [1500, 2000, 2900, 2626], { size: 19 }));
 
@@ -148,12 +148,12 @@ module.exports = function (c) {
   out.push(h2("3.4 Telepítési nézet"));
   out.push(...FIG("telepitesi-nezet", 15, "Telepítési nézet"));
   out.push(...bullets([
-    "Az alkalmazás **egyetlen Spring Boot JAR**, beágyazott Tomcat-tel (alapértelmezetten a 8080-as porton).",
-    "Az adatbázis **PostgreSQL 16**; fejlesztéskor a `docker-compose.yml` Docker konténerben indítja, a `reptrack-db-data` kötettel, hogy az adatok újraindítás után is megmaradjanak.",
+    "Az alkalmazás **egyetlen Spring Boot JAR**, beágyazott Tomcat-tel. A `Dockerfile` kétlépcsős: JDK-val fordít, majd egy csak JRE-t tartalmazó, nem root felhasználóval futó képbe csomagolja.",
+    "A `docker-compose.yml` két szolgáltatást indít: az `app` az alkalmazás, a `db` pedig a **PostgreSQL 16** a `reptrack-db-data` kötettel, állapotellenőrzéssel. Az alkalmazás csak az adatbázis egészséges állapota után indul, így az adatok újraindítás után is megmaradnak.",
+    "**HTTPS:** az alkalmazás a 8443-as porton szolgál ki HTTPS-sel. Az önaláírt tanúsítványt a konténer az első induláskor készíti (`docker/entrypoint.sh`, véletlen jelszóval, a `reptrack-certs` kötetbe), így újraindítás után ugyanaz marad. A 8080-as porton csak egy átirányító csatlakozó figyel, amely minden HTTP-kérést HTTPS-re irányít (`HttpsConfig`, `SecurityConfig`). A munkamenet-süti `secure` jelzésű.",
     "Induláskor a **Flyway** végrehajtja a hiányzó migrációkat, majd a Hibernate ellenőrzi, hogy az entitások megfelelnek-e a sémának (`ddl-auto=validate`); eltérésnél az alkalmazás nem indul el.",
-    "A konfigurációt **környezeti változók** vagy a (tárolón kívüli) `.env` fájl adja (10. fejezet).",
+    "A konfigurációt a **`.env` fájl** és a környezeti változók adják (10. fejezet). Fejlesztéskor az alkalmazás helyi JDK-val, sima HTTP-n is indítható; ilyenkor a Compose csak az adatbázist futtatja.",
     "A böngésző a Bootstrap, a Chart.js, az ikonok és a betűtípus fájljait **CDN-ről** tölti le; az alkalmazásadatok nem mennek a CDN felé.",
-    "A **HTTPS** a specifikáció szerint kötelező; a TLS lezárása a szerver előtti reverse proxyban vagy a Spring Boot SSL-beállításával történik (tervezett, lásd a 7. és 11. fejezetet).",
   ]));
 
   out.push(h2("3.5 Egy kérés útja"));
