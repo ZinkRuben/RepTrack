@@ -22,7 +22,9 @@
         <div class="collapse navbar-collapse" id="mainNav">
             <!-- hasRole('USER'): a szerepkör-hierarchia miatt az adminisztrátor is látja -->
             <ul class="navbar-nav me-auto" sec:authorize="hasRole('USER')">
+                <li th:replace="~{fragments/navbar :: navLink('/workouts', 'Edzésnapló')}"></li>
                 <li th:replace="~{fragments/navbar :: navLink('/exercises', 'Gyakorlatok')}"></li>
+                <li th:replace="~{fragments/navbar :: navLink('/records', 'Csúcsok')}"></li>
             </ul>
 
             <!-- bejelentkezett felhasználó -->

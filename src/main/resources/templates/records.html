@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title>Egyéni csúcsok – RepTrack</title></head>
+<body>
+
+<main class="container py-4">
+    <h1 class="h3 mb-3">Egyéni csúcsok</h1>
+    <p class="text-body-secondary small">
+        Egy eredmény akkor csúcs, ha szigorúan jobb a korábbiaknál; az első eredmény nem számít csúcsnak.
+    </p>
+
+    <div class="alert alert-info" th:if="${records.isEmpty()}">
+        Még nincs egyéni csúcsod. Rögzíts több edzést, és amint megdöntöd egy korábbi eredményedet, itt látod.
+    </div>
+
+    <div class="table-responsive" th:unless="${records.isEmpty()}">
+        <table class="table table-hover align-middle bg-body">
+            <thead>
+            <tr><th>Dátum</th><th>Gyakorlat</th><th>Csúcs</th><th class="text-end">Eredmény</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${records}">
+                <td class="text-nowrap" th:text="${#temporals.format(r.date(), 'yyyy. MM. dd.')}">2026. 11. 21.</td>
+                <td class="fw-semibold" th:text="${r.exerciseName()}">Guggolás</td>
+                <td th:text="${r.label()}">Becsült 1RM</td>
+                <td class="text-end fw-semibold" th:text="${r.value()}">122,5 kg</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" th:if="${r.workoutId() != null}"
+                       th:href="@{/workouts/{id}(id=${r.workoutId()})}">Edzés</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

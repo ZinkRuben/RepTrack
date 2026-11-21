@@ -7,6 +7,7 @@ import hu.reptrack.domain.WorkoutExercise;
 import hu.reptrack.domain.WorkoutSet;
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.ExerciseCategory;
+import hu.reptrack.dto.ExerciseOption;
 import hu.reptrack.dto.NotFoundException;
 import hu.reptrack.dto.StaleDataException;
 import hu.reptrack.dto.WorkoutExerciseRequest;
@@ -15,12 +16,15 @@ import hu.reptrack.dto.WorkoutRequest;
 import hu.reptrack.dto.WorkoutSetRequest;
 import hu.reptrack.dto.WorkoutSummary;
 import hu.reptrack.dto.WorkoutView;
+import hu.reptrack.repository.ExerciseOptionRepository;
 import hu.reptrack.repository.ExerciseRepository;
 import hu.reptrack.repository.UserRepository;
 import hu.reptrack.repository.WorkoutRepository;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,14 +58,17 @@ public class WorkoutService {
     private final UserRepository users;
     private final PersonalRecordService personalRecords;
     private final OverloadService overload;
+    private final ExerciseOptionRepository exerciseOptions;
 
     public WorkoutService(WorkoutRepository workouts, ExerciseRepository exercises, UserRepository users,
-                          PersonalRecordService personalRecords, OverloadService overload) {
+                          PersonalRecordService personalRecords, OverloadService overload,
+                          ExerciseOptionRepository exerciseOptions) {
         this.workouts = workouts;
         this.exercises = exercises;
         this.users = users;
         this.personalRecords = personalRecords;
         this.overload = overload;
+        this.exerciseOptions = exerciseOptions;
     }
 
     /** Új edzés rögzítése. A gyakorlatok és szettek sorrendjét a listák sorrendje adja. */
@@ -168,6 +175,27 @@ public class WorkoutService {
                 ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "startedAt"))
                 : pageable;
         return workouts.search(userId, filter, effective);
+    }
+
+    /**
+     * Az edzés űrlapján választható gyakorlatok: a felhasználó közös és saját, nem archivált gyakorlatai. Az
+     * {@code alsoInclude} azonosítójú gyakorlatok akkor is szerepelnek, ha archiváltak (egy meglévő edzés szerkesztéséhez).
+     */
+    @Transactional(readOnly = true)
+    public List<ExerciseOption> exerciseOptions(Long userId, Collection<Long> alsoInclude) {
+        List<ExerciseOption> options = new ArrayList<>(exerciseOptions.findAvailable(userId));
+        Set<Long> present = new HashSet<>();
+        options.forEach(o -> present.add(o.id()));
+        for (Long id : alsoInclude) {
+            if (present.add(id)) {
+                exercises.findById(id)
+                        .filter(e -> e.getOwner() == null || e.getOwner().getId().equals(userId))
+                        .ifPresent(e -> options.add(new ExerciseOption(e.getId(), e.getName(), e.getCategory(),
+                                e.isTracksWeight(), e.isTracksReps(), e.isTracksDuration(), e.isTracksDistance(),
+                                e.isTracksHeartRate(), e.getOwner() == null)));
+            }
+        }
+        return options;
     }
 
     // ---- belső segédek ----
