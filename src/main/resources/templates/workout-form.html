@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title th:text="${workoutId == null} ? 'Új edzés – RepTrack' : 'Edzés szerkesztése – RepTrack'">Edzés – RepTrack</title></head>
+<body>
+
+<main class="container py-4">
+    <nav aria-label="Navigáció" class="mb-2 small">
+        <a th:href="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}"
+           class="text-decoration-none">← Vissza</a>
+    </nav>
+    <h1 class="h3 mb-3" th:text="${workoutId == null} ? 'Új edzés' : 'Edzés szerkesztése'">Új edzés</h1>
+
+    <form id="workout-form" method="post"
+          th:action="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}">
+        <input type="hidden" name="version" th:if="${form.version != null}" th:value="${form.version}">
+
+        <!-- az edzés alapadatai -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="title">Megnevezés</label>
+                        <input class="form-control" id="title" name="title" type="text" maxlength="120" required
+                               th:value="${form.title}">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" for="startedAt">Kezdés</label>
+                        <input class="form-control" id="startedAt" name="startedAt" type="datetime-local" required
+                               th:value="${form.startedAt}">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" for="endedAt">Befejezés</label>
+                        <input class="form-control" id="endedAt" name="endedAt" type="datetime-local"
+                               th:value="${form.endedAt}">
+                        <div class="form-text">Üresen hagyva az edzés nyitott marad.</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" for="fatigue">Fáradtság (1–10)</label>
+                        <input class="form-control" id="fatigue" name="fatigue" type="number" min="1" max="10" step="1"
+                               th:value="${form.fatigue}">
+                        <div class="form-text">Lezárt edzéshez kötelező.</div>
+                    </div>
+                    <div class="col-12 col-md-9">
+                        <label class="form-label" for="notes">Megjegyzés</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2" maxlength="2000"
+                                  th:text="${form.notes}"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- gyakorlatok -->
+        <h2 class="h5">Gyakorlatok</h2>
+        <div id="blocks"></div>
+        <p id="empty-hint" class="text-body-secondary">Még nincs gyakorlat. Válassz egyet lent, és add hozzá.</p>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <label class="form-label" for="exercise-picker">Gyakorlat hozzáadása</label>
+                <div class="input-group">
+                    <select class="form-select" id="exercise-picker"></select>
+                    <button class="btn btn-outline-primary" type="button" id="add-exercise">+ Hozzáadás</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mb-5">
+            <button class="btn btn-primary btn-lg" type="submit">Mentés</button>
+            <a class="btn btn-outline-secondary btn-lg"
+               th:href="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}">Mégse</a>
+        </div>
+    </form>
+
+    <!-- a szkript adatai: a választható gyakorlatok és a már kitöltött blokkok (szerkesztésnél, hibás mentés után) -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.CATALOG = /*[[${catalog}]]*/ [];
+        window.INITIAL = /*[[${initialBlocks}]]*/ [];
+        /*]]>*/
+    </script>
+
+    <script th:inline="none">
+        (function () {
+            const catalog = window.CATALOG || [];
+            const initial = window.INITIAL || [];
+            const byId = {};
+            catalog.forEach(function (c) { byId[c.id] = c; });
+
+            const form = document.getElementById('workout-form');
+            const blocksEl = document.getElementById('blocks');
+            const picker = document.getElementById('exercise-picker');
+            const hint = document.getElementById('empty-hint');
+
+            // ---- a választó: kategóriánként csoportosítva ----
+            const groups = {};
+            catalog.forEach(function (c) {
+                if (!groups[c.categoryLabel]) {
+                    groups[c.categoryLabel] = document.createElement('optgroup');
+                    groups[c.categoryLabel].label = c.categoryLabel;
+                    picker.appendChild(groups[c.categoryLabel]);
+                }
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name + (c.shared ? '' : ' (saját)');
+                groups[c.categoryLabel].appendChild(opt);
+            });
+
+            // ---- segédek ----
+            function el(tag, props, children) {
+                const node = document.createElement(tag);
+                Object.keys(props || {}).forEach(function (k) {
+                    if (k === 'class') { node.className = props[k]; }
+                    else if (k === 'text') { node.textContent = props[k]; }
+                    else { node.setAttribute(k, props[k]); }
+                });
+                (children || []).forEach(function (c) { node.appendChild(c); });
+                return node;
+            }
+
+            // A szett mezői: melyik gyakorlatnál látszik, milyen korlátokkal, kötelező-e (a szerver is ellenőrzi).
+            function fieldsFor(ex) {
+                const weightLabel = ex.category === 'BODYWEIGHT' ? 'Külső terhelés (kg)' : 'Súly (kg)';
+                return [
+                    { key: 'weightKg', label: weightLabel, show: ex.w, req: ex.w && ex.category === 'WEIGHTS',
+                      attrs: { type: 'number', min: '0', max: '500', step: 'any' } },
+                    { key: 'reps', label: 'Ismétlés', show: ex.r, req: ex.r,
+                      attrs: { type: 'number', min: '1', max: '100', step: '1' } },
+                    { key: 'durationMin', label: 'Idő (perc)', show: ex.d, req: ex.d,
+                      attrs: { type: 'number', min: '0.01', step: 'any' } },
+                    { key: 'distanceKm', label: 'Táv (km)', show: ex.k, req: false,
+                      attrs: { type: 'number', min: '0.001', step: 'any' } },
+                    { key: 'avgHeartRate', label: 'Átl. pulzus', show: ex.h, req: false,
+                      attrs: { type: 'number', min: '30', max: '230', step: '1' } },
+                    { key: 'maxHeartRate', label: 'Max. pulzus', show: ex.h, req: false,
+                      attrs: { type: 'number', min: '30', max: '230', step: '1' } }
+                ].filter(function (f) { return f.show; });
+            }
+
+            function refresh() {
+                const n = blocksEl.querySelectorAll('.ex-block').length;
+                hint.style.display = n === 0 ? '' : 'none';
+                blocksEl.querySelectorAll('.ex-block').forEach(function (b, i, all) {
+                    b.querySelector('.move-up').disabled = i === 0;
+                    b.querySelector('.move-down').disabled = i === all.length - 1;
+                });
+                blocksEl.querySelectorAll('.ex-block').forEach(function (b) {
+                    b.querySelectorAll('.set-row').forEach(function (row, j) {
+                        row.querySelector('.set-no').textContent = String(j + 1);
+                    });
+                });
+            }
+
+            // ---- szett sor ----
+            function addSet(block, ex, values) {
+                const tbody = block.querySelector('tbody');
+                const rows = tbody.querySelectorAll('.set-row');
+                // új szett az előzőből indul (a legtöbbször ugyanazt ismétli a felhasználó)
+                const previous = rows.length ? rows[rows.length - 1] : null;
+                const row = el('tr', { 'class': 'set-row' });
+                row.appendChild(el('td', { 'class': 'set-no text-body-secondary align-middle', text: '' }));
+                fieldsFor(ex).forEach(function (f) {
+                    const input = el('input', Object.assign({ 'class': 'form-control form-control-sm', 'data-field': f.key,
+                        'aria-label': f.label }, f.attrs));
+                    if (f.req) { input.required = true; }
+                    let value = values ? values[f.key] : null;
+                    if ((value === null || value === undefined) && !values && previous) {
+                        const prevInput = previous.querySelector('[data-field="' + f.key + '"]');
+                        value = prevInput ? prevInput.value : null;
+                    }
+                    if (value !== null && value !== undefined) { input.value = value; }
+                    row.appendChild(el('td', {}, [input]));
+                });
+                const remove = el('button', { 'class': 'btn btn-sm btn-outline-danger', type: 'button', title: 'Szett törlése', text: '✕' });
+                remove.addEventListener('click', function () { row.remove(); refresh(); });
+                row.appendChild(el('td', { 'class': 'text-end' }, [remove]));
+                tbody.appendChild(row);
+                refresh();
+            }
+
+            // ---- gyakorlat blokk ----
+            function addBlock(exerciseId, data) {
+                const ex = byId[exerciseId];
+                if (!ex) { return; }
+                const block = el('div', { 'class': 'ex-block card shadow-sm mb-3' });
+                const idInput = el('input', { type: 'hidden', 'data-field': 'exerciseId', value: ex.id });
+
+                const up = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-up', type: 'button', title: 'Feljebb', text: '↑' });
+                const down = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-down', type: 'button', title: 'Lejjebb', text: '↓' });
+                const remove = el('button', { 'class': 'btn btn-sm btn-outline-danger', type: 'button', title: 'Gyakorlat törlése', text: 'Törlés' });
+                up.addEventListener('click', function () {
+                    if (block.previousElementSibling) { blocksEl.insertBefore(block, block.previousElementSibling); refresh(); }
+                });
+                down.addEventListener('click', function () {
+                    if (block.nextElementSibling) { blocksEl.insertBefore(block.nextElementSibling, block); refresh(); }
+                });
+                remove.addEventListener('click', function () {
+                    if (confirm('Törlöd a(z) ' + ex.name + ' gyakorlatot a szettjeivel együtt?')) { block.remove(); refresh(); }
+                });
+
+                const header = el('div', { 'class': 'card-header d-flex flex-wrap justify-content-between align-items-center gap-2' }, [
+                    el('div', {}, [
+                        el('strong', { text: ex.name }),
+                        el('span', { 'class': 'badge text-bg-secondary ms-2', text: ex.categoryLabel })
+                    ]),
+                    el('div', { 'class': 'btn-group' }, [up, down, remove])
+                ]);
+
+                const notes = el('input', { 'class': 'form-control form-control-sm', type: 'text', maxlength: '2000',
+                    placeholder: 'Megjegyzés a gyakorlathoz (nem kötelező)', 'data-field': 'notes' });
+                if (data && data.notes) { notes.value = data.notes; }
+
+                const headRow = el('tr', {}, [el('th', { text: '#', style: 'width: 2.5rem;' })]);
+                fieldsFor(ex).forEach(function (f) { headRow.appendChild(el('th', { 'class': 'small fw-normal', text: f.label })); });
+                headRow.appendChild(el('th', {}));
+                const table = el('table', { 'class': 'table table-sm align-middle mb-2' }, [
+                    el('thead', {}, [headRow]), el('tbody', {})
+                ]);
+
+                const addSetBtn = el('button', { 'class': 'btn btn-sm btn-outline-primary', type: 'button', text: '+ Szett' });
+                addSetBtn.addEventListener('click', function () { addSet(block, ex, null); });
+
+                block.appendChild(header);
+                block.appendChild(el('div', { 'class': 'card-body' }, [idInput, notes, el('div', { 'class': 'mt-3 table-responsive' }, [table]), addSetBtn]));
+                blocksEl.appendChild(block);
+
+                const sets = data && data.sets ? data.sets : [];
+                if (sets.length === 0 && !data) { addSet(block, ex, null); }
+                sets.forEach(function (s) { addSet(block, ex, s); });
+                refresh();
+            }
+
+            document.getElementById('add-exercise').addEventListener('click', function () {
+                if (picker.value) { addBlock(picker.value, null); }
+            });
+
+            // ---- küldés: a listák indexeit egymás utánira rendezzük (a szerver kötése ezt várja) ----
+            form.addEventListener('submit', function () {
+                blocksEl.querySelectorAll('.ex-block').forEach(function (block, i) {
+                    block.querySelector('[data-field="exerciseId"]').name = 'exercises[' + i + '].exerciseId';
+                    block.querySelector('[data-field="notes"]').name = 'exercises[' + i + '].notes';
+                    block.querySelectorAll('.set-row').forEach(function (row, j) {
+                        row.querySelectorAll('[data-field]').forEach(function (input) {
+                            input.name = 'exercises[' + i + '].sets[' + j + '].' + input.getAttribute('data-field');
+                        });
+                    });
+                });
+            });
+
+            // ---- kiinduló állapot ----
+            initial.forEach(function (b) { if (b.exerciseId) { addBlock(b.exerciseId, b); } });
+            refresh();
+        })();
+    </script>
+</main>
+</body>
+</html>
