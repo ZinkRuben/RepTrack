@@ -2,12 +2,14 @@ package hu.reptrack.web;
 
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.ExerciseCategory;
+import hu.reptrack.dto.TemplateView;
 import hu.reptrack.dto.WorkoutFilter;
 import hu.reptrack.dto.WorkoutSummary;
 import hu.reptrack.dto.WorkoutView;
 import hu.reptrack.service.AuthenticatedUser;
 import hu.reptrack.service.OverloadService;
 import hu.reptrack.service.PersonalRecordService;
+import hu.reptrack.service.TemplateService;
 import hu.reptrack.service.WorkoutService;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Duration;
@@ -35,7 +37,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Az edzésnapló oldalai (UC7, UC8, UC9): lista szűrőkkel, új edzés, részletek, szerkesztés, törlés és másolás.
+ * Az edzésnapló oldalai (UC7, UC8, UC9): lista szűrőkkel, új edzés (üresen vagy sablonból, UC15), részletek,
+ * szerkesztés, törlés és másolás.
  * A mentés után a részletek oldal mutatja az edzésben elért új csúcsokat és a túlterhelési figyelmeztetéseket.
  * Az időpontokat a felhasználó helyi idejében (a beállított időzónában) kezeli, a szolgáltatás UTC-t kap.
  */
@@ -50,13 +53,16 @@ public class WorkoutController {
     private final WorkoutService workouts;
     private final PersonalRecordService personalRecords;
     private final OverloadService overload;
+    private final TemplateService templates;
     private final ZoneId zone;
 
     public WorkoutController(WorkoutService workouts, PersonalRecordService personalRecords, OverloadService overload,
+                             TemplateService templates,
                              @Value("${reptrack.timezone:Europe/Budapest}") String timezone) {
         this.workouts = workouts;
         this.personalRecords = personalRecords;
         this.overload = overload;
+        this.templates = templates;
         this.zone = ZoneId.of(timezone);
     }
 
@@ -106,9 +112,22 @@ public class WorkoutController {
 
     // ---- új edzés ----
 
+    /**
+     * Új edzés üresen, vagy {@code ?template=} esetén egy sablonból (UC15): az űrlap a sablon gyakorlataival és
+     * tervezett szettjeivel töltődik ki, de semmi nem mentődik, amíg a felhasználó a Mentés gombot meg nem nyomja.
+     */
     @GetMapping("/new")
-    public String newForm(@AuthenticationPrincipal AuthenticatedUser user, Model model) {
-        return formPage(user, WorkoutForm.blank(zone), null, model);
+    public String newForm(@AuthenticationPrincipal AuthenticatedUser user,
+                          @RequestParam(name = "template", required = false) Long templateId, Model model) {
+        if (templateId == null) {
+            return formPage(user, WorkoutForm.blank(zone), null, model);
+        }
+        TemplateView template = templates.get(user.getId(), templateId);
+        model.addAttribute("sourceTemplateName", template.name());
+        model.addAttribute("skippedExercises", template.exercises().stream()
+                .filter(TemplateView.ExerciseView::archived).map(TemplateView.ExerciseView::exerciseName)
+                .distinct().toList());
+        return formPage(user, WorkoutForm.fromTemplate(template, zone), null, model);
     }
 
     @PostMapping

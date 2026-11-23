@@ -1,5 +1,6 @@
 package hu.reptrack.web;
 
+import hu.reptrack.dto.TemplateView;
 import hu.reptrack.dto.WorkoutExerciseRequest;
 import hu.reptrack.dto.WorkoutRequest;
 import hu.reptrack.dto.WorkoutSetRequest;
@@ -71,6 +72,33 @@ public class WorkoutForm {
         WorkoutForm form = new WorkoutForm();
         form.title = "Edzés";
         form.startedAt = LocalDateTime.now(zone).truncatedTo(ChronoUnit.MINUTES);
+        return form;
+    }
+
+    /**
+     * Új edzés egy sablonból (UC15): a neve a sablon neve, a kezdés a mostani idő, és minden gyakorlathoz annyi szett,
+     * ahány a sablonban tervezett, a tervezett értékekkel kitöltve (a meg nem adott értékek üresek maradnak). Az azóta
+     * archivált gyakorlatok kimaradnak. Az űrlap nincs mentve: az edzés a szokásos mentéssel jön létre.
+     */
+    public static WorkoutForm fromTemplate(TemplateView template, ZoneId zone) {
+        WorkoutForm form = blank(zone);
+        form.title = template.name();
+        for (TemplateView.ExerciseView e : template.exercises()) {
+            if (e.archived()) {
+                continue;
+            }
+            ExerciseBlock block = new ExerciseBlock();
+            block.exerciseId = e.exerciseId();
+            for (int i = 0; i < e.plannedSets(); i++) {
+                SetRow row = new SetRow();
+                row.weightKg = e.plannedWeightKg();
+                row.reps = e.plannedReps();
+                row.durationMin = FormValues.minutes(e.plannedDurationSec());
+                row.distanceKm = FormValues.kilometers(e.plannedDistanceM());
+                block.sets.add(row);
+            }
+            form.exercises.add(block);
+        }
         return form;
     }
 

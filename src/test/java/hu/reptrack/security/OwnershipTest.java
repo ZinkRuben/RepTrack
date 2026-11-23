@@ -179,8 +179,10 @@ class OwnershipTest extends SecurityTestSupport {
 
     @ParameterizedTest
     @ValueSource(strings = {"bela", "admin"})
-    void someoneElsesTemplateCannotBeOpenedChangedOrDeleted(String who) throws Exception {
+    void someoneElsesTemplateCannotBeOpenedChangedDeletedOrStarted(String who) throws Exception {
         mvc.perform(get("/templates/" + templateId + "/edit").with(intruder(who))).andExpect(status().isNotFound());
+        mvc.perform(get("/workouts/new").param("template", String.valueOf(templateId)).with(intruder(who)))
+                .andExpect(status().isNotFound());
         mvc.perform(post("/templates/" + templateId).with(csrf()).with(intruder(who))
                         .param("name", "Átírva")
                         .param("exercises[0].exerciseId", String.valueOf(sharedExerciseId("Guggolás")))

@@ -14,6 +14,18 @@
         </div>
     </div>
 
+    <!-- sablonból indított edzés (UC15): honnan jönnek az értékek, és hogy még nincs mentve -->
+    <div class="alert alert-info" role="status" th:if="${sourceTemplateName != null}">
+        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+        Edzés a(z) <strong th:text="|„${sourceTemplateName}”|">„Láb A”</strong> sablonból. A szetteket a tervezett
+        értékekkel töltöttük ki; ami a sablonban nem volt megadva, azt itt add meg. Az edzés csak a
+        <strong>Mentés</strong> gombra kerül a naplóba.
+        <div class="mt-1" th:unless="${skippedExercises == null or skippedExercises.isEmpty()}">
+            Kimaradt, mert azóta archiválták:
+            <span th:text="${#strings.listJoin(skippedExercises, ', ')}">Fekvenyomás</span>.
+        </div>
+    </div>
+
     <form id="workout-form" method="post"
           th:action="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}">
         <input type="hidden" name="version" th:if="${form.version != null}" th:value="${form.version}">
