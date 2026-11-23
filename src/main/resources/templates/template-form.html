@@ -17,12 +17,14 @@
     <!-- ha a sablon egy edzésből készül: honnan jönnek az értékek, és mi maradt ki -->
     <div class="alert alert-info" role="status" th:if="${sourceWorkoutTitle != null}">
         <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-        A sablon a(z) <strong th:text="|„${sourceWorkoutTitle}”|">„Lábnap”</strong> edzésből készül, de még nincs mentve.
-        Gyakorlatonként a szettek száma a rögzített szettek száma, a tervezett értékek pedig az <strong>utolsó szett</strong>
-        értékei. Mentés előtt bármelyiket átírhatod.
-        <div class="mt-1" th:unless="${skippedExercises == null or skippedExercises.isEmpty()}">
-            Kimaradt, mert azóta archiválták:
-            <span th:text="${#strings.listJoin(skippedExercises, ', ')}">Fekvenyomás</span>.
+        <div>
+            A sablon a(z) <strong th:text="|„${sourceWorkoutTitle}”|">„Lábnap”</strong> edzésből készül, de még nincs mentve.
+            Gyakorlatonként a szettek száma a rögzített szettek száma, a tervezett értékek pedig az <strong>utolsó szett</strong>
+            értékei. Mentés előtt bármelyiket átírhatod.
+            <div class="mt-1" th:unless="${skippedExercises == null or skippedExercises.isEmpty()}">
+                Kimaradt, mert azóta archiválták:
+                <span th:text="${#strings.listJoin(skippedExercises, ', ')}">Fekvenyomás</span>.
+            </div>
         </div>
     </div>
 

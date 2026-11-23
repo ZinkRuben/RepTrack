@@ -100,6 +100,7 @@ class TemplateWorkflowTest extends IntegrationTestBase {
                 .andExpect(content().string(allOf(
                         containsString("Edzés a(z) <strong>„Láb A”</strong> sablonból."),
                         containsString("gombra kerül a naplóba"),
+                        containsString("window.FROM_TEMPLATE = true;"),
                         containsString("value=\"Láb A\""),
                         not(containsString("Kimaradt")))))
                 .andReturn();
@@ -151,6 +152,14 @@ class TemplateWorkflowTest extends IntegrationTestBase {
                 .andReturn();
         WorkoutForm form = (WorkoutForm) result.getModelAndView().getModel().get("form");
         assertThat(form.getExercises()).extracting(WorkoutForm.ExerciseBlock::getExerciseId).containsExactly(squat);
+    }
+
+    @Test
+    void aBlankNewWorkoutHasNoTemplateNoticeOrHighlighting() throws Exception {
+        mvc.perform(get("/workouts/new").with(asAnna))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString("window.FROM_TEMPLATE = false;"), not(containsString("sablonból.")))));
     }
 
     @Test
