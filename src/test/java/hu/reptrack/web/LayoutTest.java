@@ -77,6 +77,7 @@ class LayoutTest extends IntegrationTestBase {
                 .andExpect(content().string(allOf(
                         containsString("/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css"),
                         containsString("/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js"),
+                        containsString("/webjars/flatpickr/4.6.13/dist/l10n/hu.js"), containsString("/js/datepicker.js"),
                         not(containsString("jsdelivr")), not(containsString("https://cdn")))));
         mvc.perform(get("/stats").with(hu.reptrack.TestPrincipals.anyUser()))
                 .andExpect(content().string(allOf(

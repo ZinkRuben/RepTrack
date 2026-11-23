@@ -87,7 +87,7 @@ module.exports = function (c) {
     ["Nyelv, build", "Java 21 (LTS), Maven", "a projekt Maven wrappert (`./mvnw`) tartalmaz, külön Maven nem kell"],
     ["Keretrendszer", "Spring Boot 4.1.3", "Spring Framework 7; moduláris starterek"],
     ["Webes réteg", "Spring MVC, Thymeleaf, `thymeleaf-extras-springsecurity6`", "szerveroldali HTML-előállítás"],
-    ["Kliensoldal", "Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Chart.js 4.4.7, Inter betűtípus", "WebJarként a JAR-ba csomagolva, a saját szerverről töltődnek (`/webjars/**`); saját stíluslap (`app.css`) és szkript (`app.js`)"],
+    ["Kliensoldal", "Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Chart.js 4.4.7, flatpickr 4.6.13 (dátumválasztó), Inter betűtípus", "WebJarként a JAR-ba csomagolva, a saját szerverről töltődnek (`/webjars/**`); saját stíluslap (`app.css`) és szkript (`app.js`)"],
     ["Üzleti logika", "Spring `@Service`, `@Transactional`, Bean Validation", "tranzakció és validáció a szolgáltatásokon"],
     ["Adatelérés", "Spring Data JPA (Hibernate 7), JPQL, Criteria API", "paraméterezett lekérdezések"],
     ["Adatbázis", "PostgreSQL 16", "fejlesztéskor Docker konténerben"],

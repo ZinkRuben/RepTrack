@@ -79,7 +79,9 @@ class ProtectedPagesTest extends SecurityTestSupport {
                 "/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css",
                 "/webjars/bootstrap-icons/1.11.3/font/fonts/bootstrap-icons.woff2",
                 "/webjars/fontsource-variable__inter/5.0.15/index.css",
-                "/webjars/chart.js/4.4.7/dist/chart.umd.js");
+                "/webjars/chart.js/4.4.7/dist/chart.umd.js",
+                "/webjars/flatpickr/4.6.13/dist/flatpickr.min.js", "/webjars/flatpickr/4.6.13/dist/l10n/hu.js",
+                "/js/datepicker.js");
     }
 
     /** "GET /workouts/{id}" → "/workouts/1" (a jogosultság-ellenőrzés az adat betöltése előtt történik). */
