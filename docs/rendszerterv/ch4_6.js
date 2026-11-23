@@ -146,7 +146,7 @@ module.exports = function (c) {
   out.push(h3("Az edzés életciklusa"));
   out.push(p("Az edzés két állapotban lehet. A **nyitott** edzés még folyamatban van (nincs befejezése), a **lezárt** edzésnek van befejezése és fáradtságértéke. A származtatott funkciók (csúcsok, szabályok, időtartam-statisztikák) csak a lezárt edzéseket használják. A 7. ábra az állapotokat és az átmeneteket mutatja; az adatbázis a `ck_workouts_closed` megszorítással a lezárt állapot szabályait is kikényszeríti."));
   out.push(...FIG("edzes-eletciklus", 14.5, "Az edzés állapotai"));
-  out.push(note("A nyitott edzés nem számít bele az egyéni csúcsokba és a túlterhelési szabályokba. Ezért az edzés rögzítésekor a „Befejezés” mezőt is ki kell tölteni (és a fáradtságot), különben az edzés nyitott marad."));
+  out.push(note("A nyitott edzés nem számít bele az egyéni csúcsokba és a túlterhelési szabályokba. Ezért az edzés rögzítésekor a „Befejezés” mezőt is ki kell tölteni (és a fáradtságot), különben az edzés nyitott marad. Az űrlap ezt a mező alatt el is mondja, és a „Most” gomb egy kattintással kitölti a befejezést a mostani időponttal, majd a fáradtság mezőre ugrik."));
 
   out.push(h2("4.4 Adatelérési réteg (`hu.reptrack.repository`)"));
   out.push(p("Az adatelérést Spring Data JPA repository-k végzik. Az egyszerű lekérdezések névből képzett (derived) metódusok, az összetettebbek JPQL (`@Query`), a dinamikus szűrés pedig a Criteria API segítségével készül."));
