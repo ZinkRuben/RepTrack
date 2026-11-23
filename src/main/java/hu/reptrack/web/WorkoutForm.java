@@ -5,7 +5,6 @@ import hu.reptrack.dto.WorkoutRequest;
 import hu.reptrack.dto.WorkoutSetRequest;
 import hu.reptrack.dto.WorkoutView;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -92,10 +91,8 @@ public class WorkoutForm {
                 SetRow row = new SetRow();
                 row.weightKg = s.weightKg();
                 row.reps = s.reps();
-                row.durationMin = s.durationSec() == null ? null
-                        : BigDecimal.valueOf(s.durationSec()).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
-                row.distanceKm = s.distanceM() == null ? null
-                        : BigDecimal.valueOf(s.distanceM()).divide(BigDecimal.valueOf(1000), 3, RoundingMode.HALF_UP);
+                row.durationMin = FormValues.minutes(s.durationSec());
+                row.distanceKm = FormValues.kilometers(s.distanceM());
                 row.avgHeartRate = s.avgHeartRate();
                 row.maxHeartRate = s.maxHeartRate();
                 block.sets.add(row);
@@ -111,17 +108,13 @@ public class WorkoutForm {
             List<WorkoutSetRequest> sets = new ArrayList<>();
             for (SetRow row : block.sets) {
                 sets.add(new WorkoutSetRequest(row.weightKg, row.reps,
-                        scaled(row.durationMin, 60), scaled(row.distanceKm, 1000),
+                        FormValues.seconds(row.durationMin), FormValues.meters(row.distanceKm),
                         row.avgHeartRate, row.maxHeartRate));
             }
             blocks.add(new WorkoutExerciseRequest(block.exerciseId, blankToNull(block.notes), sets));
         }
         return new WorkoutRequest(title, instant(startedAt, zone), instant(endedAt, zone), fatigue,
                 blankToNull(notes), version, blocks);
-    }
-
-    private static Integer scaled(BigDecimal value, int factor) {
-        return value == null ? null : value.multiply(BigDecimal.valueOf(factor)).setScale(0, RoundingMode.HALF_UP).intValue();
     }
 
     private static Instant instant(LocalDateTime local, ZoneId zone) {

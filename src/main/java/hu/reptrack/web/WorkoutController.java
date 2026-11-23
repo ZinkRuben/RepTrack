@@ -2,7 +2,6 @@ package hu.reptrack.web;
 
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.ExerciseCategory;
-import hu.reptrack.dto.ExerciseOption;
 import hu.reptrack.dto.WorkoutFilter;
 import hu.reptrack.dto.WorkoutSummary;
 import hu.reptrack.dto.WorkoutView;
@@ -11,7 +10,6 @@ import hu.reptrack.service.OverloadService;
 import hu.reptrack.service.PersonalRecordService;
 import hu.reptrack.service.WorkoutService;
 import jakarta.validation.ConstraintViolationException;
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -48,10 +46,6 @@ public class WorkoutController {
     private static final int PAGE_SIZE = 20;
     private static final String VALIDATION_MESSAGE = "A megadott adatok érvénytelenek. Ellenőrizd az edzés nevét és az "
             + "időpontot, a súlyt (0–500 kg), az ismétlést (1–100), a pulzust (30–230) és a fáradtságot (1–10).";
-    private static final Map<ExerciseCategory, String> CATEGORY_LABELS = Map.of(
-            ExerciseCategory.WEIGHTS, "Súlyzós",
-            ExerciseCategory.CARDIO, "Kardió",
-            ExerciseCategory.BODYWEIGHT, "Saját testsúlyos");
 
     private final WorkoutService workouts;
     private final PersonalRecordService personalRecords;
@@ -189,36 +183,21 @@ public class WorkoutController {
                 .filter(java.util.Objects::nonNull).toList();
         model.addAttribute("form", form);
         model.addAttribute("workoutId", workoutId);
-        model.addAttribute("catalog", workouts.exerciseOptions(user.getId(), usedIds).stream().map(this::catalogEntry).toList());
+        model.addAttribute("catalog", ExerciseCatalog.of(workouts.exerciseOptions(user.getId(), usedIds)));
         model.addAttribute("initialBlocks", form.getExercises().stream().map(this::blockEntry).toList());
         return "workout-form";
-    }
-
-    private Map<String, Object> catalogEntry(ExerciseOption o) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", String.valueOf(o.id()));
-        m.put("name", o.name());
-        m.put("category", o.category().name());
-        m.put("categoryLabel", CATEGORY_LABELS.get(o.category()));
-        m.put("w", o.tracksWeight());
-        m.put("r", o.tracksReps());
-        m.put("d", o.tracksDuration());
-        m.put("k", o.tracksDistance());
-        m.put("h", o.tracksHeartRate());
-        m.put("shared", o.shared());
-        return m;
     }
 
     private Map<String, Object> blockEntry(WorkoutForm.ExerciseBlock block) {
         List<Map<String, Object>> sets = new ArrayList<>();
         for (WorkoutForm.SetRow s : block.getSets()) {
             Map<String, Object> row = new LinkedHashMap<>();
-            row.put("weightKg", text(s.getWeightKg()));
-            row.put("reps", text(s.getReps()));
-            row.put("durationMin", text(s.getDurationMin()));
-            row.put("distanceKm", text(s.getDistanceKm()));
-            row.put("avgHeartRate", text(s.getAvgHeartRate()));
-            row.put("maxHeartRate", text(s.getMaxHeartRate()));
+            row.put("weightKg", FormValues.text(s.getWeightKg()));
+            row.put("reps", FormValues.text(s.getReps()));
+            row.put("durationMin", FormValues.text(s.getDurationMin()));
+            row.put("distanceKm", FormValues.text(s.getDistanceKm()));
+            row.put("avgHeartRate", FormValues.text(s.getAvgHeartRate()));
+            row.put("maxHeartRate", FormValues.text(s.getMaxHeartRate()));
             sets.add(row);
         }
         Map<String, Object> m = new LinkedHashMap<>();
@@ -226,13 +205,6 @@ public class WorkoutController {
         m.put("notes", block.getNotes());
         m.put("sets", sets);
         return m;
-    }
-
-    private static String text(Object value) {
-        if (value == null) {
-            return null;
-        }
-        return value instanceof BigDecimal d ? d.stripTrailingZeros().toPlainString() : String.valueOf(value);
     }
 
     private LocalDateTime local(Instant instant) {
