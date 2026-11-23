@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import hu.reptrack.IntegrationTestBase;
 import hu.reptrack.dto.CardioType;
 import hu.reptrack.dto.DistanceBand;
+import hu.reptrack.dto.EnduranceMetric;
 import hu.reptrack.dto.ExerciseCategory;
 import hu.reptrack.dto.FitnessLevel;
 import hu.reptrack.dto.GoalType;
@@ -75,6 +76,7 @@ class SchemaConstraintsTest extends IntegrationTestBase {
         assertCheckMatches("exercises", "cardio_type", CardioType.class);
         assertCheckMatches("exercise_secondary_muscles", "muscle", MuscleGroup.class);
         assertCheckMatches("goals", "goal_type", GoalType.class);
+        assertCheckMatches("goals", "endurance_metric", EnduranceMetric.class);
         assertCheckMatches("personal_records", "record_type", RecordType.class);
         assertCheckMatches("overload_warnings", "rule_code", OverloadRule.class);
         assertCheckMatches("personal_records", "distance_band", DistanceBand.class);
@@ -282,6 +284,51 @@ class SchemaConstraintsTest extends IntegrationTestBase {
         insertTemplate(alice, "Láb A");
         insertTemplate(bob, "Láb A"); // másik felhasználónál lehet ugyanaz a név
         assertThatThrownBy(() -> insertTemplate(alice, "LÁB a"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    // ---- állóképességi célok ----
+
+    private void insertGoal(Long user, String type, String metric, Integer distanceM) {
+        jdbc.update("insert into goals (user_id, goal_type, endurance_metric, target_distance_m, target_value) "
+                + "values (?, ?, ?, ?, 10)", user, type, metric, distanceM);
+    }
+
+    @Test
+    void validGoalShapesAreAccepted() {
+        Long user = insertUser("goal@example.com");
+        insertGoal(user, "ENDURANCE", "DISTANCE", null);
+        insertGoal(user, "ENDURANCE", "DURATION", null);
+        insertGoal(user, "ENDURANCE", "TIME_FOR_DISTANCE", 5000);
+        insertGoal(user, "STRENGTH", null, null);
+        assertThat(jdbc.queryForObject("select count(*) from goals", Integer.class)).isEqualTo(4);
+    }
+
+    @Test
+    void enduranceGoalNeedsAMetric() {
+        Long user = insertUser("goal@example.com");
+        assertThatThrownBy(() -> insertGoal(user, "ENDURANCE", null, null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void otherGoalsHaveNoMetric() {
+        Long user = insertUser("goal@example.com");
+        assertThatThrownBy(() -> insertGoal(user, "STRENGTH", "DISTANCE", null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void timeForDistanceGoalNeedsItsDistance() {
+        Long user = insertUser("goal@example.com");
+        assertThatThrownBy(() -> insertGoal(user, "ENDURANCE", "TIME_FOR_DISTANCE", null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void onlyTimeForDistanceGoalHasADistance() {
+        Long user = insertUser("goal@example.com");
+        assertThatThrownBy(() -> insertGoal(user, "ENDURANCE", "DISTANCE", 5000))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 

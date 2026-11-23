@@ -125,7 +125,6 @@ module.exports = function (c) {
     ["Fiók és adatok törlése (UC14)", "az adatbázis kaszkádolt törlése kész, a felület nincs meg", "megerősítéssel védett törlés"],
     ["Tanúsítvány", "a HTTPS önaláírt tanúsítványt használ, a böngésző első alkalommal figyelmeztet", "hiteles tanúsítvány (pl. Let's Encrypt) valódi domainhez"],
     ["Demófelhasználó", "mintaadatokkal feltöltött felhasználó nincs", "bemutatható, több hónapnyi adat"],
-    ["Állóképességi cél", "a haladása nincs definiálva, csak a célt jelenítjük meg", "távolság- vagy időalapú célérték"],
     ["Mértékegységek", "csak metrikus mértékegység van (kg, km)", "mértékegység-választás"],
     ["Felület tesztelése", "nincs automatizált böngészős teszt", "néhány végponttól végpontig teszt a fő folyamatokra"],
   ], [2300, 4500, 2226], { size: 18 }));
@@ -136,7 +135,7 @@ module.exports = function (c) {
   out.push(...bullets([
     "A **fiókkezelés** (UC13) befejezése; a fiók és az adatok törlése (UC14), valamint **adatexport** (CSV, JSON) a felhasználó kérésére.",
     "**Sablonok szettenkénti tervvel** (például bemelegítő és munkaszettek eltérő súllyal), illetve a sablon frissítése egy újabb edzés alapján.",
-    "**További rekordtípusok és célok:** heti volumen, állóképességi célok (távolság, idő), kerékpáros sebesség-PR, pulzuszónák.",
+    "**További rekordtípusok és célok:** heti volumen, heti táv vagy edzésidő mint cél, kerékpáros sebesség-PR, pulzuszónák.",
     "**Értesítések:** a túlterhelési figyelmeztetések e-mailben is, ütemezett összefoglaló a heti statisztikáról.",
     "**Edző–tanítvány kapcsolat:** az adatok megosztása egy kiválasztott személlyel, a jelenlegi szigorú adatvédelem megőrzésével (kifejezett hozzájárulás).",
     "**Beállítások:** mértékegység- és nyelvválasztás, magyar számformátum.",
@@ -177,6 +176,8 @@ module.exports = function (c) {
     ["Távsáv", "1 km, 5 km, 10 km, félmaraton (21 097 m), maraton (42 195 m); a legnagyobb sáv, amelynek hossza nem nagyobb a szett távolságánál"],
     ["Célhaladás (testtömeg)", "(aktuális − kezdő) / (cél − kezdő) × 100%, 0 és 100 közé vágva"],
     ["Célhaladás (erő)", "a gyakorlatban elért legnagyobb súly / célsúly × 100%, legfeljebb 100"],
+    ["Célhaladás (táv vagy idő egyben)", "a gyakorlat leghosszabb szettje (km vagy perc) / célérték × 100%, legfeljebb 100"],
+    ["Célhaladás (idő adott távon)", "egyenértékű idő = szett ideje × céltáv / szett távja (csak a céltávnál nem rövidebb szettek); haladás = (kiinduló − legjobb) / (kiinduló − célidő) × 100%, 0 és 100 közé vágva, a célidő elérése 100%"],
   ], [2300, 6726], { size: 18 }));
 
   return out;

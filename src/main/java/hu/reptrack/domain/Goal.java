@@ -1,6 +1,8 @@
 package hu.reptrack.domain;
 
+import hu.reptrack.dto.EnduranceMetric;
 import hu.reptrack.dto.GoalType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -35,6 +37,14 @@ public class Goal {
 
     private BigDecimal targetValue;
 
+    /** Csak állóképességi célnál: a cél mértéke (táv, idő, idő adott távon). */
+    @Enumerated(EnumType.STRING)
+    private EnduranceMetric enduranceMetric;
+
+    /** Csak az „idő adott távon” célnál: a táv méterben. */
+    @Column(name = "target_distance_m")
+    private Integer targetDistanceM;
+
     private LocalDate deadline;
 
     private boolean active = true;
@@ -43,6 +53,22 @@ public class Goal {
 
     public Long getId() {
         return id;
+    }
+
+    public EnduranceMetric getEnduranceMetric() {
+        return enduranceMetric;
+    }
+
+    public void setEnduranceMetric(EnduranceMetric enduranceMetric) {
+        this.enduranceMetric = enduranceMetric;
+    }
+
+    public Integer getTargetDistanceM() {
+        return targetDistanceM;
+    }
+
+    public void setTargetDistanceM(Integer targetDistanceM) {
+        this.targetDistanceM = targetDistanceM;
     }
 
     public void setId(Long id) {

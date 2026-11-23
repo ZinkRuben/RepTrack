@@ -64,7 +64,7 @@ module.exports = function (c) {
   out.push(tcap("Használati esetek és megvalósítási állapotuk"));
   out.push(table(["Azon.", "Használati eset", "Állapot", "Megvalósítás"], [
     ["UC1", "Regisztráció, bejelentkezés", "Kész", "`AuthController`, `UserService`, `AccountDetailsService`, `SecurityConfig`"],
-    ["UC2", "Profil és célok kezelése", "Kész", "`ProfileController`, `ProfileService`; a túlterhelési küszöbök is a profilban"],
+    ["UC2", "Profil és célok kezelése", "Kész", "`ProfileController`, `ProfileService`; a túlterhelési küszöbök is a profilban; állóképességi célok távra, időre vagy adott táv idejére"],
     ["UC3", "Testtömeg rögzítése", "Kész", "`ProfileService`; naponta egy mérés, a profil a legutóbbit mutatja"],
     ["UC4", "Gyakorlatok böngészése, keresése", "Kész", "`ExerciseController`, `ExerciseService`; szűrés névre, kategóriára, izomcsoportra, forrásra (közös/saját) és archiváltságra"],
     ["UC5", "Saját gyakorlat felvétele", "Kész", "`ExerciseController`, `ExerciseService`; létrehozás, módosítás, archiválás, törlés (a használatban lévő gyakorlat nem törölhető)"],
@@ -91,7 +91,7 @@ module.exports = function (c) {
     ["Üzleti logika", "Spring `@Service`, `@Transactional`, Bean Validation", "tranzakció és validáció a szolgáltatásokon"],
     ["Adatelérés", "Spring Data JPA (Hibernate 7), JPQL, Criteria API", "paraméterezett lekérdezések"],
     ["Adatbázis", "PostgreSQL 16", "fejlesztéskor Docker konténerben"],
-    ["Séma-verziózás", "Flyway (V1–V5)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
+    ["Séma-verziózás", "Flyway (V1–V6)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
     ["Biztonság", "Spring Security 7", "űrlapos bejelentkezés, BCrypt, CSRF, szerepkör-hierarchia, HTTPS"],
     ["Üzemeltetés", "Docker, Docker Compose", "többlépcsős Dockerfile; az alkalmazás és a PostgreSQL egy paranccsal indul"],
     ["Tesztelés", "JUnit 5, Spring Boot Test, Testcontainers, Spring Security Test", "valódi PostgreSQL a tesztekben"],
@@ -105,6 +105,7 @@ module.exports = function (c) {
     ["Spring Boot", "3-as főverzió", "4.1.3", "az újabb, stabil kiadást választottuk; a rétegeket, a JPA-t és a Security-t nem érinti"],
     ["Diagramok adatai", "JSON végpontok", "a szerver az összesített adatsorokat JSON-ként beágyazza az oldalba", "egyetlen kérés, nincs külön REST-felület; ugyanaz a védelem, mint az oldalé"],
     ["Célhaladás helye", "a statisztikai oldalon", "a „Profil és célok” oldalon, a cél mellett", "a cél és a haladása egy helyen látszik"],
+    ["Állóképességi cél", "célérték megadása", "háromféle mérték: táv egyben (km), idő egyben (perc), idő adott távon (pl. 5 km 25:00 alatt)", "a futás, úszás és kerékpározás céljai eltérőek: van, aki távot, van, aki időt vagy tempót szeretne javítani"],
     ["A BLL tesztelése", "Mockito egységtesztek", "szabályok: tiszta egységtesztek; szolgáltatások: integrációs tesztek valódi PostgreSQL-lel", "a szolgáltatások logikája az adatbázishoz (megszorítások, lekérdezések) kötődik, ezt mock nem ellenőrzi"],
     ["Edzés indítása sablonból", "az edzés létrejön, és betölti a tervezett gyakorlatokat és szetteket", "az új edzés űrlapja töltődik ki a sablonból; az edzés a Mentés gombra jön létre", "a félbehagyott indítás nem hagy üres, nyitott edzést a naplóban"],
     ["Demófelhasználó", "néhány hónapnyi mintaadat", "tervezett", "az 50 gyakorlatos alapadatbázis már megvan"],

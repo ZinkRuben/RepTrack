@@ -31,7 +31,7 @@ module.exports = function (c) {
     "**Post/Redirect/Get és üzenetek.** Minden módosító kérés átirányítással végződik; a visszajelzés flash-attribútumként (`FlashMessages`) jelenik meg az új oldalon, így a frissítés nem küldi el újra az űrlapot.",
     "**Nézetek.** A Thymeleaf sablonok a `fragments/layout.html` közös oldalvázat használják (fej, navigációs sáv, üzenetek, lábléc); az oldalak csak a saját `<title>` és `<main>` részüket adják. Közös darabok: `navbar`, `messages`, `ui` (kategória-címke, üres állapot). A sablonok csak DTO-kat olvasnak.",
     "**Diagramok.** A `StatsController` a szolgáltatás által kiszámolt adatsorokat (címkék, értékek) egyszerű `Map`/`List` szerkezetben adja a modellnek; a sablon JSON-ként beágyazza az oldalba (`th:inline=\"javascript\"`), a Chart.js pedig a böngészőben rajzolja ki őket. A számítás tehát a szerveren történik, a böngésző csak megjelenít.",
-    "**Segédosztályok.** `RecordFormatter` (a csúcsok megjelenítési formája, pl. a tempó perc:másodperc alakban), `LayoutModelAdvice` (az aktuális útvonal a menüpont kiemeléséhez), `ExerciseFormSupport` (a gyakorlat-űrlap közös modellje a saját és a közös gyakorlatokhoz), `ExerciseCatalog` (a gyakorlatválasztó adatai az edzés és a sablon űrlapjához), `FormValues` (perc és km átváltása másodpercre és méterre, magyar számformátum), `NumberDisplay` (a sablonokból `${@num.of(…)}` alakban hívható számformázó: tizedesvessző), `GlobalExceptionHandler` (hibaoldalak).",
+    "**Segédosztályok.** `RecordFormatter` (a csúcsok megjelenítési formája, pl. a tempó perc:másodperc alakban), `LayoutModelAdvice` (az aktuális útvonal a menüpont kiemeléséhez), `ExerciseFormSupport` (a gyakorlat-űrlap közös modellje a saját és a közös gyakorlatokhoz), `ExerciseCatalog` (a gyakorlatválasztó adatai az edzés és a sablon űrlapjához), `FormValues` (perc és km átváltása másodpercre és méterre, magyar számformátum), `NumberDisplay` (a sablonokból `${@num.of(…)}` alakban hívható számformázó: tizedesvessző), `GoalDisplay` (az edzéscél és a haladás szövege a céltípus egységével: kg, km, perc vagy idő; a célidő beolvasása perc:másodperc alakból), `GlobalExceptionHandler` (hibaoldalak).",
   ]));
   out.push(p("Az oldalak közötti navigációt a 15. ábra mutatja (8. fejezet)."));
 
@@ -65,6 +65,7 @@ module.exports = function (c) {
     "A profil módosításakor a megkapott verziószámot is vissza kell küldeni; eltérésnél `StaleDataException` (409). A születési dátum nem lehet jövőbeli, és nem lehet 120 évnél régebbi; a magasság 50–260 cm.",
     "A testtömeg naponta egy értéket vehet fel (az újabb mérés felülírja az aznapit); nem lehet jövőbeli, 20–500 kg közötti. A profil a legutóbbi mérést mutatja, külön nem tárolja.",
     "Cél határideje nem lehet a múltban. A testtömeg-célhoz (fogyás, tömegnövelés) a célsúly 20–500 kg; az erő-célhoz olyan gyakorlat kell, amelyhez súly rögzíthető.",
+    "Az állóképességi célnak mértéke van: **táv egyben** (km), **idő egyben** (perc) vagy **idő adott távon** (céltáv km-ben és célidő perc:másodperc alakban, pl. 5 km 25:00). Célértékhez gyakorlat is kell, és a gyakorlatnak rögzítenie kell, amit a cél mér (távot, időtartamot, illetve mindkettőt). Az „idő adott távon” célhoz a táv és a célidő is kötelező. Az űrlap a céltípushoz igazodik: csak a megfelelő mezőket és az illő gyakorlatokat mutatja.",
     "A túlterhelési küszöbök tartománya: heti terhelés aránya 1,05–3,00, izomcsoport-szettek 1–30, fáradtság 1–10.",
   ]));
 
@@ -140,7 +141,7 @@ module.exports = function (c) {
     "**Heti és havi összesítő:** az időszakban kezdett edzések száma, a lezárt edzések összideje, összvolumen, megtett távolság, edzésterhelés, a szettek száma kategóriánként.",
     "**Fejlődési görbe gyakorlatonként** (egy pont edzésenként): legnagyobb súly, becsült 1RM, volumen; futásnál tempó, kerékpárnál sebesség; **relatív erő** = becsült 1RM / testtömeg. A diagramon az egyéni csúcsok jelölve vannak.",
     "**Volumen:** súly × ismétlés. Saját testsúlyos gyakorlatnál a súly a testtömeg és a külső terhelés összege; a testtömeg az edzés napján vagy előtte mért legutóbbi érték, ha nincs mérés, csak a külső terhelés számít. Kardió szettnek nincs volumene.",
-    "**Edzéscél-haladás:** testtömeg-célnál (fogyás, tömegnövelés) az (aktuális − kezdő) / (cél − kezdő) arány százalékban, 0–100-ra vágva; a kezdő érték a cél létrehozásának napján érvényes mérés. Erő-célnál a gyakorlatban elért legnagyobb súly és a célsúly aránya. Állóképességi célnál a haladás nincs definiálva, ott csak a célt jelenítjük meg.",
+    "**Edzéscél-haladás:** testtömeg-célnál (fogyás, tömegnövelés) az (aktuális − kezdő) / (cél − kezdő) arány százalékban, 0–100-ra vágva; a kezdő érték a cél létrehozásának napján érvényes mérés. Erő-célnál a gyakorlatban elért legnagyobb súly és a célsúly aránya. Állóképességi célnál a gyakorlat egy-egy szettje számít (egy futás vagy úszás egyben): távcélnál a leghosszabb táv, időcélnál a leghosszabb idő és a célérték aránya. Az „idő adott távon” célnál a legalább céltávnyi szettek idejét azonos tempóval a céltávra számoljuk (5,2 km 26:00 alatt = 5 km 25:00 alatt); a haladás a cél felvétele előtti legjobb időtől (ha nem volt, az első utána rögzítettől) a célidőig megtett út, a célidő elérése 100%.",
   ]));
 
   out.push(h3("Az edzés életciklusa"));
@@ -177,7 +178,7 @@ module.exports = function (c) {
     ["Kérés-objektumok", "`WorkoutRequest`, `TemplateRequest`, `ProfileRequest`, `BodyWeightRequest`, `GoalRequest`, `ExerciseRequest`, `RegistrationRequest`", "a bemenet; Bean Validation szabályokkal"],
     ["Nézet-objektumok", "`WorkoutView`, `WorkoutSummary`, `TemplateView`, `ProfileView`, `PersonalRecordView`, `OverloadWarningView`, `ExerciseView`, `EditableExercise`", "a szolgáltatások kimenete a nézeteknek"],
     ["Számítási rekordok", "`WorkoutRow`, `SetRecord`, `RecordSet`, `MuscleSetCount`, `PeriodSummary`, `ExerciseProgressPoint`, `GoalProgress`", "a `rules` csomag be- és kimenete"],
-    ["Enumok", "`ExerciseCategory`, `MuscleGroup`, `CardioType`, `GoalType`, `RecordType`, `OverloadRule`, `DistanceBand`, `FitnessLevel`, `Role`, `Granularity`, `ExerciseSource`", "zárt értékkészletek; az adatbázisban CHECK védi őket"],
+    ["Enumok", "`ExerciseCategory`, `MuscleGroup`, `CardioType`, `GoalType`, `EnduranceMetric`, `RecordType`, `OverloadRule`, `DistanceBand`, `FitnessLevel`, `Role`, `Granularity`, `ExerciseSource`", "zárt értékkészletek; az adatbázisban CHECK védi őket"],
     ["Kivételek", "`NotFoundException`, `BusinessRuleException`, `StaleDataException`, `DuplicateEmailException`, `DuplicateExerciseNameException`, `DuplicateTemplateNameException`", "hibajelzés a rétegek között"],
   ], [1900, 4526, 2600], { size: 18 }));
 
@@ -251,7 +252,7 @@ module.exports = function (c) {
     ["`body_weight_entries`", "testtömeg-napló: nap és súly", "naponta egy mérés; 20–500 kg"],
     ["`exercises`", "gyakorlat: név, kategória, elsődleges izomcsoport, kardió típus, leírás, `tracks_*` jelzők, archivált, `version`", "`owner_id` üres = közös, kitöltött = privát"],
     ["`exercise_secondary_muscles`", "a gyakorlat másodlagos izomcsoportjai", "(gyakorlat, izomcsoport) összetett kulcs"],
-    ["`goals`", "edzéscél: típus, opcionális gyakorlat, célérték, határidő, aktív", "a haladás nem tárolt, számolt"],
+    ["`goals`", "edzéscél: típus, opcionális gyakorlat, célérték, határidő, aktív; állóképességi célnál a mérték (`endurance_metric`) és az „idő adott távon” célnál a céltáv (`target_distance_m`)", "a haladás nem tárolt, számolt; `ck_goals_endurance_shape`"],
     ["`workouts`", "edzés: cím, kezdés, befejezés, fáradtság, megjegyzés, `version`", "`ck_workouts_closed`"],
     ["`workout_exercises`", "az edzés gyakorlatai sorrenddel és megjegyzéssel", ""],
     ["`workout_sets`", "szett: súly, ismétlés, időtartam, távolság, átlag- és maximális pulzus", "CHECK tartományok"],
@@ -264,7 +265,8 @@ module.exports = function (c) {
   out.push(h2("6.3 Megszorítások és indexek"));
   out.push(...bullets([
     "**Tartományok (CHECK):** magasság 50–260 cm, testtömeg 20–500 kg, fáradtság 1–10, súly 0–500 kg, ismétlés 1–100, pulzus 30–230, az időtartam és a távolság pozitív; a sablonban a tervezett szettszám 1–20, a tervezett ismétlés és súly ugyanazokkal a határokkal, mint a szettnél.",
-    "**Enum-értékek (CHECK):** szerepkör, edzettségi szint, kategória, izomcsoport, kardió típus, célok típusa, rekordtípus, távsáv, szabálykód.",
+    "**Enum-értékek (CHECK):** szerepkör, edzettségi szint, kategória, izomcsoport, kardió típus, célok típusa, állóképességi cél mértéke, rekordtípus, távsáv, szabálykód.",
+    "**`ck_goals_endurance_shape`:** a mérték pontosan az állóképességi célnál van megadva, a céltáv pedig pontosan az „idő adott távon” célnál.",
     "**`ck_exercises_cardio_type`:** a kardió típus pontosan a kardió kategóriájú gyakorlatnál van megadva (futás: tempó, kerékpár: sebesség).",
     "**`ck_workouts_closed`:** a befejezett edzéshez fáradtság és a kezdés utáni befejezés tartozik.",
     "**`ck_personal_records_shape`:** a rekordtípushoz kötelező vagy tiltott mezők (a tempó-PR-hez távsáv kell és ismétlés nem; a súly-PR-hez ismétlés kell és távsáv nem).",
@@ -292,6 +294,7 @@ module.exports = function (c) {
     ["`V3__personal_record_checks.sql`", "a csúcsok távsáv- és alakmegszorításai"],
     ["`V4__overload_warning_keys.sql`", "`rule_key` és `event_date` a figyelmeztetésekhez, egyedi index"],
     ["`V5__template_constraints.sql`", "a sablonok tervezett értékeinek CHECK megszorításai, a sablonnév egyedisége felhasználónként, indexek"],
+    ["`V6__endurance_goals.sql`", "az állóképességi célok mértéke és céltávja, megszorításokkal; a meglévő állóképességi célok távcéllá (ha a gyakorlat távot rögzít) vagy időcéllá alakulnak"],
   ], [3300, 5726], { size: 19 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(p("Az új migráció új fájl (a már lefuttatott migrációkat nem módosítjuk). Az ER-diagram újragenerálása: `python3 docs/generate-er.py` (egy ábra), illetve `python3 docs/rendszerterv/diagrams.py` (a jelen dokumentum ábrái)."));
