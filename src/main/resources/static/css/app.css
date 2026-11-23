@@ -85,6 +85,17 @@
     --bs-border-color-translucent: rgba(255, 255, 255, .08);
 }
 
+/* A böngésző saját vezérlői (a dátummező naptár-ikonja, görgetősáv, legördülő listák) az alkalmazás témáját
+   kövessék, ne az operációs rendszerét: különben sötét rendszerbeállítás és világos téma mellett a naptár-ikon
+   fehér lesz a fehér mezőn. */
+[data-bs-theme=light] {
+    color-scheme: light;
+}
+
+[data-bs-theme=dark] {
+    color-scheme: dark;
+}
+
 /* ---------- alapok ---------- */
 :root {
     --bs-body-font-family: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
