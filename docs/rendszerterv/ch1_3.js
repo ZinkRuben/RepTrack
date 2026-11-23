@@ -60,7 +60,7 @@ module.exports = function (c) {
   ]));
 
   out.push(h2("2.2 Funkciók és megvalósítási állapot"));
-  out.push(p("A táblázat a specifikáció használati eseteit (UC1–UC16) és azok megvalósítási állapotát mutatja a dokumentum elkészítésekor (2026. november 21.). A „Kész” állapotú funkciók működnek és tesztelve vannak; a „Részben” és „Tervezett” sorokat a 11. fejezet részletezi."));
+  out.push(p("A táblázat a specifikáció használati eseteit (UC1–UC16) és azok megvalósítási állapotát mutatja a dokumentum legutóbbi frissítésekor (2026. november 23.). A „Kész” állapotú funkciók működnek és tesztelve vannak; a „Részben” és „Tervezett” sorokat a 11. fejezet részletezi."));
   out.push(tcap("Használati esetek és megvalósítási állapotuk"));
   out.push(table(["Azon.", "Használati eset", "Állapot", "Megvalósítás"], [
     ["UC1", "Regisztráció, bejelentkezés", "Kész", "`AuthController`, `UserService`, `AccountDetailsService`, `SecurityConfig`"],
@@ -69,7 +69,7 @@ module.exports = function (c) {
     ["UC4", "Gyakorlatok böngészése, keresése", "Kész", "`ExerciseController`, `ExerciseService`; szűrés névre, kategóriára, izomcsoportra, forrásra (közös/saját) és archiváltságra"],
     ["UC5", "Saját gyakorlat felvétele", "Kész", "`ExerciseController`, `ExerciseService`; létrehozás, módosítás, archiválás, törlés (a használatban lévő gyakorlat nem törölhető)"],
     ["UC6", "Közös gyakorlatadatbázis karbantartása", "Kész", "`AdminExerciseController`, `ExerciseService`; `/admin/exercises/**` (ADMIN), a szolgáltatás `@PreAuthorize`-zal is védett"],
-    ["UC7", "Edzés rögzítése", "Kész", "`WorkoutController`, `WorkoutService`; üresen vagy korábbi edzés másolataként"],
+    ["UC7", "Edzés rögzítése", "Kész", "`WorkoutController`, `WorkoutService`; üresen, sablonból vagy korábbi edzés másolataként"],
     ["UC8", "Edzés módosítása, törlése", "Kész", "`WorkoutService`; optimista zárolás"],
     ["UC9", "Edzésnapló böngészése", "Kész", "lapozott, szűrhető lista (időszak, gyakorlat, kategória)"],
     ["UC10", "Statisztikák és diagramok", "Kész", "`StatsController`, `StatisticsService`, `StatisticsCalculator`"],
@@ -77,7 +77,7 @@ module.exports = function (c) {
     ["UC12", "Túlterhelési figyelmeztetések kezelése", "Kész", "`OverloadService`, `OverloadDetector`, `WarningController`"],
     ["UC13", "Felhasználók kezelése", "Tervezett", "adminisztrációs felület"],
     ["UC14", "Fiók és adatok törlése", "Tervezett", "az adatbázis `ON DELETE CASCADE` kapcsolatai már támogatják"],
-    ["UC15", "Edzéssablonok kezelése", "Részben", "entitások és repository-k kész; a szolgáltatás és a felület tervezett"],
+    ["UC15", "Edzéssablonok kezelése", "Kész", "`TemplateController`, `TemplateService`; sablon mentése (üresen vagy egy edzésből), szerkesztése, törlése; edzés indítása sablonból"],
     ["UC16", "Eredmények kiértékelése", "Kész", "automatikusan fut az edzés mentésekor, módosításakor és törlésekor"],
   ], [700, 2900, 1100, 4326], { statusCol: 2, size: 19 }));
 
@@ -91,7 +91,7 @@ module.exports = function (c) {
     ["Üzleti logika", "Spring `@Service`, `@Transactional`, Bean Validation", "tranzakció és validáció a szolgáltatásokon"],
     ["Adatelérés", "Spring Data JPA (Hibernate 7), JPQL, Criteria API", "paraméterezett lekérdezések"],
     ["Adatbázis", "PostgreSQL 16", "fejlesztéskor Docker konténerben"],
-    ["Séma-verziózás", "Flyway (V1–V4)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
+    ["Séma-verziózás", "Flyway (V1–V5)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
     ["Biztonság", "Spring Security 7", "űrlapos bejelentkezés, BCrypt, CSRF, szerepkör-hierarchia, HTTPS"],
     ["Üzemeltetés", "Docker, Docker Compose", "többlépcsős Dockerfile; az alkalmazás és a PostgreSQL egy paranccsal indul"],
     ["Tesztelés", "JUnit 5, Spring Boot Test, Testcontainers, Spring Security Test", "valódi PostgreSQL a tesztekben"],
@@ -106,6 +106,7 @@ module.exports = function (c) {
     ["Diagramok adatai", "JSON végpontok", "a szerver az összesített adatsorokat JSON-ként beágyazza az oldalba", "egyetlen kérés, nincs külön REST-felület; ugyanaz a védelem, mint az oldalé"],
     ["Célhaladás helye", "a statisztikai oldalon", "a „Profil és célok” oldalon, a cél mellett", "a cél és a haladása egy helyen látszik"],
     ["A BLL tesztelése", "Mockito egységtesztek", "szabályok: tiszta egységtesztek; szolgáltatások: integrációs tesztek valódi PostgreSQL-lel", "a szolgáltatások logikája az adatbázishoz (megszorítások, lekérdezések) kötődik, ezt mock nem ellenőrzi"],
+    ["Edzés indítása sablonból", "az edzés létrejön, és betölti a tervezett gyakorlatokat és szetteket", "az új edzés űrlapja töltődik ki a sablonból; az edzés a Mentés gombra jön létre", "a félbehagyott indítás nem hagy üres, nyitott edzést a naplóban"],
     ["Demófelhasználó", "néhány hónapnyi mintaadat", "tervezett", "az 50 gyakorlatos alapadatbázis már megvan"],
   ], [1500, 2000, 2900, 2626], { size: 19 }));
 
