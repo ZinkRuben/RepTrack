@@ -24,7 +24,7 @@ module.exports = function (c) {
   ], [2000, 7026], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(p("A biztonsági megoldásokat külön automatizált tesztek ellenőrzik (9. fejezet): a tulajdonos-ellenőrzés minden adattípusra, az, hogy minden végpont be van sorolva és védett (új végpont felvételekor a teszt addig bukik, amíg a besorolás hiányzik), a szerepkörök, a regisztráció és a munkamenet-azonosító cseréje bejelentkezéskor."));
-  out.push(note("Ismert korlát: a CDN-ről töltött Chart.js-hez még nincs Subresource Integrity (SRI) hash megadva, és az önaláírt tanúsítványt a böngésző első alkalommal figyelmeztetéssel fogadja; éles üzemben hiteles tanúsítvány kell."));
+  out.push(note("Ismert korlát: az önaláírt tanúsítványt a böngésző első alkalommal figyelmeztetéssel fogadja; éles üzemben hiteles tanúsítvány kell."));
 
   // ------------------------------------------------------------------------------------------------ 8.
   out.push(h1("8. Felhasználói felület és dizájn"));
@@ -127,7 +127,6 @@ module.exports = function (c) {
     ["Demófelhasználó", "mintaadatokkal feltöltött felhasználó nincs", "bemutatható, több hónapnyi adat"],
     ["Állóképességi cél", "a haladása nincs definiálva, csak a célt jelenítjük meg", "távolság- vagy időalapú célérték"],
     ["Egyidejű mentés", "ha két kérés a verzióellenőrzés után, pontosan egyszerre ér az adatbázishoz, a JPA verzióütközése az általános hibaoldalon jelenik meg a 409-es üzenet helyett", "az ütközés kivételének leképezése 409-re"],
-    ["CDN-függés", "az erőforrások CDN-ről töltődnek; offline demóhoz helyi másolat kell, a Chart.js-hez nincs SRI hash", "a fájlok csomagolása az alkalmazásba"],
     ["Mértékegységek", "csak metrikus mértékegység van (kg, km)", "mértékegység-választás"],
     ["Felület tesztelése", "nincs automatizált böngészős teszt", "néhány végponttól végpontig teszt a fő folyamatokra"],
   ], [2300, 4500, 2226], { size: 18 }));
@@ -148,7 +147,7 @@ module.exports = function (c) {
     "**Üzemeltetés:** hiteles tanúsítvány és domain, folyamatos integráció (build és tesztek minden pull requestnél), Actuator-alapú állapot- és metrikavégpontok.",
     "**REST API (JSON):** mobilalkalmazás vagy külső kliens számára; a szolgáltatási réteg változtatás nélkül újrahasznosítható, mert a webes réteg csak DTO-kat használ.",
     "**Teljesítmény:** a statisztikák gyorsítótárazása nagy adatmennyiségnél (az újraszámolás az edzésmentésre érvényteleníthető), nagyobb adatkészletekhez az összesítések adatbázis-oldali aggregálása.",
-    "**Offline használat:** a statikus erőforrások helyi csomagolása, majd PWA-támogatás, hogy az edzés internet nélkül is rögzíthető legyen.",
+    "**Offline használat:** PWA-támogatás, hogy az edzés a szerver elérése nélkül is rögzíthető legyen (a statikus erőforrások már az alkalmazásba vannak csomagolva).",
     "**Minőségbiztosítás:** végponttól végpontig tesztek a fő folyamatokra, hozzáférhetőségi audit, terheléses mérés.",
   ]));
 

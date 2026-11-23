@@ -87,7 +87,7 @@ module.exports = function (c) {
     ["Nyelv, build", "Java 21 (LTS), Maven", "a projekt Maven wrappert (`./mvnw`) tartalmaz, külön Maven nem kell"],
     ["Keretrendszer", "Spring Boot 4.1.3", "Spring Framework 7; moduláris starterek"],
     ["Webes réteg", "Spring MVC, Thymeleaf, `thymeleaf-extras-springsecurity6`", "szerveroldali HTML-előállítás"],
-    ["Kliensoldal", "Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Chart.js 4.4.7", "CDN-ről töltődnek; saját stíluslap (`app.css`) és szkript (`app.js`)"],
+    ["Kliensoldal", "Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Chart.js 4.4.7, Inter betűtípus", "WebJarként a JAR-ba csomagolva, a saját szerverről töltődnek (`/webjars/**`); saját stíluslap (`app.css`) és szkript (`app.js`)"],
     ["Üzleti logika", "Spring `@Service`, `@Transactional`, Bean Validation", "tranzakció és validáció a szolgáltatásokon"],
     ["Adatelérés", "Spring Data JPA (Hibernate 7), JPQL, Criteria API", "paraméterezett lekérdezések"],
     ["Adatbázis", "PostgreSQL 16", "fejlesztéskor Docker konténerben"],
@@ -154,7 +154,7 @@ module.exports = function (c) {
     "**HTTPS:** az alkalmazás a 8443-as porton szolgál ki HTTPS-sel. Az önaláírt tanúsítványt a konténer az első induláskor készíti (`docker/entrypoint.sh`, véletlen jelszóval, a `reptrack-certs` kötetbe), így újraindítás után ugyanaz marad. A 8080-as porton csak egy átirányító csatlakozó figyel, amely minden HTTP-kérést HTTPS-re irányít (`HttpsConfig`, `SecurityConfig`). A munkamenet-süti `secure` jelzésű.",
     "Induláskor a **Flyway** végrehajtja a hiányzó migrációkat, majd a Hibernate ellenőrzi, hogy az entitások megfelelnek-e a sémának (`ddl-auto=validate`); eltérésnél az alkalmazás nem indul el.",
     "A konfigurációt a **`.env` fájl** és a környezeti változók adják (10. fejezet). Fejlesztéskor az alkalmazás helyi JDK-val, sima HTTP-n is indítható; ilyenkor a Compose csak az adatbázist futtatja.",
-    "A böngésző a Bootstrap, a Chart.js, az ikonok és a betűtípus fájljait **CDN-ről** tölti le; az alkalmazásadatok nem mennek a CDN felé.",
+    "A Bootstrap, a Chart.js, az ikonok és a betűtípus fájljai **WebJarként** az alkalmazás JAR-jában vannak (Maven-függőségek), és a saját szerverről töltődnek (`/webjars/**`), így az alkalmazás internetkapcsolat nélkül is teljes értékűen működik.",
   ]));
 
   out.push(h2("3.5 Egy kérés útja"));

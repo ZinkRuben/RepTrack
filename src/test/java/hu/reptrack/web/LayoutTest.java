@@ -72,6 +72,18 @@ class LayoutTest extends IntegrationTestBase {
     }
 
     @Test
+    void pagesLoadTheirLibrariesFromTheAppNotFromACdn() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(content().string(allOf(
+                        containsString("/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css"),
+                        containsString("/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js"),
+                        not(containsString("jsdelivr")), not(containsString("https://cdn")))));
+        mvc.perform(get("/stats").with(hu.reptrack.TestPrincipals.anyUser()))
+                .andExpect(content().string(allOf(
+                        containsString("/webjars/chart.js/4.4.7/dist/chart.umd.js"), not(containsString("jsdelivr")))));
+    }
+
+    @Test
     void themeIsSwitchedWithOneButtonWithoutASystemOption() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(content().string(allOf(

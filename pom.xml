@@ -50,6 +50,30 @@
 			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
 
+		<!-- Böngészőoldali könyvtárak WebJarként: a fájljaik a JAR-ba kerülnek, és a Spring Boot a /webjars/** alatt
+		     szolgálja ki őket, így az oldalak internet (CDN) nélkül is működnek. Verzióváltáskor a sablonokban
+		     (fragments/layout.html, stats.html) lévő elérési utat is módosítani kell. -->
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>bootstrap</artifactId>
+			<version>5.3.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>bootstrap-icons</artifactId>
+			<version>1.11.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>chart.js</artifactId>
+			<version>4.4.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>fontsource-variable__inter</artifactId>
+			<version>5.0.15</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
