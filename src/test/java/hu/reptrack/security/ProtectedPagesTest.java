@@ -81,7 +81,7 @@ class ProtectedPagesTest extends SecurityTestSupport {
                 "/webjars/fontsource-variable__inter/5.0.15/index.css",
                 "/webjars/chart.js/4.4.7/dist/chart.umd.js",
                 "/webjars/flatpickr/4.6.13/dist/flatpickr.min.js", "/webjars/flatpickr/4.6.13/dist/l10n/hu.js",
-                "/js/datepicker.js");
+                "/js/datepicker.js", "/js/exercise-picker.js", "/images/exercises/guggolas.jpg");
     }
 
     /** "GET /workouts/{id}" → "/workouts/1" (a jogosultság-ellenőrzés az adat betöltése előtt történik). */

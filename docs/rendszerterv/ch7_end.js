@@ -34,7 +34,7 @@ module.exports = function (c) {
   out.push(table(["Oldal", "Tartalom"], [
     ["Nyitóoldal", "vendégnek bemutatkozás, regisztráció és bejelentkezés; bejelentkezett felhasználónak gyors műveletek"],
     ["Edzésnapló (`/workouts`)", "lapozott lista (20 edzés/oldal), szűrők (időszak, gyakorlat, kategória), nyitott figyelmeztetések"],
-    ["Edzés űrlap", "dinamikus gyakorlat- és szettblokkok; a gyakorlathoz csak a releváns mezők (súly, ismétlés, időtartam, távolság, pulzus) látszanak; sablonból indítva előtöltve, tájékoztató sávval"],
+    ["Edzés űrlap", "dinamikus gyakorlat- és szettblokkok; a gyakorlathoz csak a releváns mezők (súly, ismétlés, időtartam, távolság, pulzus) látszanak; a gyakorlat a képes, kereshető, szűrhető választó ablakból kerül be; sablonból indítva előtöltve, tájékoztató sávval"],
     ["Edzés részletei", "szettek, összegzés, az edzésben elért csúcsok, figyelmeztetések; szerkesztés, másolás, mentés sablonként, törlés"],
     ["Sablonok (`/templates`)", "a sablonok gyakorlatonkénti tervvel (pl. „5 × 5 ismétlés · 100 kg”), az archivált gyakorlatok jelölésével; edzés indítása, szerkesztés, törlés"],
     ["Sablon űrlap", "név és gyakorlatsorok; csak a szettek száma kötelező, a többi mező „(nem kötelező)” jelzésű; egy edzésből előtöltve is megnyitható"],

@@ -42,10 +42,12 @@ public class TemplateController {
 
     private final TemplateService templates;
     private final WorkoutService workouts;
+    private final ExerciseCatalog exerciseCatalog;
 
-    public TemplateController(TemplateService templates, WorkoutService workouts) {
+    public TemplateController(TemplateService templates, WorkoutService workouts, ExerciseCatalog exerciseCatalog) {
         this.templates = templates;
         this.workouts = workouts;
+        this.exerciseCatalog = exerciseCatalog;
     }
 
     // ---- lista ----
@@ -168,7 +170,7 @@ public class TemplateController {
                 .filter(Objects::nonNull).toList();
         model.addAttribute("form", form);
         model.addAttribute("templateId", templateId);
-        model.addAttribute("catalog", ExerciseCatalog.of(workouts.exerciseOptions(user.getId(), usedIds)));
+        model.addAttribute("catalog", exerciseCatalog.of(workouts.exerciseOptions(user.getId(), usedIds)));
         model.addAttribute("initialRows", form.getExercises().stream().map(TemplateController::rowEntry).toList());
         return "template-form";
     }

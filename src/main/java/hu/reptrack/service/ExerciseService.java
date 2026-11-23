@@ -17,6 +17,7 @@ import hu.reptrack.dto.StaleDataException;
 import hu.reptrack.repository.ExerciseRepository;
 import hu.reptrack.repository.UserRepository;
 import jakarta.validation.Valid;
+import java.text.Normalizer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -154,12 +155,31 @@ public class ExerciseService {
         Exercise exercise = new Exercise();
         exercise.setOwner(owner);
         apply(exercise, request, true);
+        if (owner == null) {
+            // közös gyakorlat: a képe a nevéből képzett kulccsal tehető a static/images/exercises mappába
+            exercise.setImageKey(imageKeyFor(exercise.getName()));
+        }
         try {
             return exercises.saveAndFlush(exercise).getId();
         } catch (DataIntegrityViolationException e) {
             // két egyidejű mentés ugyanazzal a névvel: a második az egyedi indexen akad el
             throw new DuplicateExerciseNameException();
         }
+    }
+
+    /**
+     * A gyakorlat képkulcsa a nevéből: ékezet nélkül, kisbetűvel, a szavak kötőjellel (Ferde pados fekvenyomás →
+     * ferde-pados-fekvenyomas). Ugyanez a szabály adta a beépített gyakorlatok kulcsát (V7 migráció). A kulcs a
+     * létrehozáskor rögzül, a későbbi átnevezés nem változtatja meg.
+     */
+    static String imageKeyFor(String name) {
+        String plain = Normalizer.normalize(name.toLowerCase(Locale.ROOT), Normalizer.Form.NFKD)
+                .replaceAll("\\p{M}", "");
+        String key = plain.replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+        if (key.length() > 60) {
+            key = key.substring(0, 60).replaceAll("-+$", "");
+        }
+        return key.isEmpty() ? null : key;
     }
 
     private void update(Exercise exercise, ExerciseRequest request) {

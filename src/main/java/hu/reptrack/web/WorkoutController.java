@@ -54,15 +54,17 @@ public class WorkoutController {
     private final PersonalRecordService personalRecords;
     private final OverloadService overload;
     private final TemplateService templates;
+    private final ExerciseCatalog exerciseCatalog;
     private final ZoneId zone;
 
     public WorkoutController(WorkoutService workouts, PersonalRecordService personalRecords, OverloadService overload,
-                             TemplateService templates,
+                             TemplateService templates, ExerciseCatalog exerciseCatalog,
                              @Value("${reptrack.timezone:Europe/Budapest}") String timezone) {
         this.workouts = workouts;
         this.personalRecords = personalRecords;
         this.overload = overload;
         this.templates = templates;
+        this.exerciseCatalog = exerciseCatalog;
         this.zone = ZoneId.of(timezone);
     }
 
@@ -202,7 +204,7 @@ public class WorkoutController {
                 .filter(java.util.Objects::nonNull).toList();
         model.addAttribute("form", form);
         model.addAttribute("workoutId", workoutId);
-        model.addAttribute("catalog", ExerciseCatalog.of(workouts.exerciseOptions(user.getId(), usedIds)));
+        model.addAttribute("catalog", exerciseCatalog.of(workouts.exerciseOptions(user.getId(), usedIds)));
         model.addAttribute("initialBlocks", form.getExercises().stream().map(this::blockEntry).toList());
         return "workout-form";
     }

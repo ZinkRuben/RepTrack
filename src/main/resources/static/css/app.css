@@ -842,6 +842,97 @@ span.flatpickr-weekday,
     opacity: .35;
 }
 
+/* ---------- gyakorlatválasztó ablak (js/exercise-picker.js) ---------- */
+.exercise-picker .modal-content {
+    background: var(--bs-body-bg);
+}
+
+.picker-filters {
+    position: sticky;
+    top: -1rem;
+    z-index: 1;
+    padding-bottom: .5rem;
+    background: var(--bs-body-bg);
+}
+
+.picker-muscle-filter .form-select {
+    min-width: 12rem;
+}
+
+.picker-chip.active {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #fff;
+}
+
+.picker-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: .5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    background: var(--rt-surface);
+    color: var(--bs-body-color);
+    text-align: left;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.picker-card:hover,
+.picker-card:focus-visible {
+    border-color: var(--bs-primary);
+    box-shadow: var(--rt-shadow-lg);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+/* a képek fehér hátterűek, ezért sötét módban is fehér lapon jelennek meg */
+.picker-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    border-radius: var(--bs-border-radius);
+    background: #fff;
+}
+
+.picker-icon {
+    display: grid;
+    place-items: center;
+    font-size: 2.5rem;
+}
+
+.picker-icon-WEIGHTS {
+    background: var(--rt-weights-bg);
+    color: var(--rt-weights);
+}
+
+.picker-icon-CARDIO {
+    background: var(--rt-cardio-bg);
+    color: var(--rt-cardio);
+}
+
+.picker-icon-BODYWEIGHT {
+    background: var(--rt-bodyweight-bg);
+    color: var(--rt-bodyweight);
+}
+
+.picker-name {
+    margin-top: .5rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.picker-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem .5rem;
+    margin-top: .35rem;
+    font-size: .8rem;
+    color: var(--bs-secondary-color);
+}
+
 /* ---------- lábléc ---------- */
 .app-footer {
     border-top: 1px solid var(--bs-border-color);
@@ -852,11 +943,14 @@ span.flatpickr-weekday,
 /* ---------- mozgás csökkentése ---------- */
 @media (prefers-reduced-motion: reduce) {
     .action-card,
-    .app-navbar .nav-link {
+    .app-navbar .nav-link,
+    .picker-card {
         transition: none;
     }
 
-    .action-card:hover {
+    .action-card:hover,
+    .picker-card:hover,
+    .picker-card:focus-visible {
         transform: none;
     }
 }

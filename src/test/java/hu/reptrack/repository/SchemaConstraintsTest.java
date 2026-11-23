@@ -332,6 +332,24 @@ class SchemaConstraintsTest extends IntegrationTestBase {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    // ---- gyakorlatképek ----
+
+    @Test
+    void everyBuiltInExerciseHasAnImageKey() {
+        assertThat(jdbc.queryForObject("select count(*) from exercises where owner_id is null and image_key is null",
+                Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select image_key from exercises where owner_id is null and name = 'Guggolás'",
+                String.class)).isEqualTo("guggolas");
+        assertThat(jdbc.queryForObject("select image_key from exercises where owner_id is null and name = 'Futás'",
+                String.class)).isEqualTo("szabadteri-futas");
+    }
+
+    @Test
+    void imageKeyCannotContainAPath() {
+        assertThatThrownBy(() -> jdbc.update("update exercises set image_key = '../titok' where name = 'Guggolás'"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
     // ---- túlterhelési figyelmeztetések ----
 
     @Test

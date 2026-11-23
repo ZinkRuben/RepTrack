@@ -55,6 +55,15 @@ törölhető a `.env`-ből. Hibás adatnál vagy ha a cím egy meglévő fiókho
 ./mvnw verify               # integrációs tesztek Testcontainers-szel (fut a Docker)
 ```
 
+## Gyakorlatképek
+
+A gyakorlatválasztó a `src/main/resources/static/images/exercises/` mappa képeit mutatja. A fájl neve a gyakorlat
+képkulcsa (`exercises.image_key`), ami a név ékezet nélkül, kisbetűvel, kötőjelekkel, például
+`ferde-pados-fekvenyomas.jpg` (.jpg, .webp vagy .png; négyzetes, kb. 512×512 px). Új képhez elég a fájlt a mappába
+tenni, és újraépíteni az alkalmazást (Dockerben `docker compose up -d --build`); kép nélkül a kategória ikonja látszik.
+A beépített gyakorlatok kulcsait a `V7__exercise_images.sql` sorolja fel. Az `ExerciseImagesTest` figyelmeztet,
+ha egy fájl neve egyik gyakorlathoz sem illik.
+
 ## Rétegek (`hu.reptrack`)
 
 | Csomag | Réteg |

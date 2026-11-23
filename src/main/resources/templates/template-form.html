@@ -58,20 +58,13 @@
         <div id="empty-hint" class="card mb-3">
             <div class="card-body empty-state py-4">
                 <div class="empty-state-icon"><i class="bi bi-list-check" aria-hidden="true"></i></div>
-                <p class="text-body-secondary mb-0" id="empty-hint-text">Még nincs gyakorlat. Válassz egyet lent, és add hozzá.</p>
+                <p class="text-body-secondary mb-0" id="empty-hint-text">Még nincs gyakorlat. Adj hozzá egyet a lenti gombbal.</p>
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-body">
-                <label class="form-label" for="exercise-picker">Gyakorlat hozzáadása</label>
-                <div class="input-group">
-                    <select class="form-select" id="exercise-picker"></select>
-                    <button class="btn btn-primary" type="button" id="add-exercise">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Hozzáadás</button>
-                </div>
-            </div>
-        </div>
+        <!-- a gyakorlatválasztó ablakot a js/exercise-picker.js nyitja meg -->
+        <button class="btn btn-outline-primary w-100 py-3 mb-3" type="button" id="exercise-picker-open">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Gyakorlat hozzáadása</button>
 
         <div class="form-actions d-flex gap-2">
             <button class="btn btn-primary btn-lg flex-grow-1 flex-sm-grow-0" type="submit">
@@ -87,6 +80,7 @@
         window.INITIAL = /*[[${initialRows}]]*/ [];
         /*]]>*/
     </script>
+    <script th:src="@{/js/exercise-picker.js}"></script>
 
     <script th:inline="none">
         (function () {
@@ -97,25 +91,11 @@
 
             const form = document.getElementById('template-form');
             const rowsEl = document.getElementById('rows');
-            const picker = document.getElementById('exercise-picker');
+            const openPicker = document.getElementById('exercise-picker-open');
             const hint = document.getElementById('empty-hint');
             const hintText = document.getElementById('empty-hint-text');
             const hintDefault = hintText.textContent;
             let fieldCounter = 0;
-
-            // ---- a választó: kategóriánként csoportosítva (mint az edzés űrlapján) ----
-            const groups = {};
-            catalog.forEach(function (c) {
-                if (!groups[c.categoryLabel]) {
-                    groups[c.categoryLabel] = document.createElement('optgroup');
-                    groups[c.categoryLabel].label = c.categoryLabel;
-                    picker.appendChild(groups[c.categoryLabel]);
-                }
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name + (c.shared ? '' : ' (saját)');
-                groups[c.categoryLabel].appendChild(opt);
-            });
 
             function el(tag, props, children) {
                 const node = document.createElement(tag);
@@ -203,13 +183,12 @@
                 refresh();
             }
 
-            document.getElementById('add-exercise').addEventListener('click', function () {
-                if (picker.value) {
-                    addRow(picker.value, null);
-                    hintText.textContent = hintDefault;
-                    hintText.classList.remove('text-danger');
-                    hintText.classList.add('text-body-secondary');
-                }
+            // ---- gyakorlat hozzáadása a választó ablakból (kártyák, kereső, szűrők; mint az edzés űrlapján) ----
+            window.ExercisePicker.attach(openPicker, catalog, function (exerciseId) {
+                addRow(exerciseId, null);
+                hintText.textContent = hintDefault;
+                hintText.classList.remove('text-danger');
+                hintText.classList.add('text-body-secondary');
             });
 
             // ---- küldés: legalább egy gyakorlat kell; a sorok indexeit egymás utánira rendezzük ----
@@ -220,7 +199,7 @@
                     hintText.textContent = 'Adj hozzá legalább egy gyakorlatot a sablon mentése előtt.';
                     hintText.classList.remove('text-body-secondary');
                     hintText.classList.add('text-danger');
-                    picker.focus();
+                    openPicker.focus();
                     return;
                 }
                 rows.forEach(function (row, i) {
