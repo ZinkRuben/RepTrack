@@ -18,7 +18,7 @@ module.exports = function (c) {
     ["Bemenet-ellenőrzés", "Három szinten: Bean Validation, üzleti szabályok, adatbázis-megszorítások (3.6). Az űrlapmezők típusa és tartománya a böngészőben is korlátozott, de a szerver nem bízik benne."],
     ["SQL injection", "Kizárólag paraméterezett lekérdezések (Spring Data, JPQL, Criteria API); a névkeresés LIKE mintájában a `%`, `_` és `\\` jelek szó szerint értendők."],
     ["XSS", "A Thymeleaf `th:text` minden kimenetet escape-el; `th:utext` sehol nincs használatban."],
-    ["Titkok", "Az adatbázis-jelszó és az első adminisztrátor adatai környezeti változóban vagy a tárolón kívüli `.env` fájlban vannak. Az adminisztrátor létrehozása után a jelszó törölhető a `.env`-ből."],
+    ["Titkok", "Az adatbázis-jelszó és az első adminisztrátor adatai környezeti változóban vagy a tárolón kívüli `.env` fájlban vannak. Az adminisztrátor létrehozása után a jelszó törölhető a `.env`-ből. A tárolóban lévő `.env.example` csak mintaértéket tartalmaz (`CHANGE-ME`); ha ez a jelszó bent marad, az alkalmazás nem indul el, így a minta nem kerülhet élesbe."],
     ["Hibaoldalak", "Egységes hibaoldal; nem jelenít meg veremnyomot vagy technikai részleteket."],
     ["HTTPS", "A Docker-futtatás a 8443-as porton HTTPS-t szolgál ki önaláírt tanúsítvánnyal (első induláskor készül, véletlen jelszóval, kötetben marad). A 8080-as porton érkező HTTP-kérések HTTPS-re irányítódnak. A HSTS fejléc kapcsolható (önaláírt tanúsítványnál alapból ki van kapcsolva). A tanúsítvány és a jelszava nem kerül a tárolóba."],
   ], [2000, 7026], { size: 18 }));

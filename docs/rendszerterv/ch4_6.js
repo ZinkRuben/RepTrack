@@ -187,7 +187,7 @@ module.exports = function (c) {
     "**`HttpsConfig`**: HTTPS esetén (docker profil) egy második, sima HTTP-csatlakozót nyit, amely csak az átirányításra való.",
     "**`ClockConfig`**: a `Clock` bean, amelyet az időfüggő szolgáltatások használnak.",
     "**`DotEnvEnvironmentPostProcessor`**: a `.env` fájl beolvasása a Spring környezetébe (a `META-INF/spring.factories` regisztrálja).",
-    "**`AdminBootstrap`**: indulás után létrehozza az első adminisztrátort a `REPTRACK_ADMIN_*` változókból, ha még nincs adminisztrátor. Ha már van, nem történik semmi (a jelszót sem írja át); hibás adatnál az alkalmazás nem indul el; a jelszó nem kerül a naplóba.",
+    "**`AdminBootstrap`**: indulás után létrehozza az első adminisztrátort a `REPTRACK_ADMIN_*` változókból, ha még nincs adminisztrátor. Ha már van, nem történik semmi (a jelszót sem írja át); hibás adatnál, vagy ha a jelszó még a `.env.example` `CHANGE-ME` mintaértéke, az alkalmazás nem indul el, és az üzenet megnevezi a javítandó változót; a jelszó nem kerül a naplóba.",
     "**Flyway**: induláskor lefuttatja a hiányzó migrációkat, mielőtt a Hibernate ellenőrizné a sémát.",
   ]));
 

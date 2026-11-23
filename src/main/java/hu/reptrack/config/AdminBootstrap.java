@@ -23,8 +23,9 @@ import org.springframework.stereotype.Component;
  * <ul>
  *   <li>Van már adminisztrátor: nem történik semmi (a változók módosítása a meglévő jelszót sem írja át).</li>
  *   <li>Nincs adminisztrátor és nincs megadva adat: figyelmeztetés a naplóban, az alkalmazás elindul.</li>
- *   <li>Hibás adat, vagy a cím egy meglévő fiókhoz tartozik: az alkalmazás nem indul el, és a hibaüzenet megnevezi
- *       a javítandó változót. Meglévő fiókot nem léptet elő.</li>
+ *   <li>Hibás adat, a .env.example mintajelszava ({@value #PLACEHOLDER_PASSWORD}) maradt benne, vagy a cím egy
+ *       meglévő fiókhoz tartozik: az alkalmazás nem indul el, és a hibaüzenet megnevezi a javítandó változót.
+ *       Meglévő fiókot nem léptet elő.</li>
  * </ul>
  *
  * A jelszó soha nem kerül a naplóba.
@@ -33,6 +34,9 @@ import org.springframework.stereotype.Component;
 public class AdminBootstrap implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(AdminBootstrap.class);
+
+    /** A .env.example mintajelszava: ezzel nem jön létre adminisztrátor, hogy a minta ne maradjon élesben. */
+    static final String PLACEHOLDER_PASSWORD = "CHANGE-ME";
 
     private final UserService userService;
     private final String email;
@@ -64,6 +68,11 @@ public class AdminBootstrap implements ApplicationRunner {
         if (isBlank(email) || isBlank(password)) {
             throw new IllegalStateException("Az első adminisztrátorhoz a REPTRACK_ADMIN_EMAIL és a "
                     + "REPTRACK_ADMIN_PASSWORD is kötelező; most csak az egyik van megadva.");
+        }
+        if (PLACEHOLDER_PASSWORD.equalsIgnoreCase(password.strip())) {
+            throw new IllegalStateException("A REPTRACK_ADMIN_PASSWORD még a .env.example mintaértéke ("
+                    + PLACEHOLDER_PASSWORD + "). Adj meg saját, legalább 8 karakteres jelszót a .env fájlban "
+                    + "(vagy környezeti változóban), majd indítsd újra az alkalmazást.");
         }
 
         try {
