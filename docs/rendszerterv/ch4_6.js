@@ -231,7 +231,7 @@ module.exports = function (c) {
   out.push(p("Ha ugyanazt az edzést két eszközön egyszerre szerkesztik, a később mentő nem írhatja felül észrevétlenül a másik módosítását. Az edzés, a profil és a gyakorlat `version` mezőt tartalmaz (optimista zárolás)."));
   out.push(...bullets([
     "Az űrlap rejtett mezőben hordozza a betöltéskor látott verziószámot. Mentéskor a szolgáltatás összeveti a tárolt verzióval; eltérésnél `StaleDataException` keletkezik, amelyből a `GlobalExceptionHandler` 409-es hibaoldalt készít („Az edzést közben máshol módosították…”). A felhasználó újratölti az oldalt, és újra elvégzi a módosítást.",
-    "Második védelmi vonalként a JPA `@Version` mező az `UPDATE … WHERE version = ?` feltétellel az adatbázis szintjén is megakadályozza a felülírást.",
+    "Második védelmi vonalként a JPA `@Version` mező az `UPDATE … WHERE version = ?` feltétellel az adatbázis szintjén is megakadályozza a felülírást. Ha két mentés a verzióellenőrzés után, pontosan egyszerre ér az adatbázishoz, az ebből keletkező `OptimisticLockingFailureException`-t a `GlobalExceptionHandler` szintén 409-es oldalra képezi le, ugyanazzal a tartalmú üzenettel.",
   ]));
   out.push(...FIG("szekvencia-konkurens-modositas", 12.5, "Két eszköz egyidejű szerkesztése: a második mentés elutasítása"));
 

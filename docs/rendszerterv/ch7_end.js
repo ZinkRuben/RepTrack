@@ -126,7 +126,6 @@ module.exports = function (c) {
     ["Tanúsítvány", "a HTTPS önaláírt tanúsítványt használ, a böngésző első alkalommal figyelmeztet", "hiteles tanúsítvány (pl. Let's Encrypt) valódi domainhez"],
     ["Demófelhasználó", "mintaadatokkal feltöltött felhasználó nincs", "bemutatható, több hónapnyi adat"],
     ["Állóképességi cél", "a haladása nincs definiálva, csak a célt jelenítjük meg", "távolság- vagy időalapú célérték"],
-    ["Egyidejű mentés", "ha két kérés a verzióellenőrzés után, pontosan egyszerre ér az adatbázishoz, a JPA verzióütközése az általános hibaoldalon jelenik meg a 409-es üzenet helyett", "az ütközés kivételének leképezése 409-re"],
     ["Mértékegységek", "csak metrikus mértékegység van (kg, km)", "mértékegység-választás"],
     ["Felület tesztelése", "nincs automatizált böngészős teszt", "néhány végponttól végpontig teszt a fő folyamatokra"],
   ], [2300, 4500, 2226], { size: 18 }));

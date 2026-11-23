@@ -47,6 +47,12 @@ class LayoutTest extends IntegrationTestBase {
         String stale() {
             throw new StaleDataException("Az edzést közben máshol módosították.");
         }
+
+        /** Amit a JPA dob, ha két mentés pontosan egyszerre ér az adatbázishoz (@Version ütközés). */
+        @GetMapping("/test/concurrent-save")
+        String concurrentSave() {
+            throw new org.springframework.orm.ObjectOptimisticLockingFailureException(hu.reptrack.domain.Workout.class, 1L);
+        }
     }
 
     // ---- navigációs sáv ----
@@ -182,5 +188,15 @@ class LayoutTest extends IntegrationTestBase {
                 .andExpect(status().isConflict())
                 .andExpect(content().string(allOf(
                         containsString("Ütköző módosítás"), containsString("közben máshol módosították"))));
+    }
+
+    @Test
+    @WithMockUser
+    void simultaneousSaveCaughtByTheDatabaseAlsoBecomes409() throws Exception {
+        mvc.perform(get("/test/concurrent-save"))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(allOf(
+                        containsString("Ütköző módosítás"), containsString("Az adatot közben máshol módosították."),
+                        not(containsString("ObjectOptimisticLocking")))));
     }
 }
