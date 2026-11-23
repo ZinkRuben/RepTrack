@@ -214,7 +214,7 @@ module.exports = function (c) {
   out.push(...bullets([
     "**Regisztráció.** Az `AuthController` a `RegistrationRequest`-et validálja (név, e-mail-formátum, jelszó legalább 8 karakter, a két jelszó egyezik, legfeljebb 72 bájt). A `UserService` az e-mail-címet kisbetűsre alakítja, kis- és nagybetűtől függetlenül ellenőrzi az egyediséget (`DuplicateEmailException`), a jelszót BCrypt-hash-ként menti, a szerepkör USER.",
     "**Bejelentkezés.** A szűrőlánc a `POST /login` kérést az `AccountDetailsService`-szel dolgozza fel: e-mail alapján betölti a felhasználót (az `AuthenticatedUser` hordozza az azonosítót, a szerepkört és a hash-t), a BCrypt összeveti a jelszót, siker esetén új munkamenet indul.",
-    "**Hiba.** Hibás e-mailre és hibás jelszóra ugyanaz az üzenet jelenik meg, a letiltott fiók külön üzenetet kap. A védett oldalra érkező, be nem jelentkezett kérés a `/login` oldalra irányít.",
+    "**Hiba.** Hibás e-mailre és hibás jelszóra ugyanaz az üzenet jelenik meg, a letiltott fiók külön üzenetet kap. A védett oldalra érkező, be nem jelentkezett kérés a `/login` oldalra irányít, és bejelentkezés után a felhasználó visszakerül a kért oldalra. Ezt csak valódi oldalbetöltésnél (HTML-t kérő GET) jegyzi meg a rendszer; a böngésző háttérkéréseit (kép, adat, szkript) nem, különben bejelentkezés után egy nem létező fájlra kerülne. A böngészők és keresők szokásos háttérkérései (`/.well-known/…`, `/robots.txt`, `/favicon.ico`, `/apple-touch-icon…png`) bejelentkezés nélkül is azonnal 404-et kapnak.",
   ]));
   out.push(...FIG("szekvencia-bejelentkezes", 13.5, "Bejelentkezés a Spring Security szűrőláncával"));
 
