@@ -59,13 +59,13 @@ module.exports = function (c) {
   // ------------------------------------------------------------------------------------------------ 9.
   out.push(h1("9. Tesztelés"));
   out.push(p("A tesztstratégia a rétegekhez igazodik. A tiszta szabály-komponenseket adatbázis nélkül, gyorsan teszteljük; minden más (szolgáltatások, adatelérés, séma) **valódi PostgreSQL-lel** fut Testcontainers segítségével. A tesztek egyetlen, közös PostgreSQL 16 konténert használnak (`IntegrationTestBase`), így a Flyway-migrációk, a megszorítások és a lekérdezések a tesztekben is a valós sémán futnak."));
-  out.push(tcap("A tesztek összetétele (319 tesztmetódus, a paraméterezett esetekkel 408 futás, 2026. november 23.)"));
+  out.push(tcap("A tesztek összetétele (362 tesztmetódus, a paraméterezett esetekkel 462 futás, 2026. november 23.)"));
   out.push(table(["Réteg", "Mit ellenőriznek", "Eszköz", "Darab"], [
-    ["Szabályok (`rules`)", "PR-felismerés, túlterhelési szabályok, statisztikák, képletek (határesetekkel); tiszta egységtesztek", "JUnit 5", "69"],
-    ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése, edzéssablonok", "Spring Boot Test, Testcontainers", "102"],
-    ["Adatelérés és séma (`repository`)", "a CHECK, UNIQUE és idegen kulcs megszorítások tényleges kikényszerítése, a 50 gyakorlatos alapadat épsége, lekérdezések", "Testcontainers", "43"],
-    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, sablonok oldalai, edzés indítása sablonból és mentés sablonként, HTTP→HTTPS átirányítás", "MockMvc, Spring Security Test", "67"],
-    ["Konfiguráció (`config`)", "az első adminisztrátor létrehozása indulásnál, a `.env` beolvasása", "JUnit 5, Spring Boot Test", "12"],
+    ["Szabályok (`rules`)", "PR-felismerés, túlterhelési szabályok, statisztikák, képletek, edzéscélok haladása (határesetekkel); tiszta egységtesztek", "JUnit 5", "74"],
+    ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése, edzéssablonok, edzéscélok", "Spring Boot Test, Testcontainers", "112"],
+    ["Adatelérés és séma (`repository`)", "a CHECK, UNIQUE és idegen kulcs megszorítások tényleges kikényszerítése, a 50 gyakorlatos alapadat épsége, lekérdezések, a V6 migráció átalakítása meglévő adatokon", "Testcontainers", "51"],
+    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, sablonok oldalai, edzés indítása sablonból és mentés sablonként, edzéscélok, gyakorlatválasztó és képek, magyar formátum, hibaoldalak, a bejelentkezés utáni visszairányítás, HTTP→HTTPS átirányítás", "MockMvc, Spring Security Test", "84"],
+    ["Konfiguráció (`config`)", "az első adminisztrátor létrehozása indulásnál (a mintajelszó elutasításával), a `.env` beolvasása", "JUnit 5, Spring Boot Test", "15"],
     ["Biztonság (`security`)", "tulajdonos-ellenőrzés (idegen adat 404, az adminisztrátor sem látja), minden végpont besorolása és védelme, szerepkörök, regisztráció és munkamenet, session fixation elleni védelem valódi Tomcat-tal", "MockMvc, valódi szerver", "25"],
     ["Alkalmazás indulása", "a Spring-kontextus hiba nélkül betöltődik", "Spring Boot Test", "1"],
   ], [2300, 4300, 1700, 726], { size: 18 }));
