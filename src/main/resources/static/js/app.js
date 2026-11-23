@@ -1,58 +1,71 @@
 /*
- * Témaváltás (világos / sötét / rendszer szerint). A választás a böngészőben marad (localStorage); a kezdeti
- * témát a layout <head>-jében lévő rövid szkript állítja be, hogy betöltéskor ne villanjon az oldal.
+ * Témaváltás egyetlen gombbal. Alapból az oldal a rendszer (operációs rendszer, böngésző) témáját követi, akkor is,
+ * ha az közben megváltozik. A gomb a másik témára vált, és a választást a böngésző megjegyzi (localStorage). Ha a
+ * felhasználó visszavált arra, amit a rendszer is használ, a megjegyzett választás törlődik, és az oldal ismét a
+ * rendszert követi. A kezdeti témát a layout <head>-jében lévő rövid szkript állítja be, hogy betöltéskor ne
+ * villanjon az oldal.
  */
 (function () {
     'use strict';
 
     var KEY = 'reptrack-theme';
-    var ICONS = { light: 'bi-sun-fill', dark: 'bi-moon-stars-fill', auto: 'bi-circle-half' };
     var media = window.matchMedia('(prefers-color-scheme: dark)');
+    var sessionChoice = null;   // ha a böngésző nem enged tárolni (pl. privát mód), a választás az oldalon marad
+
+    function system() {
+        return media.matches ? 'dark' : 'light';
+    }
 
     function stored() {
         try {
             var value = localStorage.getItem(KEY);
-            return value === 'light' || value === 'dark' ? value : 'auto';
+            return value === 'light' || value === 'dark' ? value : null;
         } catch (e) {
-            return 'auto';
+            return sessionChoice;
         }
     }
 
-    function store(mode) {
+    function remember(theme) {
+        sessionChoice = theme === system() ? null : theme;
         try {
-            localStorage.setItem(KEY, mode);
+            if (sessionChoice === null) {
+                localStorage.removeItem(KEY);
+            } else {
+                localStorage.setItem(KEY, sessionChoice);
+            }
         } catch (e) {
-            // privát mód vagy letiltott tároló: a választás csak erre az oldalbetöltésre érvényes
+            // a tároló nem érhető el: a sessionChoice érvényes erre az oldalbetöltésre
         }
     }
 
-    function apply(mode) {
-        var theme = mode === 'auto' ? (media.matches ? 'dark' : 'light') : mode;
+    function current() {
+        return stored() || system();
+    }
+
+    function apply() {
+        var theme = current();
+        var next = theme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-bs-theme', theme);
-        document.querySelectorAll('[data-theme-value]').forEach(function (button) {
-            var active = button.getAttribute('data-theme-value') === mode;
-            button.classList.toggle('active', active);
-            button.setAttribute('aria-pressed', String(active));
-        });
-        document.querySelectorAll('[data-theme-icon]').forEach(function (icon) {
-            icon.className = 'bi ' + ICONS[mode];
+        document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+            // az ikon és a felirat azt mutatja, mire vált a gomb
+            button.setAttribute('aria-label', next === 'dark' ? 'Váltás sötét témára' : 'Váltás világos témára');
+            button.setAttribute('title', next === 'dark' ? 'Sötét téma' : 'Világos téma');
+            var icon = button.querySelector('[data-theme-icon]');
+            if (icon) {
+                icon.className = 'bi ' + (next === 'dark' ? 'bi-moon-stars-fill' : 'bi-sun-fill');
+            }
         });
     }
 
-    apply(stored());
+    apply();
 
-    media.addEventListener('change', function () {
-        if (stored() === 'auto') {
-            apply('auto');
-        }
-    });
+    // a rendszer témájának változását követi, hacsak a felhasználó nem választott mást
+    media.addEventListener('change', apply);
 
     document.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-theme-value]');
-        if (button) {
-            var mode = button.getAttribute('data-theme-value');
-            store(mode);
-            apply(mode);
+        if (event.target.closest('[data-theme-toggle]')) {
+            remember(current() === 'dark' ? 'light' : 'dark');
+            apply();
         }
     });
 })();

@@ -72,6 +72,14 @@ class LayoutTest extends IntegrationTestBase {
     }
 
     @Test
+    void themeIsSwitchedWithOneButtonWithoutASystemOption() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(content().string(allOf(
+                        containsString("data-theme-toggle"), containsString("aria-label=\"Váltás sötét témára\""),
+                        not(containsString("data-theme-value")), not(containsString("Rendszer szerint")))));
+    }
+
+    @Test
     @WithMockUser(username = "admin@example.com", roles = "ADMIN")
     void adminGetsAdminBadge() throws Exception {
         mvc.perform(get("/")).andExpect(content().string(containsString(">Admin<")));

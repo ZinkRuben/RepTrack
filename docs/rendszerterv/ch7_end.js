@@ -47,7 +47,7 @@ module.exports = function (c) {
   out.push(p("", { spacing: { after: 60 } }));
   out.push(...bullets([
     "**Reszponzív.** A Bootstrap rácsrendszere miatt az oldalak telefonon is használhatók; a dinamikus edzésűrlap is egy oszlopra törik, így edzés közben is kitölthető.",
-    "**Világos és sötét téma.** A téma a rendszerbeállítást követi, vagy a navigációs sáv kapcsolójával választható; a választás a böngészőben tárolódik, és az oldal megjelenítése előtt érvényesül, így nincs villanás.",
+    "**Világos és sötét téma.** Alapból a rendszer (operációs rendszer, böngésző) témáját követi. A navigációs sáv gombja a másik témára vált; a választást a böngésző megjegyzi, és az oldal megjelenítése előtt érvényesül, így nincs villanás. Ha a felhasználó visszavált a rendszer témájára, az oldal ismét a rendszert követi. A böngésző saját vezérlői (például a dátummező ikonja) is a választott témához igazodnak.",
     "**Egységes elemek.** Közös oldalváz, Bootstrap Icons, kártyák, kategória-címkék, magyarázatot adó üres állapotok („Még nincs egyéni csúcsod”).",
     "**Visszajelzés.** Űrlaphibánál a kitöltött adatok megmaradnak, és az üzenet jelzi a hibát (a regisztrációnál mezőnként); sikerüzenet mentés után; külön hibaoldal a 404, 400 és 409 esetekre.",
     "**Előtöltött űrlapok.** Ha az űrlap sablonból vagy egy edzésből töltődik ki, tájékoztató sáv mondja meg, honnan jönnek az értékek, hogy még semmi nincs mentve, és mely gyakorlatok maradtak ki. A sablonból indított edzésnél a sablonban meg nem adott kötelező mezők halvány kiemelést kapnak, így látszik, mit kell még kitölteni.",
