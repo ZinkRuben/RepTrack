@@ -124,7 +124,7 @@
                     <td class="text-body-secondary fw-semibold" th:text="${s.position()}">1</td>
                     <td>
                         <span th:if="${s.weightKg() != null}" class="fw-semibold me-3"
-                              th:text="${#strings.replace(s.weightKg().stripTrailingZeros().toPlainString(), '.', ',')} + ' kg'">100 kg</span>
+                              th:text="${@num.of(s.weightKg())} + ' kg'">100 kg</span>
                         <span th:if="${s.reps() != null}" class="me-3" th:text="|× ${s.reps()}|">× 5</span>
                         <span th:if="${s.durationSec() != null}" class="me-3"
                               th:text="|${s.durationSec() / 60}:${#numbers.formatInteger(s.durationSec() % 60, 2)} perc|">25:00 perc</span>

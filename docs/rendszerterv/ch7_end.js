@@ -49,6 +49,7 @@ module.exports = function (c) {
     "**Reszponzív.** A Bootstrap rácsrendszere miatt az oldalak telefonon is használhatók; a dinamikus edzésűrlap is egy oszlopra törik, így edzés közben is kitölthető.",
     "**Világos és sötét téma.** Alapból a rendszer (operációs rendszer, böngésző) témáját követi. A navigációs sáv gombja a másik témára vált; a választást a böngésző megjegyzi, és az oldal megjelenítése előtt érvényesül, így nincs villanás. Ha a felhasználó visszavált a rendszer témájára, az oldal ismét a rendszert követi. A böngésző saját vezérlői (például a dátummező ikonja) is a választott témához igazodnak.",
     "**Egységes elemek.** Közös oldalváz, Bootstrap Icons, kártyák, kategória-címkék, magyarázatot adó üres állapotok („Még nincs egyéni csúcsod”).",
+    "**Magyar formátum.** A megjelenített számok tizedesvesszővel szerepelnek (82,5 kg), a böngésző nyelvétől függetlenül: az alkalmazás rögzített magyar nyelvi beállítással fut (`spring.web.locale=hu_HU`). A beviteli mezők értéke tizedespontos marad, mert a számmezők azt várják.",
     "**Visszajelzés.** Űrlaphibánál a kitöltött adatok megmaradnak, és az üzenet jelzi a hibát (a regisztrációnál mezőnként); sikerüzenet mentés után; külön hibaoldal a 404, 400 és 409 esetekre.",
     "**Előtöltött űrlapok.** Ha az űrlap sablonból vagy egy edzésből töltődik ki, tájékoztató sáv mondja meg, honnan jönnek az értékek, hogy még semmi nincs mentve, és mely gyakorlatok maradtak ki. A sablonból indított edzésnél a sablonban meg nem adott kötelező mezők halvány kiemelést kapnak, így látszik, mit kell még kitölteni.",
     "**Hozzáférhetőség.** Címkézett űrlapmezők, a dekoratív ikonok `aria-hidden` jelzéssel, a színek mellett szöveges jelölés is van (pl. a nyugtázott állapot felirata).",
@@ -127,7 +128,7 @@ module.exports = function (c) {
     ["Állóképességi cél", "a haladása nincs definiálva, csak a célt jelenítjük meg", "távolság- vagy időalapú célérték"],
     ["Egyidejű mentés", "ha két kérés a verzióellenőrzés után, pontosan egyszerre ér az adatbázishoz, a JPA verzióütközése az általános hibaoldalon jelenik meg a 409-es üzenet helyett", "az ütközés kivételének leképezése 409-re"],
     ["CDN-függés", "az erőforrások CDN-ről töltődnek; offline demóhoz helyi másolat kell, a Chart.js-hez nincs SRI hash", "a fájlok csomagolása az alkalmazásba"],
-    ["Megjelenítés", "a profil oldalán a súlyok még tizedesponttal jelennek meg (pl. 82.5 kg; az edzés, a csúcsok és a sablonok oldalán már tizedesvesszővel); csak metrikus mértékegység van", "magyar számformátum mindenhol, mértékegység-választás"],
+    ["Mértékegységek", "csak metrikus mértékegység van (kg, km)", "mértékegység-választás"],
     ["Felület tesztelése", "nincs automatizált böngészős teszt", "néhány végponttól végpontig teszt a fő folyamatokra"],
   ], [2300, 4500, 2226], { size: 18 }));
 

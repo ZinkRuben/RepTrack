@@ -20,7 +20,7 @@
                 <div>
                     <div class="stat-label">Legutóbbi testtömeg</div>
                     <div class="stat-value"
-                         th:text="${profile.latestWeightKg() != null} ? ${profile.latestWeightKg().stripTrailingZeros().toPlainString()} + ' kg' : '–'">84 kg</div>
+                         th:text="${profile.latestWeightKg() != null} ? ${@num.of(profile.latestWeightKg())} + ' kg' : '–'">84 kg</div>
                     <div class="small text-body-secondary" th:if="${profile.latestWeightDate() != null}"
                          th:text="${#temporals.format(profile.latestWeightDate(), 'yyyy. MM. dd.')}">2026. 11. 21.</div>
                 </div>
@@ -129,7 +129,7 @@
                         <tbody>
                         <tr th:each="w : ${weights}">
                             <td th:text="${#temporals.format(w.date(), 'yyyy. MM. dd.')}">2026. 11. 21.</td>
-                            <td class="fw-semibold" th:text="${w.weightKg().stripTrailingZeros().toPlainString()} + ' kg'">84 kg</td>
+                            <td class="fw-semibold" th:text="${@num.of(w.weightKg())} + ' kg'">84 kg</td>
                             <td class="text-end">
                                 <form class="d-inline" method="post" th:action="@{/profile/body-weight/{id}/delete(id=${w.id()})}"
                                       onsubmit="return confirm('Törlöd ezt a mérést?');">
@@ -164,7 +164,7 @@
                             <div class="text-body-secondary small">
                                 <span th:if="${g.exerciseName() != null}" th:text="${g.exerciseName()}">Guggolás</span>
                                 <span th:if="${g.targetValue() != null}"
-                                      th:text="(${g.exerciseName() != null} ? ' · ' : '') + 'cél: ' + ${g.targetValue().stripTrailingZeros().toPlainString()} + ' kg'">cél: 80 kg</span>
+                                      th:text="(${g.exerciseName() != null} ? ' · ' : '') + 'cél: ' + ${@num.of(g.targetValue())} + ' kg'">cél: 80 kg</span>
                                 <span th:if="${g.deadline() != null}"
                                       th:text="' · határidő: ' + ${#temporals.format(g.deadline(), 'yyyy. MM. dd.')}">határidő</span>
                                 <span th:if="${g.exerciseName() == null and g.targetValue() == null and g.deadline() == null}">nincs célérték</span>
@@ -181,8 +181,8 @@
                             <div class="progress-bar" th:style="'width: ' + ${p.percent()} + '%'"></div>
                         </div>
                         <div class="small text-body-secondary mt-1"
-                             th:text="${p.percent().stripTrailingZeros().toPlainString()} + '%'
-                                    + (${p.current() != null} ? ' · jelenleg ' + ${p.current().stripTrailingZeros().toPlainString()} + ' kg' : '')">
+                             th:text="${@num.of(p.percent())} + '%'
+                                    + (${p.current() != null} ? ' · jelenleg ' + ${@num.of(p.current())} + ' kg' : '')">
                             50% · jelenleg 85 kg</div>
                     </div>
                     <div class="small text-body-secondary mt-2" th:if="${p == null or p.percent() == null}">
