@@ -3,7 +3,9 @@ package hu.reptrack.web;
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.DuplicateTemplateNameException;
 import hu.reptrack.dto.ExerciseCategory;
+import hu.reptrack.dto.ExerciseOption;
 import hu.reptrack.dto.TemplateView;
+import hu.reptrack.dto.WorkoutView;
 import hu.reptrack.service.AuthenticatedUser;
 import hu.reptrack.service.TemplateService;
 import hu.reptrack.service.WorkoutService;
@@ -13,6 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -90,9 +95,23 @@ public class TemplateController {
 
     // ---- új sablon ----
 
+    /**
+     * Új, üres sablon, vagy {@code ?fromWorkout=} esetén egy rögzített edzésből előtöltve („Mentés sablonként”). Az
+     * előtöltött űrlap sincs mentve; az oldal jelzi, honnan jönnek az értékek, és mi maradt ki.
+     */
     @GetMapping("/new")
-    public String newForm(@AuthenticationPrincipal AuthenticatedUser user, Model model) {
-        return formPage(user, new TemplateForm(), null, model);
+    public String newForm(@AuthenticationPrincipal AuthenticatedUser user,
+                          @RequestParam(name = "fromWorkout", required = false) Long workoutId, Model model) {
+        if (workoutId == null) {
+            return formPage(user, new TemplateForm(), null, model);
+        }
+        WorkoutView workout = workouts.get(user.getId(), workoutId);
+        Set<Long> usable = workouts.exerciseOptions(user.getId(), List.of()).stream()
+                .map(ExerciseOption::id).collect(Collectors.toSet());
+        TemplateForm.Prefill prefill = TemplateForm.fromWorkout(workout, usable);
+        model.addAttribute("sourceWorkoutTitle", workout.title());
+        model.addAttribute("skippedExercises", prefill.skipped());
+        return formPage(user, prefill.form(), null, model);
     }
 
     @PostMapping

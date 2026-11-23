@@ -45,7 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * A sablon és az edzés kapcsolata (UC15): edzés indítása sablonból (az új edzés űrlapja kitöltve, de semmi nem
- * mentődik), és az így kitöltött űrlap mentése szokásos edzésként.
+ * mentődik), az így kitöltött űrlap mentése szokásos edzésként, és a „Mentés sablonként” (a sablon űrlapja egy
+ * rögzített edzésből előtöltve: a szettek száma és az utolsó szett értékei).
  */
 @AutoConfigureMockMvc
 @Transactional
@@ -155,6 +156,72 @@ class TemplateWorkflowTest extends IntegrationTestBase {
     @Test
     void unknownTemplateGives404() throws Exception {
         mvc.perform(get("/workouts/new").param("template", "999999").with(asAnna)).andExpect(status().isNotFound());
+    }
+
+    // ---- mentés sablonként ----
+
+    private Long pyramidWorkout() {
+        Instant start = Instant.now().minus(2, ChronoUnit.DAYS);
+        return workoutService.create(anna.getId(), new WorkoutRequest("Lábnap", start, start.plus(1, ChronoUnit.HOURS),
+                (short) 7, null, null, List.of(
+                        new WorkoutExerciseRequest(squat, null, List.of(
+                                new WorkoutSetRequest(new BigDecimal("60"), (short) 10, null, null, null, null),
+                                new WorkoutSetRequest(new BigDecimal("80"), (short) 8, null, null, null, null),
+                                new WorkoutSetRequest(new BigDecimal("100.5"), (short) 5, null, null, null, null))),
+                        new WorkoutExerciseRequest(run, null, List.of(
+                                new WorkoutSetRequest(null, null, 1800, 5000, null, null)))))).id();
+    }
+
+    @Test
+    void saveAsTemplatePrefillsTheSetCountAndTheLastSetButSavesNothing() throws Exception {
+        Long workoutId = pyramidWorkout();
+
+        MvcResult result = mvc.perform(get("/templates/new").param("fromWorkout", String.valueOf(workoutId)).with(asAnna))
+                .andExpect(status().isOk())
+                .andExpect(view().name("template-form"))
+                .andExpect(content().string(allOf(
+                        containsString("A sablon a(z) <strong>„Lábnap”</strong> edzésből készül, de még nincs mentve."),
+                        containsString("<strong>utolsó szett</strong>"),
+                        not(containsString("Kimaradt")))))
+                .andReturn();
+
+        TemplateForm form = (TemplateForm) result.getModelAndView().getModel().get("form");
+        assertThat(form.getName()).isEqualTo("Lábnap");
+        TemplateForm.Row squatRow = form.getExercises().get(0);
+        assertThat(squatRow.getExerciseId()).isEqualTo(squat);
+        assertThat(squatRow.getPlannedSets()).isEqualTo((short) 3);
+        assertThat(squatRow.getPlannedReps()).isEqualTo((short) 5);
+        assertThat(squatRow.getPlannedWeightKg()).isEqualByComparingTo("100.5");
+        TemplateForm.Row runRow = form.getExercises().get(1);
+        assertThat(runRow.getPlannedSets()).isEqualTo((short) 1);
+        assertThat(runRow.getPlannedDurationMin()).isEqualByComparingTo("30");
+        assertThat(runRow.getPlannedDistanceKm()).isEqualByComparingTo("5");
+
+        assertThat(templateService.list(anna.getId())).as("a megnyitás nem hoz létre sablont").isEmpty();
+    }
+
+    @Test
+    void saveAsTemplateLeavesOutArchivedExercisesWithANotice() throws Exception {
+        Long workoutId = pyramidWorkout();
+        exercises.findById(run).orElseThrow().setArchived(true);
+        exercises.flush();
+
+        MvcResult result = mvc.perform(get("/templates/new").param("fromWorkout", String.valueOf(workoutId)).with(asAnna))
+                .andExpect(content().string(containsString("Kimaradt, mert azóta archiválták:")))
+                .andReturn();
+        TemplateForm form = (TemplateForm) result.getModelAndView().getModel().get("form");
+        assertThat(form.getExercises()).extracting(TemplateForm.Row::getExerciseId).containsExactly(squat);
+    }
+
+    @Test
+    void workoutPagesLinkToTheTemplatesAndShowWeightsWithADecimalComma() throws Exception {
+        Long workoutId = pyramidWorkout();
+        mvc.perform(get("/workouts/" + workoutId).with(asAnna))
+                .andExpect(content().string(allOf(
+                        containsString("/templates/new?fromWorkout=" + workoutId), containsString("Mentés sablonként"),
+                        containsString("100,5 kg"), not(containsString("100.5 kg")))));
+        mvc.perform(get("/workouts").with(asAnna))
+                .andExpect(content().string(allOf(containsString("href=\"/templates\""), containsString("Sablonból"))));
     }
 
     @Test

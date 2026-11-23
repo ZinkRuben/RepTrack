@@ -3,9 +3,11 @@ package hu.reptrack.web;
 import hu.reptrack.dto.TemplateExerciseRequest;
 import hu.reptrack.dto.TemplateRequest;
 import hu.reptrack.dto.TemplateView;
+import hu.reptrack.dto.WorkoutView;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A sablon űrlapjának adatai. A böngészőben a felhasználó percet és kilométert ad meg; a {@link #toRequest()} ezeket
@@ -13,6 +15,9 @@ import java.util.List;
  * egymás után indexeltek ({@code exercises[1].plannedSets}), ezt az oldal szkriptje küldéskor rendezi.
  */
 public class TemplateForm {
+
+    static final int MAX_SETS = 20;
+    static final int DEFAULT_SETS = 3;
 
     private String name;
     private List<Row> exercises = new ArrayList<>();
@@ -54,6 +59,43 @@ public class TemplateForm {
             form.exercises.add(row);
         }
         return form;
+    }
+
+    /** A „Mentés sablonként” előtöltésének eredménye: az űrlap és a kimaradt (azóta archivált) gyakorlatok neve. */
+    public record Prefill(TemplateForm form, List<String> skipped) {
+    }
+
+    /**
+     * Sablon egy rögzített edzésből („Mentés sablonként”). A sablon gyakorlatonként egy tervezett értéksort tárol, ezért:
+     * a szettek száma a rögzített szettek száma (legfeljebb {@value #MAX_SETS}, szett nélküli gyakorlatnál
+     * {@value #DEFAULT_SETS}), a tervezett értékek pedig az <b>utolsó szett</b> értékei. Az űrlap nincs mentve, a
+     * felhasználó mentés előtt átírhatja. A {@code usableExerciseIds}-ben nem szereplő (azóta archivált) gyakorlatok
+     * kimaradnak.
+     */
+    public static Prefill fromWorkout(WorkoutView workout, Set<Long> usableExerciseIds) {
+        TemplateForm form = new TemplateForm();
+        form.name = workout.title();
+        List<String> skipped = new ArrayList<>();
+        for (WorkoutView.ExerciseView e : workout.exercises()) {
+            if (!usableExerciseIds.contains(e.exerciseId())) {
+                if (!skipped.contains(e.exerciseName())) {
+                    skipped.add(e.exerciseName());
+                }
+                continue;
+            }
+            Row row = new Row();
+            row.exerciseId = e.exerciseId();
+            row.plannedSets = (short) (e.sets().isEmpty() ? DEFAULT_SETS : Math.min(e.sets().size(), MAX_SETS));
+            if (!e.sets().isEmpty()) {
+                WorkoutView.SetView last = e.sets().get(e.sets().size() - 1);
+                row.plannedReps = last.reps();
+                row.plannedWeightKg = last.weightKg();
+                row.plannedDurationMin = FormValues.minutes(last.durationSec());
+                row.plannedDistanceKm = FormValues.kilometers(last.distanceM());
+            }
+            form.exercises.add(row);
+        }
+        return new Prefill(form, skipped);
     }
 
     public TemplateRequest toRequest() {

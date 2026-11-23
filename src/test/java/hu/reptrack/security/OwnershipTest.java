@@ -132,13 +132,15 @@ class OwnershipTest extends SecurityTestSupport {
 
     @ParameterizedTest
     @ValueSource(strings = {"bela", "admin"})
-    void someoneElsesWorkoutCannotBeOpenedChangedCopiedOrDeleted(String who) throws Exception {
+    void someoneElsesWorkoutCannotBeOpenedChangedCopiedDeletedOrSavedAsTemplate(String who) throws Exception {
         mvc.perform(get("/workouts/" + workoutId).with(intruder(who))).andExpect(status().isNotFound());
         mvc.perform(get("/workouts/" + workoutId + "/edit").with(intruder(who))).andExpect(status().isNotFound());
         mvc.perform(post("/workouts/" + workoutId).with(csrf()).with(intruder(who))
                         .param("title", "Átírva").param("startedAt", "2026-11-20T10:00").param("version", "0"))
                 .andExpect(status().isNotFound());
         mvc.perform(post("/workouts/" + workoutId + "/copy").with(csrf()).with(intruder(who)))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/templates/new").param("fromWorkout", String.valueOf(workoutId)).with(intruder(who)))
                 .andExpect(status().isNotFound());
         mvc.perform(post("/workouts/" + workoutId + "/delete").with(csrf()).with(intruder(who)))
                 .andExpect(status().isNotFound());
