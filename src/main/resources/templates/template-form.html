@@ -98,6 +98,7 @@
             const picker = document.getElementById('exercise-picker');
             const hint = document.getElementById('empty-hint');
             const hintText = document.getElementById('empty-hint-text');
+            const hintDefault = hintText.textContent;
             let fieldCounter = 0;
 
             // ---- a választó: kategóriánként csoportosítva (mint az edzés űrlapján) ----
@@ -203,7 +204,9 @@
             document.getElementById('add-exercise').addEventListener('click', function () {
                 if (picker.value) {
                     addRow(picker.value, null);
+                    hintText.textContent = hintDefault;
                     hintText.classList.remove('text-danger');
+                    hintText.classList.add('text-body-secondary');
                 }
             });
 
