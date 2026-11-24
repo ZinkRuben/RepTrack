@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title>Fiók törlése – RepTrack</title></head>
+<body>
+
+<!-- A saját fiók törlése (UC14): mi törlődik, majd megerősítés a jelszóval. -->
+<main class="container py-4 py-lg-5" style="max-width: 44rem;">
+    <a th:href="@{/profile}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Profil</a>
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Fiók törlése</h1>
+            <p class="page-subtitle">A fiókod és minden adatod végleg törlődik.</p>
+        </div>
+    </div>
+
+    <div class="alert alert-warning" role="alert" th:if="${summary.lastActiveAdmin()}">
+        <i class="bi bi-shield-exclamation" aria-hidden="true"></i>
+        Te vagy az egyetlen aktív adminisztrátor, ezért a fiókod most nem törölhető. Előbb nevezz ki egy másik
+        adminisztrátort a <a th:href="@{/admin/users}">Felhasználók</a> oldalon.
+    </div>
+
+    <div class="card border-danger-subtle">
+        <div class="card-header">Ezek törlődnek</div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between"><span>Edzések (a gyakorlatokkal és szettekkel)</span>
+                <strong th:text="${summary.workouts()}">42</strong></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Saját gyakorlatok</span>
+                <strong th:text="${summary.ownExercises()}">3</strong></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Edzéssablonok</span>
+                <strong th:text="${summary.templates()}">2</strong></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Edzéscélok</span>
+                <strong th:text="${summary.goals()}">1</strong></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Testtömeg-mérések</span>
+                <strong th:text="${summary.bodyWeightEntries()}">12</strong></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Egyéni csúcsok</span>
+                <strong th:text="${summary.personalRecords()}">18</strong></li>
+            <li class="list-group-item text-body-secondary small">A profilod, a túlterhelési figyelmeztetéseid és
+                a fiókod is törlődik. A közös gyakorlatadatbázis nem változik.</li>
+        </ul>
+        <div class="card-body border-top" th:unless="${summary.lastActiveAdmin()}">
+            <p class="mb-3"><strong>A művelet nem vonható vissza.</strong> A megerősítéshez add meg a jelszavad.</p>
+            <form method="post" th:action="@{/account/delete}">
+                <div class="mb-3">
+                    <label class="form-label" for="password">Jelszó</label>
+                    <input class="form-control" id="password" name="password" type="password"
+                           autocomplete="current-password" required>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="confirm" name="confirm" value="true" required>
+                    <label class="form-check-label" for="confirm">Tudomásul veszem, hogy a fiókom és minden adatom végleg törlődik.</label>
+                </div>
+                <div class="d-flex flex-wrap gap-2 justify-content-end">
+                    <a class="btn btn-outline-secondary" th:href="@{/profile}">Mégsem</a>
+                    <button class="btn btn-danger" type="submit"><i class="bi bi-trash3" aria-hidden="true"></i> Fiókom végleges törlése</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title>Felhasználók – RepTrack</title></head>
+<body>
+
+<!--
+  Felhasználók kezelése (UC13). Csak fiókadatok látszanak; edzés- és egészségügyi adatot az adminisztrátor sem lát.
+  Minden művelet a sor verzióját küldi (optimista zárolás), és a keresésre/oldalra tér vissza.
+-->
+<main class="container py-4 py-lg-5">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Felhasználók</h1>
+            <p class="page-subtitle" th:text="|${totalElements} fiók|">12 fiók</p>
+        </div>
+    </div>
+
+    <!-- ideiglenes jelszó: csak most látható -->
+    <div class="alert alert-warning" role="status" th:if="${tempPassword != null}">
+        <div class="fw-semibold mb-1"><i class="bi bi-key-fill" aria-hidden="true"></i>
+            Ideiglenes jelszó: <span th:text="${tempPasswordFor}">anna@example.com</span></div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <code class="fs-5 user-select-all px-2 py-1 rounded bg-body" id="tempPassword" th:text="${tempPassword}">abcDEF234ghjk</code>
+        </div>
+        <div class="small">
+            Csak most látod, utólag nem kérhető le. Add át a felhasználónak biztonságos módon; a következő
+            bejelentkezéskor új jelszót kell megadnia. A meglévő munkamenetei lejártak.
+        </div>
+    </div>
+
+    <form class="row g-2 mb-4" method="get" th:action="@{/admin/users}" role="search">
+        <div class="col-12 col-md-6 col-lg-4">
+            <label class="visually-hidden" for="q">Keresés</label>
+            <input class="form-control" id="q" name="q" type="search" th:value="${q}"
+                   placeholder="Keresés név vagy e-mail-cím szerint">
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Keresés</button>
+        </div>
+        <div class="col-auto" th:if="${!#strings.isEmpty(q)}">
+            <a class="btn btn-ghost" th:href="@{/admin/users}">Szűrő törlése</a>
+        </div>
+    </form>
+
+    <div class="card" th:if="${users.isEmpty()}">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
+            <h2 class="h5 fw-semibold">Nincs a keresésnek megfelelő fiók.</h2>
+        </div>
+    </div>
+
+    <div class="card card-table" th:unless="${users.isEmpty()}">
+        <div class="table-responsive">
+            <table class="table table-modern table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>Név</th>
+                    <th>E-mail-cím</th>
+                    <th>Szerepkör</th>
+                    <th>Állapot</th>
+                    <th>Regisztrált</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}" th:with="me=${u.id() == meId}">
+                    <td class="fw-semibold">
+                        <span th:text="${u.displayName()}">Kiss Anna</span>
+                        <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis ms-1" th:if="${me}">te</span>
+                    </td>
+                    <td class="text-break" th:text="${u.email()}">anna@example.com</td>
+                    <td>
+                        <span class="badge rounded-pill text-bg-warning" th:if="${u.role().name() == 'ADMIN'}">Admin</span>
+                        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis"
+                              th:unless="${u.role().name() == 'ADMIN'}">Felhasználó</span>
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis" th:if="${u.enabled()}">Aktív</span>
+                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis" th:unless="${u.enabled()}">Letiltva</span>
+                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis" th:if="${u.passwordChangeRequired()}"
+                              title="Ideiglenes jelszót kapott, a következő bejelentkezéskor újat kell megadnia">Jelszócsere</span>
+                    </td>
+                    <td class="text-nowrap text-body-secondary"
+                        th:text="${#temporals.format(u.createdAt(), 'yyyy. MM. dd.')}">2026. 11. 21.</td>
+                    <td class="text-end">
+                        <span class="small text-body-secondary" th:if="${me}">a profilodban</span>
+                        <div class="dropdown" th:unless="${me}">
+                            <button class="btn btn-ghost btn-icon btn-sm" type="button" data-bs-toggle="dropdown"
+                                    data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false"
+                                    th:attr="aria-label=|Műveletek: ${u.email()}|" title="Műveletek">
+                                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li th:if="${u.enabled()}">
+                                    <form th:action="@{/admin/users/{id}/disable(id=${u.id()})}" method="post"
+                                          onsubmit="return confirm('Letiltod ezt a fiókot? A felhasználó azonnal kijelentkezik, és nem tud belépni.');">
+                                        <input type="hidden" name="version" th:value="${u.version()}">
+                                        <input type="hidden" name="q" th:value="${q}"><input type="hidden" name="page" th:value="${pageNumber}">
+                                        <button class="dropdown-item" type="submit"><i class="bi bi-slash-circle" aria-hidden="true"></i> Letiltás</button>
+                                    </form>
+                                </li>
+                                <li th:unless="${u.enabled()}">
+                                    <form th:action="@{/admin/users/{id}/enable(id=${u.id()})}" method="post">
+                                        <input type="hidden" name="version" th:value="${u.version()}">
+                                        <input type="hidden" name="q" th:value="${q}"><input type="hidden" name="page" th:value="${pageNumber}">
+                                        <button class="dropdown-item" type="submit"><i class="bi bi-check-circle" aria-hidden="true"></i> Engedélyezés</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form th:action="@{/admin/users/{id}/reset-password(id=${u.id()})}" method="post"
+                                          onsubmit="return confirm('Új, ideiglenes jelszót generálsz? A régi jelszó azonnal érvénytelen lesz.');">
+                                        <input type="hidden" name="version" th:value="${u.version()}">
+                                        <input type="hidden" name="q" th:value="${q}"><input type="hidden" name="page" th:value="${pageNumber}">
+                                        <button class="dropdown-item" type="submit"><i class="bi bi-key" aria-hidden="true"></i> Jelszó visszaállítása</button>
+                                    </form>
+                                </li>
+                                <li th:if="${u.role().name() == 'USER'}">
+                                    <form th:action="@{/admin/users/{id}/promote(id=${u.id()})}" method="post"
+                                          onsubmit="return confirm('Adminisztrátorrá nevezed ki? Kezelheti a fiókokat és a közös gyakorlatadatbázist.');">
+                                        <input type="hidden" name="version" th:value="${u.version()}">
+                                        <input type="hidden" name="q" th:value="${q}"><input type="hidden" name="page" th:value="${pageNumber}">
+                                        <button class="dropdown-item" type="submit"><i class="bi bi-shield-plus" aria-hidden="true"></i> Kinevezés adminisztrátorrá</button>
+                                    </form>
+                                </li>
+                                <li th:if="${u.role().name() == 'ADMIN'}">
+                                    <form th:action="@{/admin/users/{id}/demote(id=${u.id()})}" method="post"
+                                          onsubmit="return confirm('Visszavonod az adminisztrátori jogát?');">
+                                        <input type="hidden" name="version" th:value="${u.version()}">
+                                        <input type="hidden" name="q" th:value="${q}"><input type="hidden" name="page" th:value="${pageNumber}">
+                                        <button class="dropdown-item" type="submit"><i class="bi bi-shield-minus" aria-hidden="true"></i> Adminisztrátori jog visszavonása</button>
+                                    </form>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" th:href="@{/admin/users/{id}/delete(id=${u.id()})}">
+                                        <i class="bi bi-trash3" aria-hidden="true"></i> Fiók törlése…</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav class="mt-4" th:if="${totalPages > 1}" aria-label="Oldalak">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${pageNumber == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/users(page=${pageNumber - 1}, q=${q})}"><i class="bi bi-chevron-left" aria-hidden="true"></i> Előző</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link" th:text="|${pageNumber + 1} / ${totalPages}|">1 / 3</span></li>
+            <li class="page-item" th:classappend="${pageNumber + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/users(page=${pageNumber + 1}, q=${q})}">Következő <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+            </li>
+        </ul>
+    </nav>
+</main>
+</body>
+</html>

@@ -223,6 +223,25 @@
             </form>
         </div>
     </div>
+
+    <!-- fiók: jelszó és törlés (UC14) -->
+    <div class="card mt-4" id="fiok">
+        <div class="card-header">Fiók</div>
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="fw-semibold">Jelszó</div>
+                <div class="small text-body-secondary">A csere után a többi eszközön újra be kell jelentkezned.</div>
+            </div>
+            <a class="btn btn-outline-secondary" th:href="@{/account/password}"><i class="bi bi-key" aria-hidden="true"></i> Jelszó módosítása</a>
+        </div>
+        <div class="card-body border-top d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="fw-semibold text-danger">Fiók törlése</div>
+                <div class="small text-body-secondary">A fiókod és minden adatod (edzések, célok, testtömeg-napló, csúcsok) végleg törlődik.</div>
+            </div>
+            <a class="btn btn-outline-danger" th:href="@{/account/delete}"><i class="bi bi-trash3" aria-hidden="true"></i> Fiók törlése…</a>
+        </div>
+    </div>
 </main>
 </body>
 </html>

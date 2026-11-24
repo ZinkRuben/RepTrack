@@ -39,6 +39,9 @@ public class User {
 
     private boolean enabled = true;
 
+    /** Ideiglenes jelszó után igaz: a következő bejelentkezéskor új jelszót kell megadni (UC13). */
+    private boolean passwordChangeRequired;
+
     private BigDecimal loadRatioThreshold = new BigDecimal("1.30");
 
     private Short muscleSetsThreshold = 6;
@@ -120,6 +123,14 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isPasswordChangeRequired() {
+        return passwordChangeRequired;
+    }
+
+    public void setPasswordChangeRequired(boolean passwordChangeRequired) {
+        this.passwordChangeRequired = passwordChangeRequired;
     }
 
     public BigDecimal getLoadRatioThreshold() {

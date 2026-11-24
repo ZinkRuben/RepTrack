@@ -13,4 +13,6 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
 
     /** Tulajdonos-ellenőrzéssel: más felhasználó célja nem kérhető le. */
     Optional<Goal> findByIdAndUserId(Long id, Long userId);
+
+    long countByUserId(Long userId);
 }

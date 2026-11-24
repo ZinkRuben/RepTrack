@@ -33,6 +33,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login(@RequestParam(required = false) String error, @RequestParam(required = false) String logout,
+                        @RequestParam(required = false) String expired, @RequestParam(required = false) String deleted,
                         Authentication authentication, HttpServletRequest request, Model model) {
         if (authentication != null) {
             return "redirect:/";
@@ -42,6 +43,14 @@ public class AuthController {
         }
         if (logout != null) {
             model.addAttribute(FlashMessages.SUCCESS, "Sikeresen kijelentkeztél.");
+        }
+        if (expired != null) {
+            // a fiókot módosították (letiltás, szerepkör, jelszó-visszaállítás, jelszócsere másik eszközön)
+            model.addAttribute(FlashMessages.ERROR, "A munkameneted lejárt, mert a fiókod beállításai megváltoztak. "
+                    + "Jelentkezz be újra.");
+        }
+        if (deleted != null) {
+            model.addAttribute(FlashMessages.SUCCESS, "A fiókodat és minden adatodat töröltük.");
         }
         return "login";
     }

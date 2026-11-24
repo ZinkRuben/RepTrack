@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title>Fiók törlése – RepTrack</title></head>
+<body>
+
+<!-- Egy fiók törlése az adminisztrátor által (UC13): megerősítés után a fiók és minden adata végleg törlődik. -->
+<main class="container py-4 py-lg-5" style="max-width: 44rem;">
+    <a th:href="@{/admin/users}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Felhasználók</a>
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Fiók törlése</h1>
+            <p class="page-subtitle"><span th:text="${target.displayName()}">Kiss Anna</span> ·
+                <span th:text="${target.email()}">anna@example.com</span></p>
+        </div>
+    </div>
+
+    <div class="card border-danger-subtle">
+        <div class="card-body">
+            <p>A fiókkal együtt <strong>minden adata végleg törlődik</strong>: edzések a szettekkel, saját
+                gyakorlatok, edzéssablonok, célok, testtömeg-napló, egyéni csúcsok és figyelmeztetések. A közös
+                gyakorlatadatbázis nem változik. <strong>A művelet nem vonható vissza.</strong></p>
+            <p class="text-body-secondary small">Ha csak a belépést akarod megakadályozni, a letiltás elég: az
+                adatok megmaradnak, és a fiók később újra engedélyezhető.</p>
+
+            <form method="post" th:action="@{/admin/users/{id}/delete(id=${target.id()})}">
+                <input type="hidden" name="version" th:value="${target.version()}">
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="confirm" name="confirm" value="true" required>
+                    <label class="form-check-label" for="confirm">Tudomásul veszem, hogy a fiók és minden adata végleg törlődik.</label>
+                </div>
+                <div class="d-flex flex-wrap gap-2 justify-content-end">
+                    <a class="btn btn-outline-secondary" th:href="@{/admin/users}">Mégsem</a>
+                    <button class="btn btn-danger" type="submit"><i class="bi bi-trash3" aria-hidden="true"></i> Fiók végleges törlése</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>
