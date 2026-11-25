@@ -52,6 +52,7 @@ module.exports = function (c) {
     ["`UserService`", "regisztráció; az első adminisztrátor létrehozása", "`register`, `createInitialAdmin`"],
     ["`AccountService`", "a saját fiók: jelszó módosítása (a kötelező csere is), a fiók törlése minden adatával (UC14)", "`changePassword`, `deletionSummary`, `deleteOwnAccount`"],
     ["`UserAdminService`", "a fiókok kezelése adminisztrátornak (UC13); az egész osztályt `@PreAuthorize(\"hasRole('ADMIN')\")` védi", "`list`, `get`, `setEnabled`, `setRole`, `resetPassword`, `delete`"],
+    ["`DemoDataService`", "a demófelhasználó létrehozása 16 hétnyi mintaadattal, a többi szolgáltatáson keresztül (4.6)", "`createIfMissing`"],
     ["`AccountDetailsService`", "a Spring Security felhasználó-betöltése e-mail alapján", "`loadUserByUsername`"],
     ["`ExerciseService`", "a gyakorlatok keresése; a saját gyakorlatok kezelése (UC5); a közös gyakorlatok karbantartása adminisztrátornak (UC6)", "`search`, `createOwn`, `updateOwn`, `setOwnArchived`, `deleteOwn`; `createShared`, `updateShared`, `setSharedArchived`, `deleteShared` (`@PreAuthorize`)"],
   ], [2000, 4126, 2900], { size: 18 }));
@@ -209,6 +210,7 @@ module.exports = function (c) {
     "**`ClockConfig`**: a `Clock` bean, amelyet az időfüggő szolgáltatások használnak.",
     "**`DotEnvEnvironmentPostProcessor`**: a `.env` fájl beolvasása a Spring környezetébe (a `META-INF/spring.factories` regisztrálja).",
     "**`AdminBootstrap`**: indulás után létrehozza az első adminisztrátort a `REPTRACK_ADMIN_*` változókból, ha még nincs adminisztrátor. Ha már van, nem történik semmi (a jelszót sem írja át); hibás adatnál, vagy ha a jelszó még a `.env.example` `CHANGE-ME` mintaértéke, az alkalmazás nem indul el, és az üzenet megnevezi a javítandó változót; a jelszó nem kerül a naplóba.",
+    "**`DemoDataSeeder`**: ha a `REPTRACK_DEMO_ENABLED` be van kapcsolva (alapból nincs), induláskor létrehozza a demófelhasználót (`demo@reptrack.com` / `demo1234`) a `DemoDataService`-szel: az utolsó 16 hét edzései (heti három, fokozatos terheléssel; két nehéz hét túlterhelési figyelmeztetést ad), testtömeg-napló, célok, sablonok és egy saját gyakorlat. Az adatok a meglévő szolgáltatásokon át, egy tranzakcióban jönnek létre, így a csúcsokat és a figyelmeztetéseket a valódi kiértékelés számolja. A meglévő demófiók nem változik; hiba esetén az alkalmazás nélküle indul el.",
     "**Flyway**: induláskor lefuttatja a hiányzó migrációkat, mielőtt a Hibernate ellenőrizné a sémát.",
   ]));
 

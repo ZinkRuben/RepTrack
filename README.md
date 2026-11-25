@@ -53,6 +53,13 @@ A `.env.example` jelszava csak mintaérték (`CHANGE-ME`). Ha ez marad a `.env`-
 alkalmazás nem indul el, és a hibaüzenet megmondja, melyik változót kell javítani (Dockerben: `docker compose logs app`).
 Így a mintajelszó nem kerülhet élesbe.
 
+### Demófelhasználó
+
+Bemutatáshoz a `.env`-ben `REPTRACK_DEMO_ENABLED=true`: induláskor létrejön egy felhasználó 16 hétnyi mintaadattal
+(edzések, testtömeg, célok, sablonok, csúcsok, figyelmeztetések). Belépés: **`demo@reptrack.com` / `demo1234`**.
+A jelszó szándékosan nyilvános, ezért a kapcsoló alapból ki van kapcsolva. A meglévő demófiókot nem írja felül; friss
+adatokhoz töröld a fiókot (Profil → Fiók törlése), és indítsd újra az alkalmazást.
+
 ## Tesztek
 
 ```bash

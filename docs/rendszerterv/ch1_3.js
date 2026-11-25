@@ -7,7 +7,7 @@ module.exports = function (c) {
   out.push(h1("1. Bevezetés"));
   out.push(h2("1.1 A dokumentum célja és hatóköre"));
   out.push(p("Ez a dokumentum az **Edzéskövető és elemző alkalmazás** (kódneve: **RepTrack**) rendszerterve. A követelményspecifikáció azt írja le, __mit__ tud a rendszer; a rendszerterv azt, __hogyan__ valósítottuk meg: milyen architektúrára épül, milyen rétegekből és komponensekből áll, hogyan működnek a főbb funkciók, hogyan épül fel az adatbázis, és hogyan oldottuk meg a biztonságot, a tesztelést és az üzemeltetést."));
-  out.push(p("A dokumentum a **megvalósított** rendszert mutatja be; a forráskód a GitHub-tárolóban érhető el (https://github.com/ZinkRuben/RepTrack). Ahol a megvalósítás eltér a specifikációtól, vagy egy funkció még nem készült el, azt külön jelöljük (2.4. és 11. fejezet)."));
+  out.push(p("A dokumentum a **megvalósított** rendszert mutatja be; a forráskód a GitHub-tárolóban érhető el (https://github.com/ZinkRuben/RepTrack). Ahol a megvalósítás eltér a specifikációtól, azt a 2.4. fejezet jelöli; az ismert korlátokat a 11. fejezet sorolja fel."));
   out.push(p("A dokumentum olvasói a fejlesztők (a rendszer továbbfejlesztéséhez és karbantartásához), a konzulens és az értékelők. Feltételezi a Java, a Spring és a relációs adatbázisok alapfogalmainak ismeretét."));
 
   out.push(h2("1.2 Kapcsolódó dokumentumok"));
@@ -60,7 +60,7 @@ module.exports = function (c) {
   ]));
 
   out.push(h2("2.2 Funkciók és megvalósítási állapot"));
-  out.push(p("A táblázat a specifikáció használati eseteit (UC1–UC16) és azok megvalósítási állapotát mutatja a dokumentum legutóbbi frissítésekor (2026. november 25.). Mind a 16 használati eset elkészült; a „Kész” állapotú funkciók működnek és automatizált tesztek ellenőrzik őket (9. fejezet). A használati esethez nem kötött, még hiányzó elemeket a 2.4 és a 11. fejezet sorolja fel."));
+  out.push(p("A táblázat a specifikáció használati eseteit (UC1–UC16) és azok megvalósítási állapotát mutatja a dokumentum legutóbbi frissítésekor (2026. november 25.). Mind a 16 használati eset elkészült; a „Kész” állapotú funkciók működnek és automatizált tesztek ellenőrzik őket (9. fejezet). Az ismert korlátokat a 11. fejezet sorolja fel."));
   out.push(tcap("Használati esetek és megvalósítási állapotuk"));
   out.push(table(["Azon.", "Használati eset", "Állapot", "Megvalósítás"], [
     ["UC1", "Regisztráció, bejelentkezés", "Kész", "`AuthController`, `UserService`, `AccountDetailsService`, `SecurityConfig`"],
@@ -99,7 +99,7 @@ module.exports = function (c) {
   ], [1700, 3700, 3626], { size: 19 }));
 
   out.push(h2("2.4 Eltérések a specifikációtól"));
-  out.push(p("A fejlesztés során néhány ponton a specifikációtól eltérő megoldást választottunk, vagy egy elem még nem készült el. Az alábbi táblázat ezeket gyűjti össze, indoklással."));
+  out.push(p("A fejlesztés során néhány ponton a specifikációtól eltérő megoldást választottunk. Az alábbi táblázat ezeket gyűjti össze, indoklással."));
   out.push(tcap("Eltérések a követelményspecifikációtól"));
   out.push(table(["Terület", "Specifikáció", "Megvalósítás", "Indok"], [
     ["Spring Boot", "3-as főverzió", "4.1.3", "az újabb, stabil kiadást választottuk; a rétegeket, a JPA-t és a Security-t nem érinti"],
@@ -108,7 +108,7 @@ module.exports = function (c) {
     ["Állóképességi cél", "célérték megadása", "háromféle mérték: táv egyben (km), idő egyben (perc), idő adott távon (pl. 5 km 25:00 alatt)", "a futás, úszás és kerékpározás céljai eltérőek: van, aki távot, van, aki időt vagy tempót szeretne javítani"],
     ["A BLL tesztelése", "Mockito egységtesztek", "szabályok: tiszta egységtesztek; szolgáltatások: integrációs tesztek valódi PostgreSQL-lel", "a szolgáltatások logikája az adatbázishoz (megszorítások, lekérdezések) kötődik, ezt mock nem ellenőrzi"],
     ["Edzés indítása sablonból", "az edzés létrejön, és betölti a tervezett gyakorlatokat és szetteket", "az új edzés űrlapja töltődik ki a sablonból; az edzés a Mentés gombra jön létre", "a félbehagyott indítás nem hagy üres, nyitott edzést a naplóban"],
-    ["Demófelhasználó", "néhány hónapnyi mintaadat", "tervezett", "az 50 gyakorlatos alapadatbázis már megvan"],
+    ["Demófelhasználó", "néhány hónapnyi mintaadat", "16 hétnyi mintaadat; a `REPTRACK_DEMO_ENABLED` kapcsolóval jön létre, alapból kikapcsolva (4.6)", "a demófiók jelszava nyilvános, éles telepítésben ne jöjjön létre magától"],
   ], [1500, 2000, 2900, 2626], { size: 19 }));
 
   // ------------------------------------------------------------------------------------------------ 3.
@@ -143,7 +143,7 @@ module.exports = function (c) {
   out.push(...bullets([
     "A `service` az egyetlen csomag, amely a `repository`-t és a `rules`-t is használja; a `web` nem lát sem entitást, sem repository-t.",
     "A `web` → `rules` függőség egyetlen segédosztályra szól: a `Periods` az időszakhatárokat (hét, hónap) számolja a statisztikai oldal alapértelmezett időszakához.",
-    "A `config` → `service` függőség az `AdminBootstrap`: induláskor a `UserService`-szel hozza létre az első adminisztrátort.",
+    "A `config` → `service` függőség az indulási feladatoké: az `AdminBootstrap` a `UserService`-szel hozza létre az első adminisztrátort, a `DemoDataSeeder` a `DemoDataService`-szel a demófelhasználót.",
     "A `dto` nem függ semmitől, ezért bármelyik réteg használhatja; a `domain` csak a `dto` enumjait ismeri.",
   ]));
 

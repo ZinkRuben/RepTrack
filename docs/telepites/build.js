@@ -73,6 +73,7 @@ c.push(...numbered([
   "Nyisd meg a böngészőben a **https://localhost:8443** címet. A tanúsítvány önaláírt, ezért a böngésző első alkalommal figyelmeztet: a „Speciális” gombbal folytasd a megnyitást. A `http://localhost:8080` cím automatikusan a HTTPS-címre irányít.",
   "Jelentkezz be az 1. lépésben megadott adminisztrátori e-mail-címmel és jelszóval, vagy a „Regisztráció” oldalon hozz létre új felhasználót.",
 ], "n2"));
+c.push(note("Bemutatáshoz a `.env`-ben a `REPTRACK_DEMO_ENABLED=true` beállítással induláskor demófelhasználó is létrejön 16 hétnyi mintaadattal. Belépés: `demo@reptrack.com` / `demo1234`. A jelszó nyilvános, ezért a kapcsoló alapból ki van kapcsolva."));
 
 c.push(h2("3.1 Leállítás, újraindítás, törlés"));
 c.push(...code([
@@ -108,6 +109,7 @@ c.push(tcap("A környezeti változók és a `.env` beállításai"));
 c.push(table(["Változó", "Alapérték", "Jelentés"], [
   ["`REPTRACK_ADMIN_EMAIL`, `REPTRACK_ADMIN_PASSWORD`", "(nincs)", "az első adminisztrátor adatai; csak akkor használja, ha még nincs adminisztrátor (a meglévő jelszót nem írja át)"],
   ["`REPTRACK_ADMIN_NAME`", "Adminisztrátor", "az adminisztrátor megjelenített neve"],
+  ["`REPTRACK_DEMO_ENABLED`", "false", "demófelhasználó 16 hétnyi mintaadattal (`demo@reptrack.com` / `demo1234`); a meglévőt nem írja felül"],
   ["`DB_URL`, `DB_USER`, `DB_PASSWORD`", "`jdbc:postgresql://localhost:5432/reptrack`, `reptrack`, `reptrack`", "adatbázis-hozzáférés (a Compose automatikusan beállítja); a jelszó Docker esetén csak az adatbázis első létrehozása előtt módosítható"],
   ["`HTTPS_PORT`, `HTTP_PORT`", "8443, 8080", "a Docker-futtatás gazdagépen kiadott portjai"],
   ["`REPTRACK_HTTPS_HSTS`", "false", "a HSTS fejléc; valódi domainnél és hiteles tanúsítványnál kapcsold be"],
