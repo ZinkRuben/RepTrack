@@ -15,6 +15,7 @@ public interface WorkoutTemplateRepository extends JpaRepository<WorkoutTemplate
     @EntityGraph(attributePaths = {"exercises", "exercises.exercise"})
     List<WorkoutTemplate> findByUserIdOrderByName(Long userId);
 
+    long countByUserId(Long userId);
     /** Tulajdonos-ellenőrzéssel: más felhasználó sablona nem kérhető le. */
     @EntityGraph(attributePaths = {"exercises", "exercises.exercise"})
     Optional<WorkoutTemplate> findByIdAndUserId(Long id, Long userId);

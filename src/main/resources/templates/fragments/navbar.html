@@ -47,6 +47,11 @@
                         </a>
                     </li>
                     <li>
+                        <a class="dropdown-item" th:href="@{/account/password}">
+                            <i class="bi bi-key" aria-hidden="true"></i> Jelszó módosítása
+                        </a>
+                    </li>
+                    <li>
                         <form th:action="@{/logout}" method="post">
                             <button class="dropdown-item text-danger" type="submit">
                                 <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Kijelentkezés
@@ -77,6 +82,9 @@
                 <li th:replace="~{fragments/navbar :: navLink('/exercises', 'Gyakorlatok', 'bi-collection')}"></li>
                 <li th:replace="~{fragments/navbar :: navLink('/stats', 'Statisztika', 'bi-graph-up')}"></li>
                 <li th:replace="~{fragments/navbar :: navLink('/records', 'Csúcsok', 'bi-trophy')}"></li>
+                <th:block sec:authorize="hasRole('ADMIN')">
+                    <li th:replace="~{fragments/navbar :: navLink('/admin/users', 'Felhasználók', 'bi-people')}"></li>
+                </th:block>
             </ul>
         </div>
     </div>

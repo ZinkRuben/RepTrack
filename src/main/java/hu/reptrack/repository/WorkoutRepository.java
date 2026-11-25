@@ -12,4 +12,6 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long>, Workout
 
     /** Tulajdonos-ellenőrzéssel: más felhasználó edzése nem kérhető le. */
     Optional<Workout> findByIdAndUserId(Long id, Long userId);
+
+    long countByUserId(Long userId);
 }

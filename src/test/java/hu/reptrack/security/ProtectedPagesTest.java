@@ -49,12 +49,16 @@ class ProtectedPagesTest extends SecurityTestSupport {
             "POST /exercises/{id}/delete",
             "GET /records", "GET /stats",
             "GET /profile", "POST /profile", "POST /profile/body-weight", "POST /profile/body-weight/{id}/delete",
-            "POST /profile/goals", "POST /profile/goals/{id}/delete");
+            "POST /profile/goals", "POST /profile/goals/{id}/delete",
+            "GET /account/password", "POST /account/password", "GET /account/delete", "POST /account/delete");
 
     static final List<String> ADMIN = List.of(
             "GET /admin/exercises/new", "GET /admin/exercises/{id}/edit",
             "POST /admin/exercises", "POST /admin/exercises/{id}", "POST /admin/exercises/{id}/archive",
-            "POST /admin/exercises/{id}/restore", "POST /admin/exercises/{id}/delete");
+            "POST /admin/exercises/{id}/restore", "POST /admin/exercises/{id}/delete",
+            "GET /admin/users", "GET /admin/users/{id}/delete",
+            "POST /admin/users/{id}/disable", "POST /admin/users/{id}/enable", "POST /admin/users/{id}/promote",
+            "POST /admin/users/{id}/demote", "POST /admin/users/{id}/reset-password", "POST /admin/users/{id}/delete");
 
     /** A Spring Security saját végpontjai (szűrő kezeli őket, nem controller). */
     static final List<String> SECURITY_FILTER_POSTS = List.of("POST /login", "POST /logout");

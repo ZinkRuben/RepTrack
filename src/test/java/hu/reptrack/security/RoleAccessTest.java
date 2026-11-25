@@ -71,6 +71,19 @@ class RoleAccessTest extends SecurityTestSupport {
         assertThat(exercises.findById(squat).orElseThrow().isArchived()).isFalse();
     }
 
+    @ParameterizedTest
+    @MethodSource("adminRoutes")
+    void userCannotManageAnotherAccountThroughTheAdminEndpoints(String route) throws Exception {
+        // a fiókkezelő végpontok egy másik felhasználó azonosítójával: Anna nem tilthatja le, törölheti stb. Bélát
+        mvc.perform(request(route, bela.getId()).with(as(anna)).param("version", String.valueOf(bela.getVersion()))
+                        .param("confirm", "true"))
+                .andExpect(status().isForbidden());
+        User reloaded = users.findById(bela.getId()).orElseThrow();
+        assertThat(reloaded.isEnabled()).isTrue();
+        assertThat(reloaded.getRole()).isEqualTo(Role.USER);
+        assertThat(reloaded.isPasswordChangeRequired()).isFalse();
+    }
+
     @Test
     void adminReachesTheAdminEndpoints() throws Exception {
         Long squat = sharedExerciseId("Guggolás");
@@ -80,6 +93,19 @@ class RoleAccessTest extends SecurityTestSupport {
         mvc.perform(post("/admin/exercises/" + squat + "/archive").with(csrf()).with(as(admin)))
                 .andExpect(redirectedUrl("/exercises?source=SHARED"));
         assertThat(exercises.findById(squat).orElseThrow().isArchived()).isTrue();
+
+        mvc.perform(get("/admin/users").with(as(admin))).andExpect(status().isOk());
+        mvc.perform(get("/admin/users/" + anna.getId() + "/delete").with(as(admin))).andExpect(status().isOk());
+        mvc.perform(post("/admin/users/" + anna.getId() + "/disable").with(csrf()).with(as(admin))
+                        .param("version", String.valueOf(anna.getVersion())))
+                .andExpect(redirectedUrl("/admin/users"));
+        users.flush();
+        assertThat(users.findById(anna.getId()).orElseThrow().isEnabled()).isFalse();
+    }
+
+    @Test
+    void adminDeletePageOfAMissingAccountIsNotFound() throws Exception {
+        mvc.perform(get("/admin/users/999999/delete").with(as(admin))).andExpect(status().isNotFound());
     }
 
     // ---- felhasználói oldalak ----

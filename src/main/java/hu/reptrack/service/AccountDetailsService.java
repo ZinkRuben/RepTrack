@@ -27,6 +27,6 @@ public class AccountDetailsService implements UserDetailsService {
         User user = users.findByEmailIgnoreCase(normalized)
                 .orElseThrow(() -> new UsernameNotFoundException("Nincs ilyen felhasználó."));
         return new AuthenticatedUser(user.getId(), user.getEmail(), user.getDisplayName(), user.getPasswordHash(),
-                user.getRole(), user.isEnabled());
+                user.getRole(), user.isEnabled(), user.isPasswordChangeRequired());
     }
 }

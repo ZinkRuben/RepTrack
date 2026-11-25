@@ -49,4 +49,6 @@ public interface PersonalRecordRepository extends JpaRepository<PersonalRecord, 
             order by e.name, p.recordType, p.id
             """)
     List<PersonalRecordView> findViewsByWorkout(@Param("userId") Long userId, @Param("workoutId") Long workoutId);
+
+    long countByUserId(Long userId);
 }

@@ -66,4 +66,6 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
 
     @Query("select distinct g.exercise.id from Goal g where g.exercise.id in :ids")
     Set<Long> findIdsUsedInGoals(@Param("ids") Collection<Long> ids);
+
+    long countByOwnerId(Long ownerId);
 }

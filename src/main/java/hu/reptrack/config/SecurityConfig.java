@@ -10,9 +10,12 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.util.matcher.AndRequestMatcher;
@@ -32,8 +35,11 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
  *       az URL-szabályokra, a metódusszintű jogosultságra ({@code @PreAuthorize} a szolgáltatásokban) és a
  *       sablonok {@code sec:authorize} feltételeire egyaránt érvényes.</li>
  *   <li>Űrlapos bejelentkezés e-mail-címmel a saját /login oldalon; a felhasználókat az AccountDetailsService tölti
- *       be az adatbázisból, a jelszavak BCrypt-hash-ként tárolódnak. Bejelentkezés után a felhasználó oda kerül, ahová
+ *       be az adatbázisból, a jelszavak BCrypt-hash-ként tárolódnak.</li>
+ *   <li>Bejelentkezés után a felhasználó oda kerül, ahová
  *       oldalt akart megnyitni; a böngésző háttérkéréseit nem jegyezzük meg ({@link #pageRequestCache()}).</li>
+ *   <li>Munkamenet-nyilvántartás (SessionRegistry): egy fiók munkamenetei lejárathatók (letiltás, szerepkör-változás,
+ *       jelszó-visszaállítás, törlés; web.AccountSessions). A lejárt munkamenet a /login?expired oldalra kerül.</li>
  *   <li>CSRF-védelem bekapcsolva (alapértelmezés): a {@code th:action}-nel készült űrlapok automatikusan kapják a
  *       tokent, a kijelentkezés is csak POST-tal, tokennel működik.</li>
  *   <li>HTTPS esetén (server.ssl.enabled=true, pl. a docker profil) minden sima HTTP-kérés HTTPS-re irányítódik
@@ -80,10 +86,24 @@ public class SecurityConfig {
                 .permitAll())
             .logout(logout -> logout
                 .logoutSuccessUrl("/login?logout")
-                .permitAll());
+                .permitAll())
+            .sessionManagement(session -> session
+                .maximumSessions(-1)
+                .sessionRegistry(sessionRegistry())
+                .expiredUrl("/login?expired"));
         return http.build();
     }
 
+    /** A bejelentkezett felhasználók munkamenetei (korlátlan számú munkamenet fiókonként). */
+    @Bean
+    SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    /** A lejárt vagy kijelentkezett munkamenetek kikerülnek a nyilvántartásból. */
+    @Bean
+    static HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     /**
      * Ezeket a böngésző vagy egy kereső magától kéri, a felhasználó nem látja őket (pl. a Chrome fejlesztői eszközei a
      * {@code /.well-known/…} alatt, a Safari az {@code apple-touch-icon} képet). Az alkalmazásban nincsenek ilyen

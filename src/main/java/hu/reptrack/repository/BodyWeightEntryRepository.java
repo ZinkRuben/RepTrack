@@ -14,4 +14,6 @@ public interface BodyWeightEntryRepository extends JpaRepository<BodyWeightEntry
 
     /** Tulajdonos-ellenőrzéssel: más felhasználó mérése nem kérhető le. */
     Optional<BodyWeightEntry> findByIdAndUserId(Long id, Long userId);
+
+    long countByUserId(Long userId);
 }

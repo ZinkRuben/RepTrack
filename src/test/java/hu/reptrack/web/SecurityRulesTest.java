@@ -58,10 +58,8 @@ class SecurityRulesTest extends IntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void adminPassesTheAdminRule() throws Exception {
-        // még nincs admin oldal: a 404 azt mutatja, hogy a kérés átjutott a biztonsági szűrőn
-        mvc.perform(get("/admin/users")).andExpect(status().isNotFound());
+        mvc.perform(get("/admin/users").with(TestPrincipals.anyAdmin())).andExpect(status().isOk());
     }
 
     @Test
