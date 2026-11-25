@@ -104,6 +104,8 @@ public class SecurityConfig {
     @Bean
     static HttpSessionEventPublisher httpSessionEventPublisher() {
         return new HttpSessionEventPublisher();
+    }
+
     /**
      * Ezeket a böngésző vagy egy kereső magától kéri, a felhasználó nem látja őket (pl. a Chrome fejlesztői eszközei a
      * {@code /.well-known/…} alatt, a Safari az {@code apple-touch-icon} képet). Az alkalmazásban nincsenek ilyen
