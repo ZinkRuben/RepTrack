@@ -10,9 +10,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * ezért nem szabad osztályonként leállítani).
  *
  * <p>Az első admin adatai üresek: a fejlesztő saját .env fájlja így nem hoz létre adminisztrátort a tesztadatbázisban
- * (az AdminBootstrap tesztjei a futtatót közvetlenül hívják, tranzakcióban).
+ * (az AdminBootstrap tesztjei a futtatót közvetlenül hívják, tranzakcióban). A demófelhasználó ugyanezért ki van
+ * kapcsolva (a DemoDataSeeder tesztjei szintén közvetlenül hívják).
  */
-@SpringBootTest(properties = {"reptrack.admin.email=", "reptrack.admin.password="})
+@SpringBootTest(properties = {"reptrack.admin.email=", "reptrack.admin.password=", "reptrack.demo.enabled=false"})
 public abstract class IntegrationTestBase {
 
     @ServiceConnection
