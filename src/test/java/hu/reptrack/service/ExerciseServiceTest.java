@@ -341,6 +341,31 @@ class ExerciseServiceTest extends IntegrationTestBase {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void newSharedExerciseGetsAnImageKeyFromItsNameThatSurvivesRenaming() {
+        Long id = service.createShared(weights("Kábeles mellzárás"));
+        assertThat(exercises.findById(id).orElseThrow().getImageKey()).isEqualTo("kabeles-mellzaras");
+
+        ExerciseRequest r = service.getSharedForEdit(id).form();
+        r.setName("Kábeles mellzárás állva");
+        service.updateShared(id, r);
+        assertThat(exercises.findById(id).orElseThrow().getImageKey()).isEqualTo("kabeles-mellzaras");
+
+        Long own = service.createOwn(anna.getId(), weights("Anna nyomása"));
+        assertThat(exercises.findById(own).orElseThrow().getImageKey()).as("saját gyakorlathoz nincs kép").isNull();
+    }
+
+    @Test
+    void imageKeysFollowTheFileNamingRule() {
+        assertThat(ExerciseService.imageKeyFor("Ferde pados fekvenyomás")).isEqualTo("ferde-pados-fekvenyomas");
+        assertThat(ExerciseService.imageKeyFor("Négyütemű fekvőtámasz felugrással"))
+                .isEqualTo("negyutemu-fekvotamasz-felugrassal");
+        assertThat(ExerciseService.imageKeyFor("  Kitörés (kézisúlyzóval)! ")).isEqualTo("kitores-kezisulyzoval");
+        assertThat(ExerciseService.imageKeyFor("!!!")).isNull();
+        assertThat(ExerciseService.imageKeyFor("a".repeat(100))).hasSize(60);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void adminMaintainsSharedExercisesThatEveryoneSees() {
         Long id = service.createShared(weights("Kábeles mellzárás"));
         assertThat(exercises.findById(id).orElseThrow().isShared()).isTrue();

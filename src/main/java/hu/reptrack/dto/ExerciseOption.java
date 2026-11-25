@@ -1,6 +1,9 @@
 package hu.reptrack.dto;
 
-/** Egy választható gyakorlat az edzés űrlapjához: a név és az, hogy mely mezők rögzíthetők hozzá. */
+/**
+ * Egy választható gyakorlat az edzés és a sablon űrlapjához: a név, a kategória, az elsődleges izomcsoport (a
+ * választó szűrőjéhez), hogy mely mezők rögzíthetők hozzá, és a képének kulcsa (lehet üres).
+ */
 public record ExerciseOption(
         Long id,
         String name,
@@ -10,5 +13,7 @@ public record ExerciseOption(
         boolean tracksDuration,
         boolean tracksDistance,
         boolean tracksHeartRate,
-        boolean shared) {
+        boolean shared,
+        MuscleGroup primaryMuscle,
+        String imageKey) {
 }

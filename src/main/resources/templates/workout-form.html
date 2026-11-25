@@ -50,10 +50,16 @@
                                th:value="${form.startedAt}">
                     </div>
                     <div class="col-6 col-md-3">
-                        <label class="form-label" for="endedAt">Befejezés</label>
+                        <div class="d-flex justify-content-between align-items-baseline gap-2">
+                            <label class="form-label" for="endedAt">Befejezés</label>
+                            <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" id="ended-now"
+                                    title="A befejezés a mostani időpont">
+                                <i class="bi bi-clock" aria-hidden="true"></i> Most</button>
+                        </div>
                         <input class="form-control" id="endedAt" name="endedAt" type="datetime-local"
-                               th:value="${form.endedAt}">
-                        <div class="form-text">Üresen hagyva az edzés nyitott marad.</div>
+                               th:value="${form.endedAt}" aria-describedby="endedAt-help">
+                        <div class="form-text" id="endedAt-help">Üresen hagyva az edzés nyitott marad; a nyitott edzés
+                            nem számít bele a csúcsokba és a figyelmeztetésekbe.</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <label class="form-label" for="fatigue">Fáradtság (1–10)</label>
@@ -76,20 +82,13 @@
         <div id="empty-hint" class="card mb-3">
             <div class="card-body empty-state py-4">
                 <div class="empty-state-icon"><i class="bi bi-list-check" aria-hidden="true"></i></div>
-                <p class="text-body-secondary mb-0">Még nincs gyakorlat. Válassz egyet lent, és add hozzá.</p>
+                <p class="text-body-secondary mb-0">Még nincs gyakorlat. Adj hozzá egyet a lenti gombbal.</p>
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-body">
-                <label class="form-label" for="exercise-picker">Gyakorlat hozzáadása</label>
-                <div class="input-group">
-                    <select class="form-select" id="exercise-picker"></select>
-                    <button class="btn btn-primary" type="button" id="add-exercise">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Hozzáadás</button>
-                </div>
-            </div>
-        </div>
+        <!-- a gyakorlatválasztó ablakot a js/exercise-picker.js nyitja meg -->
+        <button class="btn btn-outline-primary w-100 py-3 mb-3" type="button" id="exercise-picker-open">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Gyakorlat hozzáadása</button>
 
         <!-- mobilon is kézre eső mentés: az oldal aljára tapad -->
         <div class="form-actions d-flex gap-2">
@@ -108,6 +107,7 @@
         window.FROM_TEMPLATE = /*[[${sourceTemplateName != null}]]*/ false;
         /*]]>*/
     </script>
+    <script th:src="@{/js/exercise-picker.js}"></script>
 
     <script th:inline="none">
         (function () {
@@ -119,22 +119,7 @@
 
             const form = document.getElementById('workout-form');
             const blocksEl = document.getElementById('blocks');
-            const picker = document.getElementById('exercise-picker');
             const hint = document.getElementById('empty-hint');
-
-            // ---- a választó: kategóriánként csoportosítva ----
-            const groups = {};
-            catalog.forEach(function (c) {
-                if (!groups[c.categoryLabel]) {
-                    groups[c.categoryLabel] = document.createElement('optgroup');
-                    groups[c.categoryLabel].label = c.categoryLabel;
-                    picker.appendChild(groups[c.categoryLabel]);
-                }
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name + (c.shared ? '' : ' (saját)');
-                groups[c.categoryLabel].appendChild(opt);
-            });
 
             // ---- segédek ----
             function el(tag, props, children) {
@@ -273,8 +258,25 @@
                 refresh();
             }
 
-            document.getElementById('add-exercise').addEventListener('click', function () {
-                if (picker.value) { addBlock(picker.value, null); }
+            // ---- gyakorlat hozzáadása a választó ablakból (kártyák, kereső, szűrők) ----
+            window.ExercisePicker.attach(document.getElementById('exercise-picker-open'), catalog, function (exerciseId) {
+                addBlock(exerciseId, null);
+            });
+
+            // „Most”: a befejezés a mostani időpont (percre); utána a fáradtság jön, mert lezárt edzéshez kötelező
+            document.getElementById('ended-now').addEventListener('click', function () {
+                const ended = document.getElementById('endedAt');
+                const now = new Date();
+                now.setSeconds(0, 0);
+                if (ended._flatpickr) {
+                    ended._flatpickr.setDate(now, true);
+                } else {
+                    const pad = function (n) { return String(n).padStart(2, '0'); };
+                    ended.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+                        + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+                }
+                const fatigue = document.getElementById('fatigue');
+                if (fatigue && !fatigue.value) { fatigue.focus(); }
             });
 
             // ---- küldés: a listák indexeit egymás utánira rendezzük (a szerver kötése ezt várja) ----

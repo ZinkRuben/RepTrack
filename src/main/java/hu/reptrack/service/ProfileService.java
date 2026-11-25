@@ -7,6 +7,7 @@ import hu.reptrack.domain.User;
 import hu.reptrack.dto.BodyWeightRequest;
 import hu.reptrack.dto.BodyWeightView;
 import hu.reptrack.dto.BusinessRuleException;
+import hu.reptrack.dto.EnduranceMetric;
 import hu.reptrack.dto.GoalRequest;
 import hu.reptrack.dto.GoalType;
 import hu.reptrack.dto.GoalView;
@@ -138,7 +139,8 @@ public class ProfileService {
                 .map(g -> new GoalView(g.getId(), g.getGoalType(),
                         g.getExercise() == null ? null : g.getExercise().getId(),
                         g.getExercise() == null ? null : g.getExercise().getName(),
-                        g.getTargetValue(), g.getDeadline(), g.getCreatedAt().atZone(zone).toLocalDate()))
+                        g.getTargetValue(), g.getDeadline(), g.getCreatedAt().atZone(zone).toLocalDate(),
+                        g.getEnduranceMetric(), g.getTargetDistanceM()))
                 .toList();
     }
 
@@ -157,12 +159,20 @@ public class ProfileService {
         if (type == GoalType.STRENGTH && request.targetValue() != null && request.exerciseId() == null) {
             throw new BusinessRuleException("Erő-célhoz válassz gyakorlatot, amelyben a célsúlyt el szeretnéd érni.");
         }
+        EnduranceMetric metric = type == GoalType.ENDURANCE
+                ? (request.enduranceMetric() == null ? EnduranceMetric.DISTANCE : request.enduranceMetric())
+                : null;
+        if (metric != null) {
+            checkEndurancePlan(metric, request);
+        }
 
         Goal goal = new Goal();
         goal.setUser(users.getReferenceById(userId));
         goal.setGoalType(type);
         goal.setTargetValue(request.targetValue());
         goal.setDeadline(request.deadline());
+        goal.setEnduranceMetric(metric);
+        goal.setTargetDistanceM(metric == EnduranceMetric.TIME_FOR_DISTANCE ? request.targetDistanceM() : null);
         if (!bodyWeightGoal && request.exerciseId() != null) {      // a testtömeg-célhoz nem tartozik gyakorlat
             Exercise exercise = exercises.findById(request.exerciseId())
                     .filter(e -> e.getOwner() == null || e.getOwner().getId().equals(userId))
@@ -170,9 +180,41 @@ public class ProfileService {
             if (type == GoalType.STRENGTH && !exercise.isTracksWeight()) {
                 throw new BusinessRuleException("Erő-célhoz olyan gyakorlat kell, amelyhez súly rögzíthető.");
             }
+            if (metric != null) {
+                checkEnduranceExercise(metric, exercise);
+            }
             goal.setExercise(exercise);
         }
         goals.save(goal);
+    }
+
+    /**
+     * Az állóképességi cél adatai: célértékhez gyakorlat is kell (különben a haladás nem számolható), az „idő adott
+     * távon” célhoz pedig a táv és a célidő is.
+     */
+    private static void checkEndurancePlan(EnduranceMetric metric, GoalRequest request) {
+        if (metric == EnduranceMetric.TIME_FOR_DISTANCE
+                && (request.targetDistanceM() == null || request.targetValue() == null)) {
+            throw new BusinessRuleException("Az „idő adott távon” célhoz add meg a távot és a célidőt is.");
+        }
+        if (request.targetValue() != null && request.exerciseId() == null) {
+            throw new BusinessRuleException("Az állóképességi célhoz válassz gyakorlatot is, amelyben el szeretnéd érni.");
+        }
+    }
+
+    /** A gyakorlat rögzíti-e azt, amit a cél mér (távot, időt, vagy mindkettőt). */
+    private static void checkEnduranceExercise(EnduranceMetric metric, Exercise exercise) {
+        boolean distanceNeeded = metric != EnduranceMetric.DURATION;
+        boolean durationNeeded = metric != EnduranceMetric.DISTANCE;
+        if ((distanceNeeded && !exercise.isTracksDistance()) || (durationNeeded && !exercise.isTracksDuration())) {
+            String needed = switch (metric) {
+                case DISTANCE -> "táv";
+                case DURATION -> "időtartam";
+                case TIME_FOR_DISTANCE -> "táv és időtartam";
+            };
+            throw new BusinessRuleException("Ehhez a célhoz olyan gyakorlat kell, amelyhez " + needed
+                    + " rögzíthető; a(z) " + exercise.getName() + " ilyet nem rögzít.");
+        }
     }
 
     public void deleteGoal(Long userId, Long id) {

@@ -192,7 +192,7 @@ public class WorkoutService {
                         .filter(e -> e.getOwner() == null || e.getOwner().getId().equals(userId))
                         .ifPresent(e -> options.add(new ExerciseOption(e.getId(), e.getName(), e.getCategory(),
                                 e.isTracksWeight(), e.isTracksReps(), e.isTracksDuration(), e.isTracksDistance(),
-                                e.isTracksHeartRate(), e.getOwner() == null)));
+                                e.isTracksHeartRate(), e.getOwner() == null, e.getPrimaryMuscle(), e.getImageKey())));
             }
         }
         return options;

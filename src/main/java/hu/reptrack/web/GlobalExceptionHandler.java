@@ -3,6 +3,7 @@ package hu.reptrack.web;
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.NotFoundException;
 import hu.reptrack.dto.StaleDataException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,6 +28,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(StaleDataException.class)
     public ModelAndView staleData(StaleDataException ex) {
         return errorPage(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /**
+     * Ritka versenyhelyzet: két mentés a verzióellenőrzés után, pontosan egyszerre ér az adatbázishoz. Ilyenkor a JPA
+     * {@code @Version} mezője állítja meg a későbbit; a felhasználó ugyanazt a 409-es üzenetet kapja, mint a
+     * szolgáltatás saját verzióellenőrzésénél ({@link StaleDataException}), nem az általános hibaoldalt.
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ModelAndView concurrentUpdate(OptimisticLockingFailureException ex) {
+        return errorPage(HttpStatus.CONFLICT,
+                "Az adatot közben máshol módosították. Töltsd újra az oldalt, és mentsd újra a módosításaidat.");
     }
 
     @ExceptionHandler(BusinessRuleException.class)

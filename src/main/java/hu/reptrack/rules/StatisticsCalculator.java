@@ -178,17 +178,18 @@ public final class StatisticsCalculator {
     /**
      * A célok haladása. Testtömeg-célnál (MUSCLE_GAIN, WEIGHT_LOSS) a célérték a cél testtömeg kg-ban, a kezdőérték a
      * cél létrehozásakor érvényes (vagy a legkorábbi) mérés. Erő-célnál (STRENGTH, gyakorlattal) a célérték a
-     * gyakorlatban emelt legnagyobb súly kg-ban. ENDURANCE-re még nincs szabály, ott a százalék null.
+     * gyakorlatban emelt legnagyobb súly kg-ban. Állóképességi célnál (ENDURANCE, gyakorlattal) a mérték szerint a
+     * leghosszabb táv egyben (km), a leghosszabb idő egyben (perc), vagy a legjobb idő adott távon (perc); lásd
+     * {@link #enduranceGoal}. A {@code zone} a cél felvételének napját a szettek időpontjával veti össze.
      */
     public static List<GoalProgress> goalProgress(List<GoalSnapshot> goals, List<BodyWeightPoint> bodyWeights,
-                                                  List<SetRecord> allSets) {
+                                                  List<SetRecord> allSets, ZoneId zone) {
         List<GoalProgress> result = new ArrayList<>();
         for (GoalSnapshot goal : goals) {
             result.add(switch (goal.type()) {
                 case WEIGHT_LOSS, MUSCLE_GAIN -> bodyWeightGoal(goal, bodyWeights);
                 case STRENGTH -> strengthGoal(goal, allSets);
-                case ENDURANCE -> new GoalProgress(goal.id(), goal.type(), goal.exerciseId(), null, null,
-                        goal.targetValue(), null);
+                case ENDURANCE -> enduranceGoal(goal, allSets, zone);
             });
         }
         return result;
@@ -233,6 +234,82 @@ public final class StatisticsCalculator {
             percent = clamp(best.multiply(BigDecimal.valueOf(100)).divide(goal.targetValue(), 1, RoundingMode.HALF_UP));
         }
         return new GoalProgress(goal.id(), goal.type(), goal.exerciseId(), null, best, goal.targetValue(), percent);
+    }
+
+    /**
+     * Állóképességi cél. A gyakorlat egy-egy szettje számít (egy futás, egy úszás egyben):
+     * <ul>
+     *   <li>{@code DISTANCE}: a leghosszabb táv km-ben, a haladás legjobb / cél (a több a jobb);</li>
+     *   <li>{@code DURATION}: a leghosszabb idő percben, ugyanígy;</li>
+     *   <li>{@code TIME_FOR_DISTANCE}: lásd {@link #timeForDistance}.</li>
+     * </ul>
+     */
+    static GoalProgress enduranceGoal(GoalSnapshot goal, List<SetRecord> allSets, ZoneId zone) {
+        if (goal.exerciseId() == null || goal.enduranceMetric() == null) {
+            return new GoalProgress(goal.id(), goal.type(), goal.exerciseId(), null, null, goal.targetValue(), null);
+        }
+        List<SetRecord> sets = allSets.stream().filter(s -> goal.exerciseId().equals(s.exerciseId())).toList();
+        return switch (goal.enduranceMetric()) {
+            case DISTANCE -> longestInOneGo(goal, sets.stream().map(SetRecord::distanceM).toList(), 1000);
+            case DURATION -> longestInOneGo(goal, sets.stream().map(SetRecord::durationSec).toList(), 60);
+            case TIME_FOR_DISTANCE -> timeForDistance(goal, sets, zone);
+        };
+    }
+
+    /** A legnagyobb egyszeri érték a cél egységében (méter / 1000 = km, másodperc / 60 = perc). */
+    private static GoalProgress longestInOneGo(GoalSnapshot goal, List<Integer> raw, int unit) {
+        BigDecimal best = raw.stream().filter(v -> v != null && v > 0).max(Integer::compare)
+                .map(v -> BigDecimal.valueOf(v).divide(BigDecimal.valueOf(unit), 2, RoundingMode.HALF_UP))
+                .orElse(null);
+        BigDecimal target = goal.targetValue();
+        BigDecimal percent = null;
+        if (best != null && target != null && target.signum() > 0) {
+            percent = clamp(best.multiply(BigDecimal.valueOf(100)).divide(target, 1, RoundingMode.HALF_UP));
+        }
+        return new GoalProgress(goal.id(), goal.type(), goal.exerciseId(), null, best, target, percent);
+    }
+
+    /**
+     * Idő adott távon (pl. 5 km 25:00 alatt). Azok a szettek számítanak, amelyek legalább a céltávot lefedik; az
+     * idejüket azonos tempóval a céltávra számoljuk át (5,2 km 26:00 alatt = 5 km 25:00 alatt). A mostani érték a
+     * legjobb (legrövidebb) ilyen idő. A kiindulás a cél felvétele előtti legjobb, vagy ha akkor még nem volt ilyen
+     * szett, az első utána. A haladás a kiindulástól a célidőig megtett út százalékban (a kevesebb a jobb); a célidő
+     * elérése 100%.
+     */
+    private static GoalProgress timeForDistance(GoalSnapshot goal, List<SetRecord> sets, ZoneId zone) {
+        Integer distance = goal.targetDistanceM();
+        BigDecimal target = goal.targetValue();
+        if (distance == null || distance <= 0) {
+            return new GoalProgress(goal.id(), goal.type(), goal.exerciseId(), null, null, target, null);
+        }
+        record Attempt(Instant at, BigDecimal minutes) {
+        }
+        List<Attempt> attempts = sets.stream()
+                .filter(s -> s.distanceM() != null && s.durationSec() != null
+                        && s.distanceM() >= distance && s.durationSec() > 0)
+                .map(s -> new Attempt(s.startedAt(), BigDecimal.valueOf((long) s.durationSec() * distance)
+                        .divide(BigDecimal.valueOf((long) s.distanceM() * 60), 2, RoundingMode.HALF_UP)))
+                .sorted(Comparator.comparing(Attempt::at))
+                .toList();
+        if (attempts.isEmpty()) {
+            return new GoalProgress(goal.id(), goal.type(), goal.exerciseId(), null, null, target, null);
+        }
+        BigDecimal current = attempts.stream().map(Attempt::minutes).min(Comparator.naturalOrder()).orElseThrow();
+        Instant goalSet = goal.createdOn().atStartOfDay(zone).toInstant();
+        BigDecimal start = attempts.stream().filter(a -> a.at().isBefore(goalSet)).map(Attempt::minutes)
+                .min(Comparator.naturalOrder()).orElse(attempts.get(0).minutes());
+        BigDecimal percent = null;
+        if (target != null) {
+            if (current.compareTo(target) <= 0) {
+                percent = BigDecimal.valueOf(100).setScale(1);
+            } else {
+                BigDecimal total = start.subtract(target);           // pozitív: a kiindulás lassabb a célnál
+                percent = total.signum() <= 0 ? BigDecimal.ZERO.setScale(1)
+                        : clamp(start.subtract(current).multiply(BigDecimal.valueOf(100))
+                                .divide(total, 1, RoundingMode.HALF_UP));
+            }
+        }
+        return new GoalProgress(goal.id(), goal.type(), goal.exerciseId(), start, current, target, percent);
     }
 
     private static BigDecimal clamp(BigDecimal percent) {

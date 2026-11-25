@@ -98,7 +98,7 @@ public class StatisticsRepository {
     public List<ExerciseOption> findUsedExercises(Long userId) {
         return em.createQuery("select distinct new hu.reptrack.dto.ExerciseOption(e.id, e.name, e.category, e.tracksWeight, "
                         + "e.tracksReps, e.tracksDuration, e.tracksDistance, e.tracksHeartRate, "
-                        + "case when e.owner is null then true else false end) "
+                        + "case when e.owner is null then true else false end, e.primaryMuscle, e.imageKey) "
                         + "from WorkoutSet s join s.workoutExercise we join we.workout w join we.exercise e "
                         + "where w.user.id = :userId order by e.name", ExerciseOption.class)
                 .setParameter("userId", userId)

@@ -88,12 +88,13 @@ public class StatisticsService {
         for (Goal goal : activeGoals) {
             Long exerciseId = goal.getExercise() == null ? null : goal.getExercise().getId();
             snapshots.add(new GoalSnapshot(goal.getId(), goal.getGoalType(), exerciseId, goal.getTargetValue(),
-                    goal.getCreatedAt().atZone(zone).toLocalDate()));
-            if (goal.getGoalType() == GoalType.STRENGTH && exerciseId != null) {
+                    goal.getCreatedAt().atZone(zone).toLocalDate(), goal.getEnduranceMetric(), goal.getTargetDistanceM()));
+            boolean exerciseGoal = goal.getGoalType() == GoalType.STRENGTH || goal.getGoalType() == GoalType.ENDURANCE;
+            if (exerciseGoal && exerciseId != null) {
                 sets.addAll(statistics.findSets(userId, null, null, exerciseId, null));
             }
         }
-        return StatisticsCalculator.goalProgress(snapshots, statistics.findBodyWeights(userId), sets);
+        return StatisticsCalculator.goalProgress(snapshots, statistics.findBodyWeights(userId), sets, zone);
     }
 
     /** A felhasználó gyakorlatai, amelyekből van szettje (a fejlődési görbe gyakorlatválasztójához). */

@@ -47,6 +47,12 @@ class LayoutTest extends IntegrationTestBase {
         String stale() {
             throw new StaleDataException("Az edzést közben máshol módosították.");
         }
+
+        /** Amit a JPA dob, ha két mentés pontosan egyszerre ér az adatbázishoz (@Version ütközés). */
+        @GetMapping("/test/concurrent-save")
+        String concurrentSave() {
+            throw new org.springframework.orm.ObjectOptimisticLockingFailureException(hu.reptrack.domain.Workout.class, 1L);
+        }
     }
 
     // ---- navigációs sáv ----
@@ -69,6 +75,27 @@ class LayoutTest extends IntegrationTestBase {
                         containsString("anna@example.com"), containsString("Kijelentkezés"),
                         containsString(">Gyakorlatok<"),
                         not(containsString("Regisztráció")), not(containsString(">Admin<")))));
+    }
+
+    @Test
+    void pagesLoadTheirLibrariesFromTheAppNotFromACdn() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(content().string(allOf(
+                        containsString("/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css"),
+                        containsString("/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js"),
+                        containsString("/webjars/flatpickr/4.6.13/dist/l10n/hu.js"), containsString("/js/datepicker.js"),
+                        not(containsString("jsdelivr")), not(containsString("https://cdn")))));
+        mvc.perform(get("/stats").with(hu.reptrack.TestPrincipals.anyUser()))
+                .andExpect(content().string(allOf(
+                        containsString("/webjars/chart.js/4.4.7/dist/chart.umd.js"), not(containsString("jsdelivr")))));
+    }
+
+    @Test
+    void themeIsSwitchedWithOneButtonWithoutASystemOption() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(content().string(allOf(
+                        containsString("data-theme-toggle"), containsString("aria-label=\"Váltás sötét témára\""),
+                        not(containsString("data-theme-value")), not(containsString("Rendszer szerint")))));
     }
 
     @Test
@@ -161,5 +188,15 @@ class LayoutTest extends IntegrationTestBase {
                 .andExpect(status().isConflict())
                 .andExpect(content().string(allOf(
                         containsString("Ütköző módosítás"), containsString("közben máshol módosították"))));
+    }
+
+    @Test
+    @WithMockUser
+    void simultaneousSaveCaughtByTheDatabaseAlsoBecomes409() throws Exception {
+        mvc.perform(get("/test/concurrent-save"))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(allOf(
+                        containsString("Ütköző módosítás"), containsString("Az adatot közben máshol módosították."),
+                        not(containsString("ObjectOptimisticLocking")))));
     }
 }

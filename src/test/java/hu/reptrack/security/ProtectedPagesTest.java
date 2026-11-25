@@ -73,7 +73,15 @@ class ProtectedPagesTest extends SecurityTestSupport {
     }
 
     static Stream<String> publicPaths() {
-        return Stream.of("/", "/login", "/register", "/css/app.css", "/js/app.js");
+        return Stream.of("/", "/login", "/register", "/css/app.css", "/js/app.js",
+                "/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css",
+                "/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js",
+                "/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css",
+                "/webjars/bootstrap-icons/1.11.3/font/fonts/bootstrap-icons.woff2",
+                "/webjars/fontsource-variable__inter/5.0.15/index.css",
+                "/webjars/chart.js/4.4.7/dist/chart.umd.js",
+                "/webjars/flatpickr/4.6.13/dist/flatpickr.min.js", "/webjars/flatpickr/4.6.13/dist/l10n/hu.js",
+                "/js/datepicker.js", "/js/exercise-picker.js", "/images/exercises/guggolas.jpg");
     }
 
     /** "GET /workouts/{id}" → "/workouts/1" (a jogosultság-ellenőrzés az adat betöltése előtt történik). */

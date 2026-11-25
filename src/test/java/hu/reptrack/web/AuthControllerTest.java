@@ -25,6 +25,7 @@ import hu.reptrack.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -176,11 +177,42 @@ class AuthControllerTest extends IntegrationTestBase {
     @Test
     void protectedPageRedirectsGuestToLoginAndBackAfterLogin() throws Exception {
         registerAnna();
-        MvcResult denied = mvc.perform(get("/exercises")).andExpect(redirectedUrl("/login")).andReturn();
+        // a böngésző oldalbetöltése HTML-t kér; ezt jegyzi meg a rendszer
+        MvcResult denied = mvc.perform(get("/exercises").accept(MediaType.TEXT_HTML, MediaType.ALL))
+                .andExpect(redirectedUrl("/login")).andReturn();
         MockHttpSession session = (MockHttpSession) denied.getRequest().getSession();
 
         mvc.perform(post("/login").with(csrf()).session(session)
                         .param("email", "anna@example.com").param("password", "titkos123"))
                 .andExpect(redirectedUrl("http://localhost/exercises?continue"));
+    }
+
+    // ---- a böngésző háttérkérései (a bejelentkezés utáni 404 javítása) ----
+
+    @Test
+    void browserBackgroundRequestsGetA404InsteadOfALoginRedirect() throws Exception {
+        for (String path : new String[] {"/.well-known/appspecific/com.chrome.devtools.json", "/apple-touch-icon.png",
+                "/apple-touch-icon-precomposed.png", "/robots.txt", "/favicon.ico"}) {
+            MvcResult result = mvc.perform(get(path)).andExpect(status().isNotFound()).andReturn();
+            assertThat(result.getRequest().getSession(false)).as("%s: nem jön létre munkamenet", path).isNull();
+        }
+    }
+
+    @Test
+    void backgroundRequestsToProtectedPathsAreNotRememberedForAfterLogin() throws Exception {
+        registerAnna();
+        MockHttpServletRequestBuilder[] notPageLoads = {
+                get("/workouts/5").accept(MediaType.ALL),                          // pl. egy kép vagy fetch
+                get("/stats").accept(MediaType.APPLICATION_JSON),
+                get("/workouts").accept(MediaType.TEXT_HTML).header("X-Requested-With", "XMLHttpRequest")};
+        for (MockHttpServletRequestBuilder request : notPageLoads) {
+            MvcResult denied = mvc.perform(request).andExpect(redirectedUrl("/login")).andReturn();
+            MockHttpSession session = denied.getRequest().getSession(false) == null
+                    ? new MockHttpSession() : (MockHttpSession) denied.getRequest().getSession();
+
+            mvc.perform(post("/login").with(csrf()).session(session)
+                            .param("email", "anna@example.com").param("password", "titkos123"))
+                    .andExpect(redirectedUrl("/"));
+        }
     }
 }

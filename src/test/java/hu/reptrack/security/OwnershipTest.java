@@ -122,7 +122,7 @@ class OwnershipTest extends SecurityTestSupport {
                 .andExpect(content().string(allOf(containsString(SECRET + " második lábnapja"),
                         containsString(SECRET + " figyelmeztetése"))));
         mvc.perform(get("/records").with(as(anna))).andExpect(content().string(containsString("Guggolás")));
-        mvc.perform(get("/profile").with(as(anna))).andExpect(content().string(containsString("61.7")));
+        mvc.perform(get("/profile").with(as(anna))).andExpect(content().string(containsString("61,7 kg")));
         mvc.perform(get("/exercises/" + exerciseId + "/edit").with(as(anna))).andExpect(status().isOk());
         mvc.perform(get("/templates").with(as(anna))).andExpect(content().string(containsString(SECRET + " sablonja")));
         mvc.perform(get("/templates/" + templateId + "/edit").with(as(anna))).andExpect(status().isOk());
@@ -214,7 +214,8 @@ class OwnershipTest extends SecurityTestSupport {
         for (String page : new String[] {"/workouts", "/records", "/stats", "/profile", "/exercises", "/templates"}) {
             mvc.perform(get(page).with(intruder(who)))
                     .andExpect(status().isOk())
-                    .andExpect(content().string(allOf(not(containsString(SECRET)), not(containsString("61.7")))));
+                    .andExpect(content().string(allOf(not(containsString(SECRET)), not(containsString("61.7")),
+                            not(containsString("61,7")))));
         }
     }
 

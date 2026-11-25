@@ -64,7 +64,7 @@ module.exports = function (c) {
   out.push(tcap("Használati esetek és megvalósítási állapotuk"));
   out.push(table(["Azon.", "Használati eset", "Állapot", "Megvalósítás"], [
     ["UC1", "Regisztráció, bejelentkezés", "Kész", "`AuthController`, `UserService`, `AccountDetailsService`, `SecurityConfig`"],
-    ["UC2", "Profil és célok kezelése", "Kész", "`ProfileController`, `ProfileService`; a túlterhelési küszöbök is a profilban"],
+    ["UC2", "Profil és célok kezelése", "Kész", "`ProfileController`, `ProfileService`; a túlterhelési küszöbök is a profilban; állóképességi célok távra, időre vagy adott táv idejére"],
     ["UC3", "Testtömeg rögzítése", "Kész", "`ProfileService`; naponta egy mérés, a profil a legutóbbit mutatja"],
     ["UC4", "Gyakorlatok böngészése, keresése", "Kész", "`ExerciseController`, `ExerciseService`; szűrés névre, kategóriára, izomcsoportra, forrásra (közös/saját) és archiváltságra"],
     ["UC5", "Saját gyakorlat felvétele", "Kész", "`ExerciseController`, `ExerciseService`; létrehozás, módosítás, archiválás, törlés (a használatban lévő gyakorlat nem törölhető)"],
@@ -87,11 +87,11 @@ module.exports = function (c) {
     ["Nyelv, build", "Java 21 (LTS), Maven", "a projekt Maven wrappert (`./mvnw`) tartalmaz, külön Maven nem kell"],
     ["Keretrendszer", "Spring Boot 4.1.3", "Spring Framework 7; moduláris starterek"],
     ["Webes réteg", "Spring MVC, Thymeleaf, `thymeleaf-extras-springsecurity6`", "szerveroldali HTML-előállítás"],
-    ["Kliensoldal", "Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Chart.js 4.4.7", "CDN-ről töltődnek; saját stíluslap (`app.css`) és szkript (`app.js`)"],
+    ["Kliensoldal", "Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Chart.js 4.4.7, flatpickr 4.6.13 (dátumválasztó), Inter betűtípus", "WebJarként a JAR-ba csomagolva, a saját szerverről töltődnek (`/webjars/**`); saját stíluslap (`app.css`) és szkript (`app.js`)"],
     ["Üzleti logika", "Spring `@Service`, `@Transactional`, Bean Validation", "tranzakció és validáció a szolgáltatásokon"],
     ["Adatelérés", "Spring Data JPA (Hibernate 7), JPQL, Criteria API", "paraméterezett lekérdezések"],
     ["Adatbázis", "PostgreSQL 16", "fejlesztéskor Docker konténerben"],
-    ["Séma-verziózás", "Flyway (V1–V5)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
+    ["Séma-verziózás", "Flyway (V1–V7)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
     ["Biztonság", "Spring Security 7", "űrlapos bejelentkezés, BCrypt, CSRF, szerepkör-hierarchia, HTTPS"],
     ["Üzemeltetés", "Docker, Docker Compose", "többlépcsős Dockerfile; az alkalmazás és a PostgreSQL egy paranccsal indul"],
     ["Tesztelés", "JUnit 5, Spring Boot Test, Testcontainers, Spring Security Test", "valódi PostgreSQL a tesztekben"],
@@ -105,6 +105,7 @@ module.exports = function (c) {
     ["Spring Boot", "3-as főverzió", "4.1.3", "az újabb, stabil kiadást választottuk; a rétegeket, a JPA-t és a Security-t nem érinti"],
     ["Diagramok adatai", "JSON végpontok", "a szerver az összesített adatsorokat JSON-ként beágyazza az oldalba", "egyetlen kérés, nincs külön REST-felület; ugyanaz a védelem, mint az oldalé"],
     ["Célhaladás helye", "a statisztikai oldalon", "a „Profil és célok” oldalon, a cél mellett", "a cél és a haladása egy helyen látszik"],
+    ["Állóképességi cél", "célérték megadása", "háromféle mérték: táv egyben (km), idő egyben (perc), idő adott távon (pl. 5 km 25:00 alatt)", "a futás, úszás és kerékpározás céljai eltérőek: van, aki távot, van, aki időt vagy tempót szeretne javítani"],
     ["A BLL tesztelése", "Mockito egységtesztek", "szabályok: tiszta egységtesztek; szolgáltatások: integrációs tesztek valódi PostgreSQL-lel", "a szolgáltatások logikája az adatbázishoz (megszorítások, lekérdezések) kötődik, ezt mock nem ellenőrzi"],
     ["Edzés indítása sablonból", "az edzés létrejön, és betölti a tervezett gyakorlatokat és szetteket", "az új edzés űrlapja töltődik ki a sablonból; az edzés a Mentés gombra jön létre", "a félbehagyott indítás nem hagy üres, nyitott edzést a naplóban"],
     ["Demófelhasználó", "néhány hónapnyi mintaadat", "tervezett", "az 50 gyakorlatos alapadatbázis már megvan"],
@@ -154,7 +155,7 @@ module.exports = function (c) {
     "**HTTPS:** az alkalmazás a 8443-as porton szolgál ki HTTPS-sel. Az önaláírt tanúsítványt a konténer az első induláskor készíti (`docker/entrypoint.sh`, véletlen jelszóval, a `reptrack-certs` kötetbe), így újraindítás után ugyanaz marad. A 8080-as porton csak egy átirányító csatlakozó figyel, amely minden HTTP-kérést HTTPS-re irányít (`HttpsConfig`, `SecurityConfig`). A munkamenet-süti `secure` jelzésű.",
     "Induláskor a **Flyway** végrehajtja a hiányzó migrációkat, majd a Hibernate ellenőrzi, hogy az entitások megfelelnek-e a sémának (`ddl-auto=validate`); eltérésnél az alkalmazás nem indul el.",
     "A konfigurációt a **`.env` fájl** és a környezeti változók adják (10. fejezet). Fejlesztéskor az alkalmazás helyi JDK-val, sima HTTP-n is indítható; ilyenkor a Compose csak az adatbázist futtatja.",
-    "A böngésző a Bootstrap, a Chart.js, az ikonok és a betűtípus fájljait **CDN-ről** tölti le; az alkalmazásadatok nem mennek a CDN felé.",
+    "A Bootstrap, a Chart.js, az ikonok és a betűtípus fájljai **WebJarként** az alkalmazás JAR-jában vannak (Maven-függőségek), és a saját szerverről töltődnek (`/webjars/**`), így az alkalmazás internetkapcsolat nélkül is teljes értékűen működik.",
   ]));
 
   out.push(h2("3.5 Egy kérés útja"));

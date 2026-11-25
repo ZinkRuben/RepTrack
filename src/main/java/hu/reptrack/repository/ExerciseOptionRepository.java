@@ -14,7 +14,7 @@ public interface ExerciseOptionRepository extends Repository<Exercise, Long> {
     @Query("""
             select new hu.reptrack.dto.ExerciseOption(e.id, e.name, e.category, e.tracksWeight, e.tracksReps,
                    e.tracksDuration, e.tracksDistance, e.tracksHeartRate,
-                   case when e.owner is null then true else false end)
+                   case when e.owner is null then true else false end, e.primaryMuscle, e.imageKey)
             from Exercise e
             where e.archived = false and (e.owner is null or e.owner.id = :userId)
             order by e.name

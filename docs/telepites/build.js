@@ -54,14 +54,14 @@ c.push(table(["", "Docker-es telepítés", "Docker nélküli telepítés"], [
   ["Erőforrás", "kb. 2 GB szabad memória, 2 GB szabad tárhely (képek, Maven-gyorsítótár)", "kb. 1 GB szabad memória"],
   ["Hálózat", "internet az első építéshez (a Maven-függőségek és az alapképek letöltése)", "–"],
   ["Portok", "8443 (HTTPS), 8080 (átirányítás), 5432 (PostgreSQL) szabad legyen", "8080 szabad legyen"],
-  ["Böngésző", "modern böngésző (Chrome, Firefox, Edge, Safari); internet-hozzáférés, mert a Bootstrap, a Chart.js és a betűtípus CDN-ről töltődik", "ugyanaz"],
+  ["Böngésző", "modern böngésző (Chrome, Firefox, Edge, Safari); a futtatáshoz nem kell internet, a Bootstrap, a Chart.js és a betűtípus az alkalmazásba van csomagolva", "ugyanaz"],
 ], [1400, 4300, 3326], { size: 19, boldFirst: true }));
 
 // ---- 3. ----
 c.push(h1("3. Telepítés Dockerrel (ajánlott)"));
 c.push(...numbered([
   "Csomagold ki a forráscsomagot, és lépj a projekt mappájába: `cd RepTrack`.",
-  "Hozd létre a beállítófájlt a mintából: `cp .env.example .env`. Nyisd meg, és add meg az első adminisztrátor adatait: `REPTRACK_ADMIN_EMAIL`, `REPTRACK_ADMIN_PASSWORD` (legalább 8 karakter) és `REPTRACK_ADMIN_NAME`. **A minta jelszavát mindenképpen cseréld le egy sajátra.**",
+  "Hozd létre a beállítófájlt a mintából: `cp .env.example .env`. Nyisd meg, és add meg az első adminisztrátor adatait: `REPTRACK_ADMIN_EMAIL`, `REPTRACK_ADMIN_PASSWORD` (legalább 8 karakter) és `REPTRACK_ADMIN_NAME`. **A minta jelszavát (`CHANGE-ME`) mindenképpen cseréld le egy sajátra:** ha benne marad, az alkalmazás nem indul el, és a hibaüzenet ezt meg is mondja.",
   "Építsd meg és indítsd el a rendszert (az első építés néhány percig tart; a tesztek a képépítéskor nem futnak le):",
 ], "numbers"));
 c.push(...code([
@@ -143,11 +143,11 @@ c.push(table(["Tünet", "Ok és megoldás"], [
   ["`docker: 'compose' is not a docker command`", "a Compose bővítmény nincs telepítve: használd az önálló `docker-compose` parancsot, vagy telepítsd a Compose bővítményt."],
   ["Böngészőfigyelmeztetés (például `ERR_CERT_AUTHORITY_INVALID`)", "várt jelenség, a tanúsítvány önaláírt. Fogadd el a „Speciális → Folytatás” gombbal. Hiteles tanúsítványt lásd az 5. fejezetben."],
   ["Az átirányítás rossz portra mutat", "a `HTTP_PORT` és a `HTTPS_PORT` értéke egyezzen a ténylegesen használt portokkal; a `.env` módosítása után `docker compose up -d` újraindítja az alkalmazást."],
-  ["Az alkalmazás nem indul el, a naplóban admin-hiba szerepel", "az admin adatai hibásak (rossz e-mail-formátum, a jelszó rövidebb 8 karakternél, vagy a cím egy meglévő nem admin fiókhoz tartozik). A hibaüzenet megnevezi a javítandó változót."],
+  ["Az alkalmazás nem indul el, a naplóban admin-hiba szerepel", "az admin adatai hibásak (rossz e-mail-formátum, a jelszó rövidebb 8 karakternél vagy még a minta `CHANGE-ME` értéke, vagy a cím egy meglévő nem admin fiókhoz tartozik). A hibaüzenet megnevezi a javítandó változót. Javítsd a `.env` fájlt, és indítsd újra (Dockerben a `docker compose logs app` mutatja az üzenetet)."],
   ["`password authentication failed for user \"reptrack\"`", "az adatbázis jelszava csak az adatbázis első létrehozásakor érvényesül. Használd a régi jelszót, vagy töröld az adatokat: `docker compose down -v` (adatvesztéssel jár)."],
   ["Flyway-hiba (`checksum mismatch`) vagy séma-eltérés", "régebbi fejlesztői adatbázis maradt meg. Fejlesztési környezetben `docker compose down -v` után újraépül."],
   ["`release version 21 not supported` (helyi build)", "a `JAVA_HOME` nem JDK 21-re mutat, lásd a 4.1 szakaszt."],
-  ["Formázás vagy diagramok hiányoznak", "a böngésző nem éri el a CDN-t (Bootstrap, Chart.js); internet-hozzáférés kell."],
+  ["Formázás vagy diagramok hiányoznak", "a böngésző régi változatot tárol: frissítsd az oldalt (Ctrl+F5); Docker esetén építsd újra a képet (`--build`)."],
 ], [3300, 5726], { size: 18 }));
 
 // ---- 9. ----
