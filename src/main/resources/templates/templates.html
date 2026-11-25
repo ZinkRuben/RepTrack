@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title>Edzéssablonok – RepTrack</title></head>
+<body>
+
+<main class="container py-4 py-lg-5">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Edzéssablonok</h1>
+            <p class="page-subtitle">Tervezett edzések, amelyekből egy kattintással indíthatsz új edzést. A sablon csak
+                terv: nem kerül az edzésnaplóba, és nem számít bele a statisztikába és a csúcsokba.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/templates/new}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Új sablon</a>
+    </div>
+
+    <div class="card" th:if="${templates.isEmpty()}">
+        <div class="card-body empty-state">
+            <div class="empty-state-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></div>
+            <h2 class="h5 fw-semibold">Még nincs sablonod.</h2>
+            <p class="text-body-secondary mb-3">Állíts össze egyet, vagy egy rögzített edzés oldalán használd a
+                „Mentés sablonként” gombot.</p>
+            <a class="btn btn-primary" th:href="@{/templates/new}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Hozz létre egyet!</a>
+        </div>
+    </div>
+
+    <div class="row g-3" th:unless="${templates.isEmpty()}">
+        <div class="col-12 col-lg-6" th:each="t : ${templates}">
+            <article class="card h-100">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                    <h2 class="h6 fw-semibold mb-0" th:text="${t.name()}">Láb A</h2>
+                    <span class="text-body-secondary small" th:text="|${t.lines().size()} gyakorlat|">3 gyakorlat</span>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2"
+                        th:each="l : ${t.lines()}" th:classappend="${l.archived()} ? 'text-body-secondary'">
+                        <span class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="fw-semibold" th:text="${l.exerciseName()}">Guggolás</span>
+                            <span th:replace="~{fragments/ui :: categoryBadge(${l.category()})}"></span>
+                            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis"
+                                  th:if="${l.archived()}">archivált</span>
+                        </span>
+                        <span class="text-nowrap" th:text="${l.plan()}">5 × 5 ismétlés · 100 kg</span>
+                    </li>
+                </ul>
+                <div class="card-body d-flex flex-column gap-2 justify-content-end">
+                    <p class="text-body-secondary small mb-0" th:if="${t.hasArchived()}">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        Az archivált gyakorlatok az edzés indításakor kimaradnak.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-primary" th:href="@{/workouts/new(template=${t.id()})}"
+                           title="Új edzés ennek a sablonnak a gyakorlataival; csak a Mentés gombra kerül a naplóba">
+                            <i class="bi bi-play-fill" aria-hidden="true"></i> Edzés indítása</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/templates/{id}/edit(id=${t.id()})}">
+                            <i class="bi bi-pencil-square" aria-hidden="true"></i> Szerkesztés</a>
+                        <form th:action="@{/templates/{id}/delete(id=${t.id()})}" method="post" th:data-name="${t.name()}"
+                              onsubmit="return confirm('Biztosan törlöd a(z) „' + this.dataset.name + '” sablont? A belőle rögzített edzések megmaradnak.');">
+                            <button class="btn btn-outline-danger" type="submit">
+                                <i class="bi bi-trash3" aria-hidden="true"></i> Törlés</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</main>
+</body>
+</html>

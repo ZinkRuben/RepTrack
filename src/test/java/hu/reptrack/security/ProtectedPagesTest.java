@@ -41,6 +41,8 @@ class ProtectedPagesTest extends SecurityTestSupport {
     static final List<String> USER = List.of(
             "GET /workouts", "GET /workouts/new", "GET /workouts/{id}", "GET /workouts/{id}/edit",
             "POST /workouts", "POST /workouts/{id}", "POST /workouts/{id}/delete", "POST /workouts/{id}/copy",
+            "GET /templates", "GET /templates/new", "GET /templates/{id}/edit",
+            "POST /templates", "POST /templates/{id}", "POST /templates/{id}/delete",
             "POST /warnings/{id}/acknowledge",
             "GET /exercises", "GET /exercises/new", "GET /exercises/{id}/edit",
             "POST /exercises", "POST /exercises/{id}", "POST /exercises/{id}/archive", "POST /exercises/{id}/restore",

@@ -226,6 +226,65 @@ class SchemaConstraintsTest extends IntegrationTestBase {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    // ---- edzéssablonok ----
+
+    private Long insertTemplate(Long user, String name) {
+        return jdbc.queryForObject("insert into workout_templates (user_id, name) values (?, ?) returning id",
+                Long.class, user, name);
+    }
+
+    private void insertTemplateExercise(Long template, Integer sets, Integer reps, String weight) {
+        insertExercise("Teszt sablon gyakorlat", "WEIGHTS", null, null);
+        Long exercise = jdbc.queryForObject("select id from exercises where name = 'Teszt sablon gyakorlat'", Long.class);
+        jdbc.update("insert into template_exercises (template_id, exercise_id, position, planned_sets, planned_reps, "
+                + "planned_weight_kg) values (?, ?, 1, ?, ?, ?::numeric)", template, exercise, sets, reps, weight);
+    }
+
+    @Test
+    void plannedValuesWithinRangeAreAccepted() {
+        Long template = insertTemplate(insertUser("t@example.com"), "Láb A");
+        insertTemplateExercise(template, 20, 100, "500");
+        assertThat(jdbc.queryForObject("select count(*) from template_exercises", Integer.class)).isEqualTo(1);
+    }
+
+    @Test
+    void plannedSetsMustBeBetweenOneAndTwenty() {
+        Long template = insertTemplate(insertUser("t@example.com"), "Láb A");
+        assertThatThrownBy(() -> insertTemplateExercise(template, 21, 5, "100"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void plannedSetsCannotBeZero() {
+        Long template = insertTemplate(insertUser("t@example.com"), "Láb A");
+        assertThatThrownBy(() -> insertTemplateExercise(template, 0, 5, "100"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void plannedRepsMustBeBetweenOneAndHundred() {
+        Long template = insertTemplate(insertUser("t@example.com"), "Láb A");
+        assertThatThrownBy(() -> insertTemplateExercise(template, 3, 101, "100"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void plannedWeightMustBeBetweenZeroAndFiveHundred() {
+        Long template = insertTemplate(insertUser("t@example.com"), "Láb A");
+        assertThatThrownBy(() -> insertTemplateExercise(template, 3, 5, "500.5"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void templateNamesAreUniquePerUserCaseInsensitively() {
+        Long alice = insertUser("alice@example.com");
+        Long bob = insertUser("bob@example.com");
+        insertTemplate(alice, "Láb A");
+        insertTemplate(bob, "Láb A"); // másik felhasználónál lehet ugyanaz a név
+        assertThatThrownBy(() -> insertTemplate(alice, "LÁB a"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
     // ---- túlterhelési figyelmeztetések ----
 
     @Test

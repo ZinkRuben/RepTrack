@@ -14,6 +14,20 @@
         </div>
     </div>
 
+    <!-- sablonból indított edzés (UC15): honnan jönnek az értékek, és hogy még nincs mentve -->
+    <div class="alert alert-info" role="status" th:if="${sourceTemplateName != null}">
+        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+        <div>
+            Edzés a(z) <strong th:text="|„${sourceTemplateName}”|">„Láb A”</strong> sablonból. A szetteket a tervezett
+            értékekkel töltöttük ki<span id="needs-input-hint">; a <span class="needs-input-legend">kiemelt</span> mezőket
+            a sablon nem adta meg, ezeket itt töltsd ki</span>. Az edzés csak a <strong>Mentés</strong> gombra kerül a naplóba.
+            <div class="mt-1" th:unless="${skippedExercises == null or skippedExercises.isEmpty()}">
+                Kimaradt, mert azóta archiválták:
+                <span th:text="${#strings.listJoin(skippedExercises, ', ')}">Fekvenyomás</span>.
+            </div>
+        </div>
+    </div>
+
     <form id="workout-form" method="post"
           th:action="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}">
         <input type="hidden" name="version" th:if="${form.version != null}" th:value="${form.version}">
@@ -91,6 +105,7 @@
         /*<![CDATA[*/
         window.CATALOG = /*[[${catalog}]]*/ [];
         window.INITIAL = /*[[${initialBlocks}]]*/ [];
+        window.FROM_TEMPLATE = /*[[${sourceTemplateName != null}]]*/ false;
         /*]]>*/
     </script>
 
@@ -98,6 +113,7 @@
         (function () {
             const catalog = window.CATALOG || [];
             const initial = window.INITIAL || [];
+            const fromTemplate = window.FROM_TEMPLATE === true;
             const byId = {};
             catalog.forEach(function (c) { byId[c.id] = c; });
 
@@ -151,6 +167,14 @@
                 ].filter(function (f) { return f.show; });
             }
 
+            // Sablonból indított edzésnél a kötelező, de üres mező (amit a sablon nem adott meg) kiemelve látszik,
+            // amíg a felhasználó ki nem tölti.
+            function trackMissing(input) {
+                const update = function () { input.classList.toggle('needs-input', input.value === ''); };
+                update();
+                input.addEventListener('input', update);
+            }
+
             function refresh() {
                 const n = blocksEl.querySelectorAll('.ex-block').length;
                 hint.style.display = n === 0 ? '' : 'none';
@@ -183,6 +207,7 @@
                         value = prevInput ? prevInput.value : null;
                     }
                     if (value !== null && value !== undefined) { input.value = value; }
+                    if (fromTemplate && f.req) { trackMissing(input); }
                     row.appendChild(el('td', {}, [input]));
                 });
                 const remove = el('button', { 'class': 'btn btn-sm btn-ghost btn-icon text-danger', type: 'button',
@@ -268,6 +293,9 @@
             // ---- kiinduló állapot ----
             initial.forEach(function (b) { if (b.exerciseId) { addBlock(b.exerciseId, b); } });
             refresh();
+            // ha a sablon minden kötelező értéket megadott, a kiemelésről szóló mondat felesleges
+            const needsInputHint = document.getElementById('needs-input-hint');
+            if (needsInputHint && !blocksEl.querySelector('.needs-input')) { needsInputHint.style.display = 'none'; }
         })();
     </script>
 </main>

@@ -34,8 +34,10 @@ module.exports = function (c) {
   out.push(table(["Oldal", "Tartalom"], [
     ["Nyitóoldal", "vendégnek bemutatkozás, regisztráció és bejelentkezés; bejelentkezett felhasználónak gyors műveletek"],
     ["Edzésnapló (`/workouts`)", "lapozott lista (20 edzés/oldal), szűrők (időszak, gyakorlat, kategória), nyitott figyelmeztetések"],
-    ["Edzés űrlap", "dinamikus gyakorlat- és szettblokkok; a gyakorlathoz csak a releváns mezők (súly, ismétlés, időtartam, távolság, pulzus) látszanak"],
-    ["Edzés részletei", "szettek, összegzés, az edzésben elért csúcsok, figyelmeztetések; szerkesztés, másolás, törlés"],
+    ["Edzés űrlap", "dinamikus gyakorlat- és szettblokkok; a gyakorlathoz csak a releváns mezők (súly, ismétlés, időtartam, távolság, pulzus) látszanak; sablonból indítva előtöltve, tájékoztató sávval"],
+    ["Edzés részletei", "szettek, összegzés, az edzésben elért csúcsok, figyelmeztetések; szerkesztés, másolás, mentés sablonként, törlés"],
+    ["Sablonok (`/templates`)", "a sablonok gyakorlatonkénti tervvel (pl. „5 × 5 ismétlés · 100 kg”), az archivált gyakorlatok jelölésével; edzés indítása, szerkesztés, törlés"],
+    ["Sablon űrlap", "név és gyakorlatsorok; csak a szettek száma kötelező, a többi mező „(nem kötelező)” jelzésű; egy edzésből előtöltve is megnyitható"],
     ["Statisztikák", "időszak- és gyakorlatválasztó, összesítő kártyák, vonal-, oszlop- és kördiagramok, testtömeg-diagram"],
     ["Egyéni csúcsok", "időrendi lista, hivatkozással az edzésre"],
     ["Gyakorlatok", "keresés névre, szűrés kategóriára, izomcsoportra, forrásra és archiváltságra; a saját gyakorlatok kezelése, adminisztrátornak a közösöké is"],
@@ -48,6 +50,7 @@ module.exports = function (c) {
     "**Világos és sötét téma.** A téma a rendszerbeállítást követi, vagy a navigációs sáv kapcsolójával választható; a választás a böngészőben tárolódik, és az oldal megjelenítése előtt érvényesül, így nincs villanás.",
     "**Egységes elemek.** Közös oldalváz, Bootstrap Icons, kártyák, kategória-címkék, magyarázatot adó üres állapotok („Még nincs egyéni csúcsod”).",
     "**Visszajelzés.** Űrlaphibánál a kitöltött adatok megmaradnak, és az üzenet jelzi a hibát (a regisztrációnál mezőnként); sikerüzenet mentés után; külön hibaoldal a 404, 400 és 409 esetekre.",
+    "**Előtöltött űrlapok.** Ha az űrlap sablonból vagy egy edzésből töltődik ki, tájékoztató sáv mondja meg, honnan jönnek az értékek, hogy még semmi nincs mentve, és mely gyakorlatok maradtak ki. A sablonból indított edzésnél a sablonban meg nem adott kötelező mezők halvány kiemelést kapnak, így látszik, mit kell még kitölteni.",
     "**Hozzáférhetőség.** Címkézett űrlapmezők, a dekoratív ikonok `aria-hidden` jelzéssel, a színek mellett szöveges jelölés is van (pl. a nyugtázott állapot felirata).",
     "**Diagramok.** A Chart.js vonal-, oszlop- és kördiagramjai a téma színeihez igazodnak (világos és sötét módban is olvashatók).",
   ]));
@@ -55,14 +58,14 @@ module.exports = function (c) {
   // ------------------------------------------------------------------------------------------------ 9.
   out.push(h1("9. Tesztelés"));
   out.push(p("A tesztstratégia a rétegekhez igazodik. A tiszta szabály-komponenseket adatbázis nélkül, gyorsan teszteljük; minden más (szolgáltatások, adatelérés, séma) **valódi PostgreSQL-lel** fut Testcontainers segítségével. A tesztek egyetlen, közös PostgreSQL 16 konténert használnak (`IntegrationTestBase`), így a Flyway-migrációk, a megszorítások és a lekérdezések a tesztekben is a valós sémán futnak."));
-  out.push(tcap("A tesztek összetétele (278 teszt a dokumentum készítésekor)"));
+  out.push(tcap("A tesztek összetétele (319 tesztmetódus, a paraméterezett esetekkel 408 futás, 2026. november 23.)"));
   out.push(table(["Réteg", "Mit ellenőriznek", "Eszköz", "Darab"], [
     ["Szabályok (`rules`)", "PR-felismerés, túlterhelési szabályok, statisztikák, képletek (határesetekkel); tiszta egységtesztek", "JUnit 5", "69"],
-    ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése", "Spring Boot Test, Testcontainers", "87"],
-    ["Adatelérés és séma (`repository`)", "a CHECK, UNIQUE és idegen kulcs megszorítások tényleges kikényszerítése, a 50 gyakorlatos alapadat épsége, lekérdezések", "Testcontainers", "37"],
-    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, HTTP→HTTPS átirányítás", "MockMvc, Spring Security Test", "49"],
+    ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése, edzéssablonok", "Spring Boot Test, Testcontainers", "102"],
+    ["Adatelérés és séma (`repository`)", "a CHECK, UNIQUE és idegen kulcs megszorítások tényleges kikényszerítése, a 50 gyakorlatos alapadat épsége, lekérdezések", "Testcontainers", "43"],
+    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, sablonok oldalai, edzés indítása sablonból és mentés sablonként, HTTP→HTTPS átirányítás", "MockMvc, Spring Security Test", "67"],
     ["Konfiguráció (`config`)", "az első adminisztrátor létrehozása indulásnál, a `.env` beolvasása", "JUnit 5, Spring Boot Test", "12"],
-    ["Biztonság (`security`)", "tulajdonos-ellenőrzés (idegen adat 404, az adminisztrátor sem látja), minden végpont besorolása és védelme, szerepkörök, regisztráció és munkamenet, session fixation elleni védelem valódi Tomcat-tal", "MockMvc, valódi szerver", "23"],
+    ["Biztonság (`security`)", "tulajdonos-ellenőrzés (idegen adat 404, az adminisztrátor sem látja), minden végpont besorolása és védelme, szerepkörök, regisztráció és munkamenet, session fixation elleni védelem valódi Tomcat-tal", "MockMvc, valódi szerver", "25"],
     ["Alkalmazás indulása", "a Spring-kontextus hiba nélkül betöltődik", "Spring Boot Test", "1"],
   ], [2300, 4300, 1700, 726], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
@@ -70,6 +73,7 @@ module.exports = function (c) {
     "**Futtatás:** `./mvnw verify` (a Docker fusson, mert a tesztek PostgreSQL-konténert indítanak).",
     "**Mit fed le:** a fő folyamatok (edzés mentése → PR és figyelmeztetés), az üzleti szabályok határesetei (24 órás korlát, lezáratlan edzés, azonos eredmény nem csúcs, a nyugtázás megőrzése újraszámoláskor) és a tulajdonos-ellenőrzés (idegen adat 404).",
     "**Felület:** a felhasználói felületet a csapat kézzel próbálja ki; automatizált böngészős (end-to-end) teszt nincs.",
+    "**Új oldal felvételekor** az útvonalat a `ProtectedPagesTest` PUBLIC, USER vagy ADMIN listájába kell tenni, különben az `everyEndpointIsClassified` teszt bukik; ezután a vendég-átirányítás és a CSRF-védelem ellenőrzése automatikusan kiterjed rá. Azonosítós felhasználói oldalnál (`GET …/{id}`) a `RoleAccessTest` is kiegészítendő, hogy létező saját adatot nyisson meg.",
   ]));
 
   // ------------------------------------------------------------------------------------------------ 10.
@@ -118,13 +122,12 @@ module.exports = function (c) {
   out.push(table(["Terület", "Állapot vagy korlát", "Terv"], [
     ["Fiókkezelés (UC13)", "az adminisztrátori fiókkezelés (listázás, tiltás, jelszó-visszaállítás) még nem készült el", "fiókok kezelése az `/admin/**` alatt"],
     ["Fiók és adatok törlése (UC14)", "az adatbázis kaszkádolt törlése kész, a felület nincs meg", "megerősítéssel védett törlés"],
-    ["Edzéssablonok (UC15)", "entitások és repository-k kész; szolgáltatás és felület hiányzik", "sablon mentése, szerkesztése, edzés indítása sablonból"],
     ["Tanúsítvány", "a HTTPS önaláírt tanúsítványt használ, a böngésző első alkalommal figyelmeztet", "hiteles tanúsítvány (pl. Let's Encrypt) valódi domainhez"],
     ["Demófelhasználó", "mintaadatokkal feltöltött felhasználó nincs", "bemutatható, több hónapnyi adat"],
     ["Állóképességi cél", "a haladása nincs definiálva, csak a célt jelenítjük meg", "távolság- vagy időalapú célérték"],
     ["Egyidejű mentés", "ha két kérés a verzióellenőrzés után, pontosan egyszerre ér az adatbázishoz, a JPA verzióütközése az általános hibaoldalon jelenik meg a 409-es üzenet helyett", "az ütközés kivételének leképezése 409-re"],
     ["CDN-függés", "az erőforrások CDN-ről töltődnek; offline demóhoz helyi másolat kell, a Chart.js-hez nincs SRI hash", "a fájlok csomagolása az alkalmazásba"],
-    ["Megjelenítés", "a súlyok tizedespontot használnak (pl. 102.5 kg); csak metrikus mértékegység van", "magyar számformátum, mértékegység-választás"],
+    ["Megjelenítés", "a profil oldalán a súlyok még tizedesponttal jelennek meg (pl. 82.5 kg; az edzés, a csúcsok és a sablonok oldalán már tizedesvesszővel); csak metrikus mértékegység van", "magyar számformátum mindenhol, mértékegység-választás"],
     ["Felület tesztelése", "nincs automatizált böngészős teszt", "néhány végponttól végpontig teszt a fő folyamatokra"],
   ], [2300, 4500, 2226], { size: 18 }));
 
@@ -132,7 +135,8 @@ module.exports = function (c) {
   out.push(h1("12. Továbbfejlesztési lehetőségek"));
   out.push(h2("12.1 Funkciók"));
   out.push(...bullets([
-    "**Edzéssablonok** (UC15) és a fiókkezelés (UC13) befejezése; a fiók és az adatok törlése (UC14), valamint **adatexport** (CSV, JSON) a felhasználó kérésére.",
+    "A **fiókkezelés** (UC13) befejezése; a fiók és az adatok törlése (UC14), valamint **adatexport** (CSV, JSON) a felhasználó kérésére.",
+    "**Sablonok szettenkénti tervvel** (például bemelegítő és munkaszettek eltérő súllyal), illetve a sablon frissítése egy újabb edzés alapján.",
     "**További rekordtípusok és célok:** heti volumen, állóképességi célok (távolság, idő), kerékpáros sebesség-PR, pulzuszónák.",
     "**Értesítések:** a túlterhelési figyelmeztetések e-mailben is, ütemezett összefoglaló a heti statisztikáról.",
     "**Edző–tanítvány kapcsolat:** az adatok megosztása egy kiválasztott személlyel, a jelenlegi szigorú adatvédelem megőrzésével (kifejezett hozzájárulás).",
@@ -149,7 +153,7 @@ module.exports = function (c) {
 
   // ------------------------------------------------------------------------------------------------ 13.
   out.push(h1("13. Összegzés"));
-  out.push(p("A RepTrack egy többrétegű (web, szolgáltatás és szabály-komponens, adatelérés, adatbázis) Spring Boot webalkalmazás, amely az edzések rögzítésére, elemzésére és az egyéni csúcsok, valamint a túlterhelés automatikus felismerésére szolgál. A rendszer magja működik: a regisztráció és bejelentkezés, a profil és a célok, a testtömeg-napló, az edzésnapló dinamikus űrlappal, a statisztikai oldal diagramokkal, az egyéni csúcsok, a túlterhelési figyelmeztetések, valamint a gyakorlatok kezelése (saját és közös)."));
+  out.push(p("A RepTrack egy többrétegű (web, szolgáltatás és szabály-komponens, adatelérés, adatbázis) Spring Boot webalkalmazás, amely az edzések rögzítésére, elemzésére és az egyéni csúcsok, valamint a túlterhelés automatikus felismerésére szolgál. A rendszer magja működik: a regisztráció és bejelentkezés, a profil és a célok, a testtömeg-napló, az edzésnapló dinamikus űrlappal, a statisztikai oldal diagramokkal, az egyéni csúcsok, a túlterhelési figyelmeztetések, az edzéssablonok, valamint a gyakorlatok kezelése (saját és közös)."));
   out.push(p("Az architektúra legfontosabb döntései a következők:"));
   out.push(...bullets([
     "az **egyirányú rétegfüggőség és a DTO-határ**, amely a webes réteget az adatbázistól és a JPA-tól elválasztja;",
@@ -158,7 +162,7 @@ module.exports = function (c) {
     "a **tulajdonos-ellenőrzés mint alapelv**: minden művelet a bejelentkezett felhasználó azonosítójával dolgozik;",
     "az **optimista zárolás** és az **egy tranzakcióban végzett mentés és kiértékelés**, amelyek a párhuzamos használatnál is konzisztensen tartják az adatot.",
   ]));
-  out.push(p("Néhány funkció még hátra van (fiókkezelés, fióktörlés, sablonok és a demófelhasználó); ezeket a 11. fejezet sorolja fel. A rétegelt felépítés miatt ezek a meglévő kód módosítása nélkül, új szolgáltatásként és felületként illeszthetők be, a 12. fejezet pedig további irányokat mutat."));
+  out.push(p("Néhány funkció még hátra van (fiókkezelés, fióktörlés és a demófelhasználó); ezeket a 11. fejezet sorolja fel. A rétegelt felépítés miatt ezek a meglévő kód módosítása nélkül, új szolgáltatásként és felületként illeszthetők be, a 12. fejezet pedig további irányokat mutat."));
 
   // ------------------------------------------------------------------------------------------------ függelék
   out.push(h1("Függelék: Képletek és definíciók"));

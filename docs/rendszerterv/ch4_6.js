@@ -10,12 +10,13 @@ module.exports = function (c) {
   // ------------------------------------------------------------------------------------------------ 4.
   out.push(h1("4. A rétegek részletesen"));
   out.push(h2("4.1 Webes réteg (`hu.reptrack.web`)"));
-  out.push(p("A webes réteg a Spring MVC-re épül. A controllerek fogadják a kérést, az űrlap adatait háttérobjektumhoz kötik (`WorkoutForm`, `ProfileForm`, `RegistrationRequest`), meghívják a szolgáltatást, majd vagy nézetet választanak, vagy átirányítanak. Üzleti döntést nem hoznak, és entitást nem látnak."));
+  out.push(p("A webes réteg a Spring MVC-re épül. A controllerek fogadják a kérést, az űrlap adatait háttérobjektumhoz kötik (`WorkoutForm`, `TemplateForm`, `ProfileForm`, `RegistrationRequest`), meghívják a szolgáltatást, majd vagy nézetet választanak, vagy átirányítanak. Üzleti döntést nem hoznak, és entitást nem látnak."));
   out.push(tcap("A controllerek, útvonalaik és nézeteik"));
   out.push(table(["Controller", "Útvonalak", "Nézet", "Szolgáltatások"], [
     ["`HomeController`", "GET `/`", "`index`", "–"],
     ["`AuthController`", "GET `/login`; GET, POST `/register`", "`login`, `register`", "`UserService`"],
-    ["`WorkoutController`", ["GET `/workouts`, `/workouts/new`, `/workouts/{id}`, `/workouts/{id}/edit`", "POST `/workouts`, `/workouts/{id}`, `/workouts/{id}/delete`, `/workouts/{id}/copy`"], "`workouts`, `workout-form`, `workout`", "`WorkoutService`, `PersonalRecordService`, `OverloadService`"],
+    ["`WorkoutController`", ["GET `/workouts`, `/workouts/new`, `/workouts/{id}`, `/workouts/{id}/edit`", "POST `/workouts`, `/workouts/{id}`, `/workouts/{id}/delete`, `/workouts/{id}/copy`"], "`workouts`, `workout-form`, `workout`", "`WorkoutService`, `PersonalRecordService`, `OverloadService`, `TemplateService`"],
+    ["`TemplateController`", ["GET `/templates`, `/templates/new`, `/templates/{id}/edit`", "POST `/templates`, `/templates/{id}`, `/templates/{id}/delete`"], "`templates`, `template-form`", "`TemplateService`, `WorkoutService`"],
     ["`WarningController`", "POST `/warnings/{id}/acknowledge`", "(átirányít)", "`OverloadService`"],
     ["`RecordController`", "GET `/records`", "`records`", "`PersonalRecordService`"],
     ["`StatsController`", "GET `/stats`", "`stats`", "`StatisticsService`, `PersonalRecordService`"],
@@ -25,11 +26,12 @@ module.exports = function (c) {
   ], [1700, 3300, 1800, 2226], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(...bullets([
-    "**Űrlapok és a dinamikus edzésűrlap.** Az edzés rögzítésekor a gyakorlatok és a szettek száma előre nem ismert. Az űrlap indexelt mezőneveket használ (`exercises[i].sets[j].reps`); a böngészőben futó kis szkript blokkonként ad hozzá és töröl sorokat (a gyakorlat típusához igazodó mezőkkel; az új szett az előző szett értékeiből indul, a gyakorlatok sorrendje nyilakkal változtatható), beküldés előtt pedig újraszámozza az indexeket. A szkript csak kényelmi funkció: a szerver a beküldött értékeket teljes egészében újraellenőrzi.",
+    "**Űrlapok és a dinamikus edzésűrlap.** Az edzés rögzítésekor a gyakorlatok és a szettek száma előre nem ismert. Az űrlap indexelt mezőneveket használ (`exercises[i].sets[j].reps`); a böngészőben futó kis szkript blokkonként ad hozzá és töröl sorokat (a gyakorlat típusához igazodó mezőkkel; az új szett az előző szett értékeiből indul, a gyakorlatok sorrendje nyilakkal változtatható), beküldés előtt pedig újraszámozza az indexeket. A szkript csak kényelmi funkció: a szerver a beküldött értékeket teljes egészében újraellenőrzi. A sablon űrlapja ugyanígy működik, gyakorlatonként egy sorral (szettszám és tervezett értékek).",
+    "**Sablon és edzés.** Az edzés indítása sablonból (`GET /workouts/new?template={id}`) és a „Mentés sablonként” (`GET /templates/new?fromWorkout={id}`) csak előtölti a megfelelő űrlapot, adatot nem ír; ezért GET kérés, és semmi nem mentődik, amíg a felhasználó a Mentés gombot meg nem nyomja. Az űrlap tetején tájékoztató sáv jelzi, honnan jönnek az értékek, és mely (azóta archivált) gyakorlatok maradtak ki. A másolás ezzel szemben azonnal új edzést ment, ezért POST.",
     "**Post/Redirect/Get és üzenetek.** Minden módosító kérés átirányítással végződik; a visszajelzés flash-attribútumként (`FlashMessages`) jelenik meg az új oldalon, így a frissítés nem küldi el újra az űrlapot.",
     "**Nézetek.** A Thymeleaf sablonok a `fragments/layout.html` közös oldalvázat használják (fej, navigációs sáv, üzenetek, lábléc); az oldalak csak a saját `<title>` és `<main>` részüket adják. Közös darabok: `navbar`, `messages`, `ui` (kategória-címke, üres állapot). A sablonok csak DTO-kat olvasnak.",
     "**Diagramok.** A `StatsController` a szolgáltatás által kiszámolt adatsorokat (címkék, értékek) egyszerű `Map`/`List` szerkezetben adja a modellnek; a sablon JSON-ként beágyazza az oldalba (`th:inline=\"javascript\"`), a Chart.js pedig a böngészőben rajzolja ki őket. A számítás tehát a szerveren történik, a böngésző csak megjelenít.",
-    "**Segédosztályok.** `RecordFormatter` (a csúcsok megjelenítési formája, pl. a tempó perc:másodperc alakban), `LayoutModelAdvice` (az aktuális útvonal a menüpont kiemeléséhez), `ExerciseFormSupport` (a gyakorlat-űrlap közös modellje a saját és a közös gyakorlatokhoz), `GlobalExceptionHandler` (hibaoldalak).",
+    "**Segédosztályok.** `RecordFormatter` (a csúcsok megjelenítési formája, pl. a tempó perc:másodperc alakban), `LayoutModelAdvice` (az aktuális útvonal a menüpont kiemeléséhez), `ExerciseFormSupport` (a gyakorlat-űrlap közös modellje a saját és a közös gyakorlatokhoz), `ExerciseCatalog` (a gyakorlatválasztó adatai az edzés és a sablon űrlapjához), `FormValues` (perc és km átváltása másodpercre és méterre, magyar számformátum), `GlobalExceptionHandler` (hibaoldalak).",
   ]));
   out.push(p("Az oldalak közötti navigációt a 15. ábra mutatja (8. fejezet)."));
 
@@ -38,6 +40,7 @@ module.exports = function (c) {
   out.push(tcap("A szolgáltatások"));
   out.push(table(["Szolgáltatás", "Felelősség", "Fontosabb műveletek"], [
     ["`WorkoutService`", "az edzésnapló: rögzítés, módosítás, törlés, másolás, szűrt lista, gyakorlatválasztó; a módosítások után elindítja a PR-újraszámolást és a szabálykiértékelést", "`create`, `get`, `update`, `delete`, `copy`, `list`, `exerciseOptions`"],
+    ["`TemplateService`", "az edzéssablonok (UC15): mentés, módosítás, törlés, lekérdezés; a gyakorlatokra az edzésével azonos szabályok", "`list`, `get`, `create`, `update`, `delete`"],
     ["`PersonalRecordService`", "az egyéni csúcsok újraszámolása és lekérdezése", "`recalculate`, `list`, `achievedIn`"],
     ["`OverloadService`", "a túlterhelési figyelmeztetések kiértékelése, egyeztetése és nyugtázása", "`evaluate`, `list`, `forWorkout`, `acknowledge`"],
     ["`StatisticsService`", "összesítők, fejlődési görbék, testtömeg-sorozat, célhaladás", "`summaries`, `exerciseProgress`, `bodyWeightSeries`, `goalProgress`, `usedExercises`"],
@@ -72,6 +75,17 @@ module.exports = function (c) {
     "A gyakorlat neve egyedi: a közös gyakorlatok között, illetve felhasználónként a saját gyakorlatok között, kis- és nagybetűtől függetlenül (`DuplicateExerciseNameException`).",
     "A **használatban lévő** gyakorlat (edzésben, sablonban vagy célban szerepel) nem törölhető, csak archiválható, és a kategóriája, valamint a rögzíthető mezői nem módosíthatók, hogy a korábbi szettek érvényesek maradjanak. A használaton kívüli gyakorlat törölhető.",
     "Az archivált gyakorlat új edzésbe nem vehető fel, a korábbiakban megmarad, és visszaállítható.",
+  ]));
+
+  out.push(h3("Az edzéssablonok szabályai (UC15)"));
+  out.push(...bullets([
+    "A sablon **terv, nem edzésadat**: nem kerül az edzésnaplóba, és nem számít bele a csúcsokba, a statisztikába és a túlterhelési szabályokba. Törlése a belőle korábban rögzített edzéseket nem érinti.",
+    "A név kötelező, legfeljebb 120 karakter, és felhasználónként egyedi, kis- és nagybetűtől függetlenül (`DuplicateTemplateNameException`; az űrlap a névmezőnél jelzi). A sablonban legalább egy gyakorlat van.",
+    "Gyakorlatonként csak a **szettek száma** kötelező (1–20). A tervezett ismétlés (1–100), súly (0–500 kg), időtartam és távolság (pozitív) elhagyható, de csak a gyakorlathoz beállított mező adható meg. Az űrlap az elhagyható mezőket „(nem kötelező)” felirattal jelöli.",
+    "A gyakorlatokra az edzésével azonos szabályok vonatkoznak: csak közös vagy saját gyakorlat választható (más privát gyakorlata 404), archivált gyakorlat újonnan nem vehető fel, a sablonban már benne lévő megmaradhat.",
+    "**Edzés indítása sablonból:** az új edzés űrlapja a sablon nevével, a mostani kezdéssel és gyakorlatonként annyi szettel töltődik ki, ahány a sablonban tervezett, a tervezett értékekkel. Ami a sablonban nincs megadva, az üresen marad, és az edzés szokásos ellenőrzése kéri; az ilyen kötelező mezők halvány kiemelést kapnak, amíg ki nem töltik őket. Az azóta archivált gyakorlatok kimaradnak. Az edzés a mentéskor jön létre, a szokásos kiértékeléssel (5.1).",
+    "**Mentés sablonként:** a sablon gyakorlatonként egy tervezett értéksort tárol, ezért a sablon űrlapja úgy töltődik elő, hogy a szettek száma a rögzített szettek száma (legfeljebb 20), a tervezett értékek pedig az **utolsó szett** értékei. A felhasználó mentés előtt bármelyiket átírhatja; az oldal ezt a szabályt ki is írja.",
+    "A sablonnak nincs verziószáma (optimista zárolása): csak a tulajdonosa szerkeszti, két egyidejű mentésnél a későbbi érvényes.",
   ]));
 
   out.push(h2("4.3 Üzleti logikai réteg: szabályok és statisztikák (`hu.reptrack.rules`)"));
@@ -145,7 +159,8 @@ module.exports = function (c) {
     ["`StatisticsRepository`", "`findWorkouts`, `findSets`, `findBodyWeights`, `findRecordSets`, `findMuscleSetCounts`, `findUsedExercises`: `select new …` JPQL-lekérdezések, amelyek közvetlenül DTO-t adnak"],
     ["`PersonalRecordRepository`", "`deleteByUserAndExercise`; nézet-lekérdezések felhasználóra, gyakorlatra és edzésre"],
     ["`OverloadWarningRepository`", "`findByUserId`, `findOpenViewsByUser`, `findViewsByWorkout`, `findByIdAndUserId`"],
-    ["`BodyWeightEntryRepository`, `GoalRepository`, `WorkoutTemplateRepository`, …", "felhasználóra szűrt listák és `findByIdAndUserId`"],
+    ["`WorkoutTemplateRepository`", "`findByUserIdOrderByName`, `findByIdAndUserId` (a sablon gyakorlataival együtt, egy lekérdezéssel: `@EntityGraph`), névegyediség-ellenőrzések (`existsByUserIdAndNameIgnoreCase…`)"],
+    ["`BodyWeightEntryRepository`, `GoalRepository`, …", "felhasználóra szűrt listák és `findByIdAndUserId`"],
   ], [3200, 5826], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(...bullets([
@@ -159,11 +174,11 @@ module.exports = function (c) {
   out.push(p("A `domain` csomag 11 JPA entitást tartalmaz, amelyek a 6. fejezetben leírt táblákra képződnek le. A `dto` csomag a rétegek közös nyelve."));
   out.push(tcap("A DTO-k csoportjai"));
   out.push(table(["Csoport", "Példák", "Szerep"], [
-    ["Kérés-objektumok", "`WorkoutRequest`, `ProfileRequest`, `BodyWeightRequest`, `GoalRequest`, `ExerciseRequest`, `RegistrationRequest`", "a bemenet; Bean Validation szabályokkal"],
-    ["Nézet-objektumok", "`WorkoutView`, `WorkoutSummary`, `ProfileView`, `PersonalRecordView`, `OverloadWarningView`, `ExerciseView`, `EditableExercise`", "a szolgáltatások kimenete a nézeteknek"],
+    ["Kérés-objektumok", "`WorkoutRequest`, `TemplateRequest`, `ProfileRequest`, `BodyWeightRequest`, `GoalRequest`, `ExerciseRequest`, `RegistrationRequest`", "a bemenet; Bean Validation szabályokkal"],
+    ["Nézet-objektumok", "`WorkoutView`, `WorkoutSummary`, `TemplateView`, `ProfileView`, `PersonalRecordView`, `OverloadWarningView`, `ExerciseView`, `EditableExercise`", "a szolgáltatások kimenete a nézeteknek"],
     ["Számítási rekordok", "`WorkoutRow`, `SetRecord`, `RecordSet`, `MuscleSetCount`, `PeriodSummary`, `ExerciseProgressPoint`, `GoalProgress`", "a `rules` csomag be- és kimenete"],
     ["Enumok", "`ExerciseCategory`, `MuscleGroup`, `CardioType`, `GoalType`, `RecordType`, `OverloadRule`, `DistanceBand`, `FitnessLevel`, `Role`, `Granularity`, `ExerciseSource`", "zárt értékkészletek; az adatbázisban CHECK védi őket"],
-    ["Kivételek", "`NotFoundException`, `BusinessRuleException`, `StaleDataException`, `DuplicateEmailException`, `DuplicateExerciseNameException`", "hibajelzés a rétegek között"],
+    ["Kivételek", "`NotFoundException`, `BusinessRuleException`, `StaleDataException`, `DuplicateEmailException`, `DuplicateExerciseNameException`, `DuplicateTemplateNameException`", "hibajelzés a rétegek között"],
   ], [1900, 4526, 2600], { size: 18 }));
 
   out.push(h2("4.6 Konfiguráció és indulás (`hu.reptrack.config`)"));
@@ -240,22 +255,22 @@ module.exports = function (c) {
     ["`workouts`", "edzés: cím, kezdés, befejezés, fáradtság, megjegyzés, `version`", "`ck_workouts_closed`"],
     ["`workout_exercises`", "az edzés gyakorlatai sorrenddel és megjegyzéssel", ""],
     ["`workout_sets`", "szett: súly, ismétlés, időtartam, távolság, átlag- és maximális pulzus", "CHECK tartományok"],
-    ["`workout_templates`", "edzéssablonok felhasználónként", "UC15 (tervezett)"],
-    ["`template_exercises`", "a sablon gyakorlatai és tervezett szettjei", "UC15 (tervezett)"],
+    ["`workout_templates`", "edzéssablon: név", "a név felhasználónként egyedi (kis- és nagybetűtől függetlenül)"],
+    ["`template_exercises`", "a sablon gyakorlatai sorrenddel: tervezett szettszám, ismétlés, súly, időtartam, távolság", "gyakorlatonként egy tervezett értéksor; CHECK tartományok"],
     ["`personal_records`", "felismert csúcs: típus, ismétlés, távsáv, érték, a rekordot elérő szett, dátum", "származtatott, újraszámolható; `ck_personal_records_shape`"],
     ["`overload_warnings`", "figyelmeztetés: szabály, kulcs, esemény dátuma, üzenet, nyugtázva", "egyedi: (felhasználó, szabály, kulcs)"],
   ], [2200, 4300, 2526], { size: 18 }));
 
   out.push(h2("6.3 Megszorítások és indexek"));
   out.push(...bullets([
-    "**Tartományok (CHECK):** magasság 50–260 cm, testtömeg 20–500 kg, fáradtság 1–10, súly 0–500 kg, ismétlés 1–100, pulzus 30–230, az időtartam és a távolság pozitív.",
+    "**Tartományok (CHECK):** magasság 50–260 cm, testtömeg 20–500 kg, fáradtság 1–10, súly 0–500 kg, ismétlés 1–100, pulzus 30–230, az időtartam és a távolság pozitív; a sablonban a tervezett szettszám 1–20, a tervezett ismétlés és súly ugyanazokkal a határokkal, mint a szettnél.",
     "**Enum-értékek (CHECK):** szerepkör, edzettségi szint, kategória, izomcsoport, kardió típus, célok típusa, rekordtípus, távsáv, szabálykód.",
     "**`ck_exercises_cardio_type`:** a kardió típus pontosan a kardió kategóriájú gyakorlatnál van megadva (futás: tempó, kerékpár: sebesség).",
     "**`ck_workouts_closed`:** a befejezett edzéshez fáradtság és a kezdés utáni befejezés tartozik.",
     "**`ck_personal_records_shape`:** a rekordtípushoz kötelező vagy tiltott mezők (a tempó-PR-hez távsáv kell és ismétlés nem; a súly-PR-hez ismétlés kell és távsáv nem).",
-    "**Egyediség:** `users.email`; (`user_id`, `measured_on`) a testtömegnél; a gyakorlatnév kis- és nagybetűtől függetlenül egyedi a közös gyakorlatok között és felhasználónként a privátoknál (részleges egyedi indexek); (`user_id`, `rule_code`, `rule_key`) a figyelmeztetéseknél.",
+    "**Egyediség:** `users.email`; (`user_id`, `measured_on`) a testtömegnél; a gyakorlatnév kis- és nagybetűtől függetlenül egyedi a közös gyakorlatok között és felhasználónként a privátoknál (részleges egyedi indexek); a sablon neve felhasználónként, kis- és nagybetűtől függetlenül (`ux_workout_templates_name`); (`user_id`, `rule_code`, `rule_key`) a figyelmeztetéseknél.",
     "**Idegen kulcsok `ON DELETE CASCADE`-del:** a felhasználó törlése minden adatát viszi (az UC14 alapja), az edzés törlése a szettjeit, csúcsait és figyelmeztetéseit.",
-    "**Indexek:** `idx_workouts_user_started` (a napló és a statisztikák fő szűrője), `idx_workout_exercises_workout` és `_exercise`, `idx_workout_sets_we`, `idx_pr_user_exercise`, `idx_warnings_user`, `idx_exercises_owner` és `_category`.",
+    "**Indexek:** `idx_workouts_user_started` (a napló és a statisztikák fő szűrője), `idx_workout_exercises_workout` és `_exercise`, `idx_workout_sets_we`, `idx_template_exercises_template` és `_exercise`, `idx_pr_user_exercise`, `idx_warnings_user`, `idx_exercises_owner` és `_category`.",
   ]));
 
   out.push(h2("6.4 Tervezési döntések"));
@@ -264,7 +279,8 @@ module.exports = function (c) {
     "**A számított értékek nem tárolódnak.** Az 1RM, a volumen, a tempó, a terhelés és a célhaladás lekérdezéskor számolódik. Kivétel a PR és a figyelmeztetés: ezek időrendi lejátszást igényelnek, és gyakran jelennek meg listában, ezért tároljuk őket, de minden módosítás után újraszámoljuk.",
     "**Közös és privát gyakorlat egy táblában.** Az `owner_id` NULL vagy kitöltött. Az edzésnaplóban szereplő gyakorlat nem törölhető, csak archiválható (`archived`), így a régi edzések érintetlenek maradnak.",
     "**Időpontok és napok.** Az időpontok `timestamptz` típusúak (UTC); a naphoz kötött adatok (mérés, cél határideje, csúcs dátuma) `date` típusúak.",
-    "**Optimista zárolás.** A gyakran szerkesztett táblák (`users`, `exercises`, `workouts`) `version` oszlopot kapnak.",
+    "**Optimista zárolás.** A gyakran szerkesztett táblák (`users`, `exercises`, `workouts`) `version` oszlopot kapnak. A sablon nem: csak a tulajdonosa szerkeszti.",
+    "**A sablon gyakorlatonként egy tervezett értéksort tárol** („3 × 8 × 80 kg”), nem szettenként. A terv így egyszerű; edzés indításakor a sor a tervezett számú, azonos értékű szettre bomlik, amelyet a felhasználó az edzés közben igazíthat.",
     "**A `rule_key` az idempotens egyeztetéshez kell:** a figyelmeztetés a szabály konkrét előfordulását azonosítja, így az újraszámolás nem duplikál, és a nyugtázás megmarad.",
   ]));
 
@@ -275,6 +291,7 @@ module.exports = function (c) {
     ["`V2__seed_exercises.sql`", "az alapadatbázis: 50 közös gyakorlat másodlagos izomcsoportokkal"],
     ["`V3__personal_record_checks.sql`", "a csúcsok távsáv- és alakmegszorításai"],
     ["`V4__overload_warning_keys.sql`", "`rule_key` és `event_date` a figyelmeztetésekhez, egyedi index"],
+    ["`V5__template_constraints.sql`", "a sablonok tervezett értékeinek CHECK megszorításai, a sablonnév egyedisége felhasználónként, indexek"],
   ], [3300, 5726], { size: 19 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(p("Az új migráció új fájl (a már lefuttatott migrációkat nem módosítjuk). Az ER-diagram újragenerálása: `python3 docs/generate-er.py` (egy ábra), illetve `python3 docs/rendszerterv/diagrams.py` (a jelen dokumentum ábrái)."));
