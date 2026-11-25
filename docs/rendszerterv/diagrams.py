@@ -523,9 +523,14 @@ def sitemap():
     s += nd("prof", "/profile", ["Profil, testtömeg, célok"], "blue")
     s += nd("exform", "/exercises/new", ["Gyakorlat-űrlap (saját gyakorlat)"], "green")
     s += nd("adm", "/admin/exercises/**", ["Közös gyakorlatok kezelése", "(csak ADMIN)"], "green")
+    s += nd("tpl", "/templates", ["Edzéssablonok: lista,", "edzés indítása"], "blue")
+    s += nd("tplform", "/templates/new", ["Sablon-űrlap (új, szerkesztés;", "előtöltve egy edzésből)"], "blue")
     s += "  home -> login; home -> reg; home -> list; home -> stats; home -> rec; home -> ex; home -> prof;\n"
     s += "  ex -> exform; ex -> adm [label=\" ADMIN\"];\n  list -> new; list -> det; det -> edit;\n"
-    s += '  det -> edit [style=dashed, label=" másolás: új, nyitott\\n edzés szerkesztője"];\n}\n'
+    s += '  det -> edit [style=dashed, label=" másolás: új, nyitott\\n edzés szerkesztője"];\n'
+    s += "  home -> tpl; list -> tpl [label=\" Sablonból\"]; tpl -> tplform;\n"
+    s += '  tpl -> new [style=dashed, label=" edzés indítása:\\n előtöltött űrlap"];\n'
+    s += '  det -> tplform [style=dashed, label=" mentés sablonként"];\n}\n'
     dot("oldalterkep.png", s)
     FS.update(title=12, line=10, edge=10)
 

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+<head><title th:text="${templateId == null} ? 'Új sablon – RepTrack' : 'Sablon szerkesztése – RepTrack'">Sablon – RepTrack</title></head>
+<body>
+
+<main class="container py-4 py-lg-5">
+    <a th:href="@{/templates}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Sablonok</a>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${templateId == null} ? 'Új sablon' : 'Sablon szerkesztése'">Új sablon</h1>
+            <p class="page-subtitle">Add meg a gyakorlatokat és a tervezett szetteket. A sablon csak terv: nem kerül az
+                edzésnaplóba, belőle később új edzést indíthatsz.</p>
+        </div>
+    </div>
+
+    <!-- ha a sablon egy edzésből készül: honnan jönnek az értékek, és mi maradt ki -->
+    <div class="alert alert-info" role="status" th:if="${sourceWorkoutTitle != null}">
+        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+        <div>
+            A sablon a(z) <strong th:text="|„${sourceWorkoutTitle}”|">„Lábnap”</strong> edzésből készül, de még nincs mentve.
+            Gyakorlatonként a szettek száma a rögzített szettek száma, a tervezett értékek pedig az <strong>utolsó szett</strong>
+            értékei. Mentés előtt bármelyiket átírhatod.
+            <div class="mt-1" th:unless="${skippedExercises == null or skippedExercises.isEmpty()}">
+                Kimaradt, mert azóta archiválták:
+                <span th:text="${#strings.listJoin(skippedExercises, ', ')}">Fekvenyomás</span>.
+            </div>
+        </div>
+    </div>
+
+    <form id="template-form" method="post"
+          th:action="${templateId == null} ? @{/templates} : @{/templates/{id}(id=${templateId})}">
+
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2 py-3">
+                <i class="bi bi-info-circle text-body-secondary" aria-hidden="true"></i> Alapadatok
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="name">Sablon neve</label>
+                        <input class="form-control" id="name" name="name" type="text" maxlength="120" required
+                               th:value="${form.name}" th:classappend="${nameTaken} ? 'is-invalid'"
+                               th:attr="aria-describedby=${nameTaken} ? 'name-error name-help' : 'name-help'">
+                        <div class="invalid-feedback" id="name-error" th:if="${nameTaken}">Ilyen nevű sablonod már van.</div>
+                        <div class="form-text" id="name-help">Egyedi név, például „Láb A” vagy „Hétfői felsőtest”.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="h5 fw-semibold mb-1">Gyakorlatok</h2>
+        <p class="text-body-secondary small mb-3">
+            Legalább egy gyakorlat kell. Gyakorlatonként csak a <strong>szettek száma</strong> kötelező (1–20); az
+            ismétlés, a súly, az idő és a táv elhagyható. Amit üresen hagysz, azt az edzés indításakor töltheted ki.
+        </p>
+        <div id="rows"></div>
+        <div id="empty-hint" class="card mb-3">
+            <div class="card-body empty-state py-4">
+                <div class="empty-state-icon"><i class="bi bi-list-check" aria-hidden="true"></i></div>
+                <p class="text-body-secondary mb-0" id="empty-hint-text">Még nincs gyakorlat. Adj hozzá egyet a lenti gombbal.</p>
+            </div>
+        </div>
+
+        <!-- a gyakorlatválasztó ablakot a js/exercise-picker.js nyitja meg -->
+        <button class="btn btn-outline-primary w-100 py-3 mb-3" type="button" id="exercise-picker-open">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Gyakorlat hozzáadása</button>
+
+        <div class="form-actions d-flex gap-2">
+            <button class="btn btn-primary btn-lg flex-grow-1 flex-sm-grow-0" type="submit">
+                <i class="bi bi-check2" aria-hidden="true"></i> Sablon mentése</button>
+            <a class="btn btn-outline-secondary btn-lg" th:href="@{/templates}">Mégse</a>
+        </div>
+    </form>
+
+    <!-- a szkript adatai: a választható gyakorlatok és a már kitöltött sorok (szerkesztésnél, hibás mentés után) -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.CATALOG = /*[[${catalog}]]*/ [];
+        window.INITIAL = /*[[${initialRows}]]*/ [];
+        /*]]>*/
+    </script>
+    <script th:src="@{/js/exercise-picker.js}"></script>
+
+    <script th:inline="none">
+        (function () {
+            const catalog = window.CATALOG || [];
+            const initial = window.INITIAL || [];
+            const byId = {};
+            catalog.forEach(function (c) { byId[c.id] = c; });
+
+            const form = document.getElementById('template-form');
+            const rowsEl = document.getElementById('rows');
+            const openPicker = document.getElementById('exercise-picker-open');
+            const hint = document.getElementById('empty-hint');
+            const hintText = document.getElementById('empty-hint-text');
+            const hintDefault = hintText.textContent;
+            let fieldCounter = 0;
+
+            function el(tag, props, children) {
+                const node = document.createElement(tag);
+                Object.keys(props || {}).forEach(function (k) {
+                    if (k === 'class') { node.className = props[k]; }
+                    else if (k === 'text') { node.textContent = props[k]; }
+                    else { node.setAttribute(k, props[k]); }
+                });
+                (children || []).forEach(function (c) { node.appendChild(c); });
+                return node;
+            }
+
+            // A tervezett mezők: csak a szettek száma kötelező, a többi a gyakorlat beállításaitól függően látszik.
+            function fieldsFor(ex) {
+                const weightLabel = ex.category === 'BODYWEIGHT' ? 'Külső terhelés (kg)' : 'Súly (kg)';
+                return [
+                    { key: 'plannedSets', label: 'Szettek', show: true, req: true,
+                      attrs: { type: 'number', min: '1', max: '20', step: '1' } },
+                    { key: 'plannedReps', label: 'Ismétlés', show: ex.r, req: false,
+                      attrs: { type: 'number', min: '1', max: '100', step: '1' } },
+                    { key: 'plannedWeightKg', label: weightLabel, show: ex.w, req: false,
+                      attrs: { type: 'number', min: '0', max: '500', step: 'any' } },
+                    { key: 'plannedDurationMin', label: 'Idő (perc)', show: ex.d, req: false,
+                      attrs: { type: 'number', min: '0.01', step: 'any' } },
+                    { key: 'plannedDistanceKm', label: 'Táv (km)', show: ex.k, req: false,
+                      attrs: { type: 'number', min: '0.001', step: 'any' } }
+                ].filter(function (f) { return f.show; });
+            }
+
+            function refresh() {
+                const rows = rowsEl.querySelectorAll('.tpl-row');
+                hint.style.display = rows.length === 0 ? '' : 'none';
+                rows.forEach(function (r, i, all) {
+                    r.querySelector('.move-up').disabled = i === 0;
+                    r.querySelector('.move-down').disabled = i === all.length - 1;
+                });
+            }
+
+            function addRow(exerciseId, data) {
+                const ex = byId[exerciseId];
+                if (!ex) { return; }
+                const card = el('div', { 'class': 'tpl-row card accent-card accent-' + ex.category + ' mb-3' });
+                const idInput = el('input', { type: 'hidden', 'data-field': 'exerciseId', value: ex.id });
+
+                const up = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-up', type: 'button', title: 'Feljebb',
+                    'aria-label': 'Feljebb' }, [el('i', { 'class': 'bi bi-arrow-up' })]);
+                const down = el('button', { 'class': 'btn btn-sm btn-outline-secondary move-down', type: 'button', title: 'Lejjebb',
+                    'aria-label': 'Lejjebb' }, [el('i', { 'class': 'bi bi-arrow-down' })]);
+                const remove = el('button', { 'class': 'btn btn-sm btn-outline-danger', type: 'button', title: 'Gyakorlat törlése',
+                    'aria-label': 'Gyakorlat törlése' }, [el('i', { 'class': 'bi bi-trash3' })]);
+                up.addEventListener('click', function () {
+                    if (card.previousElementSibling) { rowsEl.insertBefore(card, card.previousElementSibling); refresh(); }
+                });
+                down.addEventListener('click', function () {
+                    if (card.nextElementSibling) { rowsEl.insertBefore(card.nextElementSibling, card); refresh(); }
+                });
+                remove.addEventListener('click', function () { card.remove(); refresh(); });
+
+                const header = el('div', { 'class': 'card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3' }, [
+                    el('div', { 'class': 'd-flex flex-wrap align-items-center gap-2' }, [
+                        el('strong', { text: ex.name }),
+                        el('span', { 'class': 'cat-badge cat-' + ex.category, text: ex.categoryLabel })
+                    ]),
+                    el('div', { 'class': 'btn-group' }, [up, down, remove])
+                ]);
+
+                const fieldsRow = el('div', { 'class': 'row g-3' });
+                fieldsFor(ex).forEach(function (f) {
+                    const id = 'tpl-field-' + (++fieldCounter);
+                    const label = el('label', { 'class': 'form-label', 'for': id, text: f.label + ' ' });
+                    if (!f.req) {
+                        label.appendChild(el('span', { 'class': 'text-body-secondary fw-normal small', text: '(nem kötelező)' }));
+                    }
+                    const input = el('input', Object.assign({ 'class': 'form-control', id: id, 'data-field': f.key }, f.attrs));
+                    if (f.req) { input.required = true; }
+                    let value = data ? data[f.key] : null;
+                    if ((value === null || value === undefined) && f.key === 'plannedSets' && !data) { value = '3'; }
+                    if (value !== null && value !== undefined) { input.value = value; }
+                    fieldsRow.appendChild(el('div', { 'class': 'col-6 col-md-4 col-xl' }, [label, input]));
+                });
+
+                card.appendChild(header);
+                card.appendChild(el('div', { 'class': 'card-body' }, [idInput, fieldsRow]));
+                rowsEl.appendChild(card);
+                refresh();
+            }
+
+            // ---- gyakorlat hozzáadása a választó ablakból (kártyák, kereső, szűrők; mint az edzés űrlapján) ----
+            window.ExercisePicker.attach(openPicker, catalog, function (exerciseId) {
+                addRow(exerciseId, null);
+                hintText.textContent = hintDefault;
+                hintText.classList.remove('text-danger');
+                hintText.classList.add('text-body-secondary');
+            });
+
+            // ---- küldés: legalább egy gyakorlat kell; a sorok indexeit egymás utánira rendezzük ----
+            form.addEventListener('submit', function (event) {
+                const rows = rowsEl.querySelectorAll('.tpl-row');
+                if (rows.length === 0) {
+                    event.preventDefault();
+                    hintText.textContent = 'Adj hozzá legalább egy gyakorlatot a sablon mentése előtt.';
+                    hintText.classList.remove('text-body-secondary');
+                    hintText.classList.add('text-danger');
+                    openPicker.focus();
+                    return;
+                }
+                rows.forEach(function (row, i) {
+                    row.querySelectorAll('[data-field]').forEach(function (input) {
+                        input.name = 'exercises[' + i + '].' + input.getAttribute('data-field');
+                    });
+                });
+            });
+
+            // ---- kiinduló állapot ----
+            initial.forEach(function (r) { if (r.exerciseId) { addRow(r.exerciseId, r); } });
+            refresh();
+        })();
+    </script>
+</main>
+</body>
+</html>

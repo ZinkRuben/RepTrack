@@ -101,6 +101,29 @@ class AdminBootstrapTest extends IntegrationTestBase {
     }
 
     @Test
+    void stopsStartupWhenTheExamplePlaceholderPasswordWasLeftIn() {
+        for (String placeholder : new String[] {"CHANGE-ME", " change-me "}) {
+            assertThatThrownBy(() -> runWith("admin@reptrack.test", placeholder, "Adminisztrátor"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("REPTRACK_ADMIN_PASSWORD még a .env.example mintaértéke (CHANGE-ME)");
+        }
+        assertThat(adminCount()).isZero();
+    }
+
+    @Test
+    void examplePlaceholderDoesNotMatterOnceAnAdminExists() {
+        runWith("admin@reptrack.test", PASSWORD, "Adminisztrátor");
+        runWith("admin@reptrack.test", "CHANGE-ME", "Adminisztrátor");   // a meglévő adminnál nem fut le az ellenőrzés
+        assertThat(adminCount()).isEqualTo(1);
+    }
+
+    @Test
+    void theExampleFileContainsOnlyThePlaceholderPassword() throws Exception {
+        String example = java.nio.file.Files.readString(java.nio.file.Path.of(".env.example"));
+        assertThat(example).contains("REPTRACK_ADMIN_PASSWORD=" + AdminBootstrap.PLACEHOLDER_PASSWORD);
+    }
+
+    @Test
     void stopsStartupOnInvalidValuesAndNamesTheVariableToFix() {
         assertThatThrownBy(() -> runWith("admin@reptrack.test", "rovid", "Adminisztrátor"))
                 .isInstanceOf(IllegalStateException.class)

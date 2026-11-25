@@ -12,8 +12,12 @@ import hu.reptrack.dto.ExerciseCategory;
 import hu.reptrack.dto.ExerciseRequest;
 import hu.reptrack.dto.MuscleGroup;
 import hu.reptrack.dto.Role;
+import hu.reptrack.dto.TemplateExerciseRequest;
+import hu.reptrack.dto.TemplateRequest;
 import hu.reptrack.service.ExerciseService;
+import hu.reptrack.service.TemplateService;
 import java.time.Instant;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 class RoleAccessTest extends SecurityTestSupport {
 
     @Autowired ExerciseService exerciseService;
+    @Autowired TemplateService templateService;
 
     static Stream<String> adminRoutes() {
         return ProtectedPagesTest.ADMIN.stream();
@@ -114,6 +119,9 @@ class RoleAccessTest extends SecurityTestSupport {
                 id = workout(who, "Saját edzés", Instant.now().minusSeconds(7200), "Guggolás", "60", 5);
             } else if (route.startsWith("GET /exercises/{id}")) {
                 id = ownExercise(who, "Saját gyakorlat " + who.getId());
+            } else if (route.startsWith("GET /templates/{id}")) {
+                id = templateService.create(who.getId(), new TemplateRequest("Saját sablon", List.of(
+                        new TemplateExerciseRequest(sharedExerciseId("Guggolás"), (short) 3, null, null, null, null)))).id();
             }
             mvc.perform(request(route, id).with(as(who))).andExpect(status().isOk());
         }

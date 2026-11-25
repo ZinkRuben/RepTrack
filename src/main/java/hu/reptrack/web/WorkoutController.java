@@ -2,16 +2,16 @@ package hu.reptrack.web;
 
 import hu.reptrack.dto.BusinessRuleException;
 import hu.reptrack.dto.ExerciseCategory;
-import hu.reptrack.dto.ExerciseOption;
+import hu.reptrack.dto.TemplateView;
 import hu.reptrack.dto.WorkoutFilter;
 import hu.reptrack.dto.WorkoutSummary;
 import hu.reptrack.dto.WorkoutView;
 import hu.reptrack.service.AuthenticatedUser;
 import hu.reptrack.service.OverloadService;
 import hu.reptrack.service.PersonalRecordService;
+import hu.reptrack.service.TemplateService;
 import hu.reptrack.service.WorkoutService;
 import jakarta.validation.ConstraintViolationException;
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -37,7 +37,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Az edzésnapló oldalai (UC7, UC8, UC9): lista szűrőkkel, új edzés, részletek, szerkesztés, törlés és másolás.
+ * Az edzésnapló oldalai (UC7, UC8, UC9): lista szűrőkkel, új edzés (üresen vagy sablonból, UC15), részletek,
+ * szerkesztés, törlés és másolás.
  * A mentés után a részletek oldal mutatja az edzésben elért új csúcsokat és a túlterhelési figyelmeztetéseket.
  * Az időpontokat a felhasználó helyi idejében (a beállított időzónában) kezeli, a szolgáltatás UTC-t kap.
  */
@@ -48,21 +49,22 @@ public class WorkoutController {
     private static final int PAGE_SIZE = 20;
     private static final String VALIDATION_MESSAGE = "A megadott adatok érvénytelenek. Ellenőrizd az edzés nevét és az "
             + "időpontot, a súlyt (0–500 kg), az ismétlést (1–100), a pulzust (30–230) és a fáradtságot (1–10).";
-    private static final Map<ExerciseCategory, String> CATEGORY_LABELS = Map.of(
-            ExerciseCategory.WEIGHTS, "Súlyzós",
-            ExerciseCategory.CARDIO, "Kardió",
-            ExerciseCategory.BODYWEIGHT, "Saját testsúlyos");
 
     private final WorkoutService workouts;
     private final PersonalRecordService personalRecords;
     private final OverloadService overload;
+    private final TemplateService templates;
+    private final ExerciseCatalog exerciseCatalog;
     private final ZoneId zone;
 
     public WorkoutController(WorkoutService workouts, PersonalRecordService personalRecords, OverloadService overload,
+                             TemplateService templates, ExerciseCatalog exerciseCatalog,
                              @Value("${reptrack.timezone:Europe/Budapest}") String timezone) {
         this.workouts = workouts;
         this.personalRecords = personalRecords;
         this.overload = overload;
+        this.templates = templates;
+        this.exerciseCatalog = exerciseCatalog;
         this.zone = ZoneId.of(timezone);
     }
 
@@ -112,9 +114,22 @@ public class WorkoutController {
 
     // ---- új edzés ----
 
+    /**
+     * Új edzés üresen, vagy {@code ?template=} esetén egy sablonból (UC15): az űrlap a sablon gyakorlataival és
+     * tervezett szettjeivel töltődik ki, de semmi nem mentődik, amíg a felhasználó a Mentés gombot meg nem nyomja.
+     */
     @GetMapping("/new")
-    public String newForm(@AuthenticationPrincipal AuthenticatedUser user, Model model) {
-        return formPage(user, WorkoutForm.blank(zone), null, model);
+    public String newForm(@AuthenticationPrincipal AuthenticatedUser user,
+                          @RequestParam(name = "template", required = false) Long templateId, Model model) {
+        if (templateId == null) {
+            return formPage(user, WorkoutForm.blank(zone), null, model);
+        }
+        TemplateView template = templates.get(user.getId(), templateId);
+        model.addAttribute("sourceTemplateName", template.name());
+        model.addAttribute("skippedExercises", template.exercises().stream()
+                .filter(TemplateView.ExerciseView::archived).map(TemplateView.ExerciseView::exerciseName)
+                .distinct().toList());
+        return formPage(user, WorkoutForm.fromTemplate(template, zone), null, model);
     }
 
     @PostMapping
@@ -189,36 +204,21 @@ public class WorkoutController {
                 .filter(java.util.Objects::nonNull).toList();
         model.addAttribute("form", form);
         model.addAttribute("workoutId", workoutId);
-        model.addAttribute("catalog", workouts.exerciseOptions(user.getId(), usedIds).stream().map(this::catalogEntry).toList());
+        model.addAttribute("catalog", exerciseCatalog.of(workouts.exerciseOptions(user.getId(), usedIds)));
         model.addAttribute("initialBlocks", form.getExercises().stream().map(this::blockEntry).toList());
         return "workout-form";
-    }
-
-    private Map<String, Object> catalogEntry(ExerciseOption o) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", String.valueOf(o.id()));
-        m.put("name", o.name());
-        m.put("category", o.category().name());
-        m.put("categoryLabel", CATEGORY_LABELS.get(o.category()));
-        m.put("w", o.tracksWeight());
-        m.put("r", o.tracksReps());
-        m.put("d", o.tracksDuration());
-        m.put("k", o.tracksDistance());
-        m.put("h", o.tracksHeartRate());
-        m.put("shared", o.shared());
-        return m;
     }
 
     private Map<String, Object> blockEntry(WorkoutForm.ExerciseBlock block) {
         List<Map<String, Object>> sets = new ArrayList<>();
         for (WorkoutForm.SetRow s : block.getSets()) {
             Map<String, Object> row = new LinkedHashMap<>();
-            row.put("weightKg", text(s.getWeightKg()));
-            row.put("reps", text(s.getReps()));
-            row.put("durationMin", text(s.getDurationMin()));
-            row.put("distanceKm", text(s.getDistanceKm()));
-            row.put("avgHeartRate", text(s.getAvgHeartRate()));
-            row.put("maxHeartRate", text(s.getMaxHeartRate()));
+            row.put("weightKg", FormValues.text(s.getWeightKg()));
+            row.put("reps", FormValues.text(s.getReps()));
+            row.put("durationMin", FormValues.text(s.getDurationMin()));
+            row.put("distanceKm", FormValues.text(s.getDistanceKm()));
+            row.put("avgHeartRate", FormValues.text(s.getAvgHeartRate()));
+            row.put("maxHeartRate", FormValues.text(s.getMaxHeartRate()));
             sets.add(row);
         }
         Map<String, Object> m = new LinkedHashMap<>();
@@ -226,13 +226,6 @@ public class WorkoutController {
         m.put("notes", block.getNotes());
         m.put("sets", sets);
         return m;
-    }
-
-    private static String text(Object value) {
-        if (value == null) {
-            return null;
-        }
-        return value instanceof BigDecimal d ? d.stripTrailingZeros().toPlainString() : String.valueOf(value);
     }
 
     private LocalDateTime local(Instant instant) {

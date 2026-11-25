@@ -10,7 +10,11 @@
             <h1 class="page-title">Edzésnapló</h1>
             <p class="page-subtitle" th:text="|${totalElements} edzés|">12 edzés</p>
         </div>
-        <a class="btn btn-primary" th:href="@{/workouts/new}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Új edzés</a>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" th:href="@{/templates}" title="Új edzés egy mentett sablon alapján">
+                <i class="bi bi-clipboard-check" aria-hidden="true"></i> Sablonból</a>
+            <a class="btn btn-primary" th:href="@{/workouts/new}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Új edzés</a>
+        </div>
     </div>
 
     <!-- nyugtázatlan túlterhelési figyelmeztetések -->

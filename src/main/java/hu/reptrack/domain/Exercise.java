@@ -62,11 +62,26 @@ public class Exercise {
 
     private boolean archived;
 
+    /**
+     * A gyakorlat képének kulcsa: a {@code static/images/exercises/<kulcs>.jpg} (vagy .png, .webp) fájl neve
+     * kiterjesztés nélkül. A közös gyakorlatoknál van megadva; ha nincs ilyen fájl, a választó ikont mutat.
+     */
+    @Column(name = "image_key")
+    private String imageKey;
+
     @Version
     private Long version;
 
     public Long getId() {
         return id;
+    }
+
+    public String getImageKey() {
+        return imageKey;
+    }
+
+    public void setImageKey(String imageKey) {
+        this.imageKey = imageKey;
     }
 
     public void setId(Long id) {

@@ -28,6 +28,9 @@
             <form th:action="@{/workouts/{id}/copy(id=${workout.id()})}" method="post">
                 <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-copy" aria-hidden="true"></i> Másolás</button>
             </form>
+            <a class="btn btn-outline-secondary" th:href="@{/templates/new(fromWorkout=${workout.id()})}"
+               title="Új sablon ebből az edzésből: a szettek száma és az utolsó szett értékei kerülnek bele, mentés előtt átírhatod">
+                <i class="bi bi-clipboard-plus" aria-hidden="true"></i> Mentés sablonként</a>
             <a class="btn btn-primary" th:href="@{/workouts/{id}/edit(id=${workout.id()})}">
                 <i class="bi bi-pencil-square" aria-hidden="true"></i>
                 <span th:text="${workout.endedAt() == null} ? 'Szerkesztés / lezárás' : 'Szerkesztés'">Szerkesztés</span>
@@ -121,7 +124,7 @@
                     <td class="text-body-secondary fw-semibold" th:text="${s.position()}">1</td>
                     <td>
                         <span th:if="${s.weightKg() != null}" class="fw-semibold me-3"
-                              th:text="${s.weightKg().stripTrailingZeros().toPlainString()} + ' kg'">100 kg</span>
+                              th:text="${@num.of(s.weightKg())} + ' kg'">100 kg</span>
                         <span th:if="${s.reps() != null}" class="me-3" th:text="|× ${s.reps()}|">× 5</span>
                         <span th:if="${s.durationSec() != null}" class="me-3"
                               th:text="|${s.durationSec() / 60}:${#numbers.formatInteger(s.durationSec() % 60, 2)} perc|">25:00 perc</span>

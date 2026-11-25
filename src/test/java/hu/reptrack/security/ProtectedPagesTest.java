@@ -41,6 +41,8 @@ class ProtectedPagesTest extends SecurityTestSupport {
     static final List<String> USER = List.of(
             "GET /workouts", "GET /workouts/new", "GET /workouts/{id}", "GET /workouts/{id}/edit",
             "POST /workouts", "POST /workouts/{id}", "POST /workouts/{id}/delete", "POST /workouts/{id}/copy",
+            "GET /templates", "GET /templates/new", "GET /templates/{id}/edit",
+            "POST /templates", "POST /templates/{id}", "POST /templates/{id}/delete",
             "POST /warnings/{id}/acknowledge",
             "GET /exercises", "GET /exercises/new", "GET /exercises/{id}/edit",
             "POST /exercises", "POST /exercises/{id}", "POST /exercises/{id}/archive", "POST /exercises/{id}/restore",
@@ -75,7 +77,15 @@ class ProtectedPagesTest extends SecurityTestSupport {
     }
 
     static Stream<String> publicPaths() {
-        return Stream.of("/", "/login", "/register", "/css/app.css", "/js/app.js");
+        return Stream.of("/", "/login", "/register", "/css/app.css", "/js/app.js",
+                "/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css",
+                "/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js",
+                "/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css",
+                "/webjars/bootstrap-icons/1.11.3/font/fonts/bootstrap-icons.woff2",
+                "/webjars/fontsource-variable__inter/5.0.15/index.css",
+                "/webjars/chart.js/4.4.7/dist/chart.umd.js",
+                "/webjars/flatpickr/4.6.13/dist/flatpickr.min.js", "/webjars/flatpickr/4.6.13/dist/l10n/hu.js",
+                "/js/datepicker.js", "/js/exercise-picker.js", "/images/exercises/guggolas.jpg");
     }
 
     /** "GET /workouts/{id}" → "/workouts/1" (a jogosultság-ellenőrzés az adat betöltése előtt történik). */

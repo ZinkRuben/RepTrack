@@ -14,6 +14,20 @@
         </div>
     </div>
 
+    <!-- sablonból indított edzés (UC15): honnan jönnek az értékek, és hogy még nincs mentve -->
+    <div class="alert alert-info" role="status" th:if="${sourceTemplateName != null}">
+        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+        <div>
+            Edzés a(z) <strong th:text="|„${sourceTemplateName}”|">„Láb A”</strong> sablonból. A szetteket a tervezett
+            értékekkel töltöttük ki<span id="needs-input-hint">; a <span class="needs-input-legend">kiemelt</span> mezőket
+            a sablon nem adta meg, ezeket itt töltsd ki</span>. Az edzés csak a <strong>Mentés</strong> gombra kerül a naplóba.
+            <div class="mt-1" th:unless="${skippedExercises == null or skippedExercises.isEmpty()}">
+                Kimaradt, mert azóta archiválták:
+                <span th:text="${#strings.listJoin(skippedExercises, ', ')}">Fekvenyomás</span>.
+            </div>
+        </div>
+    </div>
+
     <form id="workout-form" method="post"
           th:action="${workoutId == null} ? @{/workouts} : @{/workouts/{id}(id=${workoutId})}">
         <input type="hidden" name="version" th:if="${form.version != null}" th:value="${form.version}">
@@ -36,10 +50,16 @@
                                th:value="${form.startedAt}">
                     </div>
                     <div class="col-6 col-md-3">
-                        <label class="form-label" for="endedAt">Befejezés</label>
+                        <div class="d-flex justify-content-between align-items-baseline gap-2">
+                            <label class="form-label" for="endedAt">Befejezés</label>
+                            <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" id="ended-now"
+                                    title="A befejezés a mostani időpont">
+                                <i class="bi bi-clock" aria-hidden="true"></i> Most</button>
+                        </div>
                         <input class="form-control" id="endedAt" name="endedAt" type="datetime-local"
-                               th:value="${form.endedAt}">
-                        <div class="form-text">Üresen hagyva az edzés nyitott marad.</div>
+                               th:value="${form.endedAt}" aria-describedby="endedAt-help">
+                        <div class="form-text" id="endedAt-help">Üresen hagyva az edzés nyitott marad; a nyitott edzés
+                            nem számít bele a csúcsokba és a figyelmeztetésekbe.</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <label class="form-label" for="fatigue">Fáradtság (1–10)</label>
@@ -62,20 +82,13 @@
         <div id="empty-hint" class="card mb-3">
             <div class="card-body empty-state py-4">
                 <div class="empty-state-icon"><i class="bi bi-list-check" aria-hidden="true"></i></div>
-                <p class="text-body-secondary mb-0">Még nincs gyakorlat. Válassz egyet lent, és add hozzá.</p>
+                <p class="text-body-secondary mb-0">Még nincs gyakorlat. Adj hozzá egyet a lenti gombbal.</p>
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-body">
-                <label class="form-label" for="exercise-picker">Gyakorlat hozzáadása</label>
-                <div class="input-group">
-                    <select class="form-select" id="exercise-picker"></select>
-                    <button class="btn btn-primary" type="button" id="add-exercise">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Hozzáadás</button>
-                </div>
-            </div>
-        </div>
+        <!-- a gyakorlatválasztó ablakot a js/exercise-picker.js nyitja meg -->
+        <button class="btn btn-outline-primary w-100 py-3 mb-3" type="button" id="exercise-picker-open">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> Gyakorlat hozzáadása</button>
 
         <!-- mobilon is kézre eső mentés: az oldal aljára tapad -->
         <div class="form-actions d-flex gap-2">
@@ -91,34 +104,22 @@
         /*<![CDATA[*/
         window.CATALOG = /*[[${catalog}]]*/ [];
         window.INITIAL = /*[[${initialBlocks}]]*/ [];
+        window.FROM_TEMPLATE = /*[[${sourceTemplateName != null}]]*/ false;
         /*]]>*/
     </script>
+    <script th:src="@{/js/exercise-picker.js}"></script>
 
     <script th:inline="none">
         (function () {
             const catalog = window.CATALOG || [];
             const initial = window.INITIAL || [];
+            const fromTemplate = window.FROM_TEMPLATE === true;
             const byId = {};
             catalog.forEach(function (c) { byId[c.id] = c; });
 
             const form = document.getElementById('workout-form');
             const blocksEl = document.getElementById('blocks');
-            const picker = document.getElementById('exercise-picker');
             const hint = document.getElementById('empty-hint');
-
-            // ---- a választó: kategóriánként csoportosítva ----
-            const groups = {};
-            catalog.forEach(function (c) {
-                if (!groups[c.categoryLabel]) {
-                    groups[c.categoryLabel] = document.createElement('optgroup');
-                    groups[c.categoryLabel].label = c.categoryLabel;
-                    picker.appendChild(groups[c.categoryLabel]);
-                }
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name + (c.shared ? '' : ' (saját)');
-                groups[c.categoryLabel].appendChild(opt);
-            });
 
             // ---- segédek ----
             function el(tag, props, children) {
@@ -149,6 +150,14 @@
                     { key: 'maxHeartRate', label: 'Max. pulzus', show: ex.h, req: false,
                       attrs: { type: 'number', min: '30', max: '230', step: '1' } }
                 ].filter(function (f) { return f.show; });
+            }
+
+            // Sablonból indított edzésnél a kötelező, de üres mező (amit a sablon nem adott meg) kiemelve látszik,
+            // amíg a felhasználó ki nem tölti.
+            function trackMissing(input) {
+                const update = function () { input.classList.toggle('needs-input', input.value === ''); };
+                update();
+                input.addEventListener('input', update);
             }
 
             function refresh() {
@@ -183,6 +192,7 @@
                         value = prevInput ? prevInput.value : null;
                     }
                     if (value !== null && value !== undefined) { input.value = value; }
+                    if (fromTemplate && f.req) { trackMissing(input); }
                     row.appendChild(el('td', {}, [input]));
                 });
                 const remove = el('button', { 'class': 'btn btn-sm btn-ghost btn-icon text-danger', type: 'button',
@@ -248,8 +258,25 @@
                 refresh();
             }
 
-            document.getElementById('add-exercise').addEventListener('click', function () {
-                if (picker.value) { addBlock(picker.value, null); }
+            // ---- gyakorlat hozzáadása a választó ablakból (kártyák, kereső, szűrők) ----
+            window.ExercisePicker.attach(document.getElementById('exercise-picker-open'), catalog, function (exerciseId) {
+                addBlock(exerciseId, null);
+            });
+
+            // „Most”: a befejezés a mostani időpont (percre); utána a fáradtság jön, mert lezárt edzéshez kötelező
+            document.getElementById('ended-now').addEventListener('click', function () {
+                const ended = document.getElementById('endedAt');
+                const now = new Date();
+                now.setSeconds(0, 0);
+                if (ended._flatpickr) {
+                    ended._flatpickr.setDate(now, true);
+                } else {
+                    const pad = function (n) { return String(n).padStart(2, '0'); };
+                    ended.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+                        + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+                }
+                const fatigue = document.getElementById('fatigue');
+                if (fatigue && !fatigue.value) { fatigue.focus(); }
             });
 
             // ---- küldés: a listák indexeit egymás utánira rendezzük (a szerver kötése ezt várja) ----
@@ -268,6 +295,9 @@
             // ---- kiinduló állapot ----
             initial.forEach(function (b) { if (b.exerciseId) { addBlock(b.exerciseId, b); } });
             refresh();
+            // ha a sablon minden kötelező értéket megadott, a kiemelésről szóló mondat felesleges
+            const needsInputHint = document.getElementById('needs-input-hint');
+            if (needsInputHint && !blocksEl.querySelector('.needs-input')) { needsInputHint.style.display = 'none'; }
         })();
     </script>
 </main>

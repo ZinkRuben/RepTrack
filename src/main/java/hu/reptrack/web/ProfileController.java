@@ -2,6 +2,7 @@ package hu.reptrack.web;
 
 import hu.reptrack.dto.BodyWeightRequest;
 import hu.reptrack.dto.BusinessRuleException;
+import hu.reptrack.dto.EnduranceMetric;
 import hu.reptrack.dto.FitnessLevel;
 import hu.reptrack.dto.GoalProgress;
 import hu.reptrack.dto.GoalRequest;
@@ -39,7 +40,8 @@ public class ProfileController {
 
     private static final int WEIGHTS_SHOWN = 10;
     private static final String VALIDATION_MESSAGE = "A megadott adatok érvénytelenek. Ellenőrizd az értékeket: "
-            + "magasság 50–260 cm, testtömeg 20–500 kg, heti terhelés küszöb 105–300%, szettszám 1–30, fáradtság 1–10.";
+            + "magasság 50–260 cm, testtömeg 20–500 kg, heti terhelés küszöb 105–300%, szettszám 1–30, fáradtság 1–10, "
+            + "célérték legfeljebb 1000, céltáv legfeljebb 1000 km.";
 
     private final ProfileService profileService;
     private final StatisticsService statistics;
@@ -102,14 +104,28 @@ public class ProfileController {
 
     // ---- célok ----
 
+    /**
+     * Új edzéscél. Állóképességi célnál a mérték is jön; az „idő adott távon” célnál a célérték a célidő
+     * (perc:másodperc szövegként, percre váltva), a táv pedig km-ben (méterre váltva).
+     */
     @PostMapping("/goals")
     public String addGoal(@AuthenticationPrincipal AuthenticatedUser user, @RequestParam GoalType type,
                           @RequestParam(required = false) Long exerciseId,
                           @RequestParam(required = false) BigDecimal targetValue,
                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deadline,
+                          @RequestParam(required = false) EnduranceMetric enduranceMetric,
+                          @RequestParam(required = false) BigDecimal targetDistanceKm,
+                          @RequestParam(required = false) String targetTime,
                           RedirectAttributes redirect) {
         try {
-            profileService.addGoal(user.getId(), new GoalRequest(type, exerciseId, targetValue, deadline));
+            EnduranceMetric metric = type == GoalType.ENDURANCE ? enduranceMetric : null;
+            BigDecimal value = targetValue;
+            Integer distanceM = null;
+            if (metric == EnduranceMetric.TIME_FOR_DISTANCE) {
+                value = GoalDisplay.parseTime(targetTime);
+                distanceM = FormValues.meters(targetDistanceKm);
+            }
+            profileService.addGoal(user.getId(), new GoalRequest(type, exerciseId, value, deadline, metric, distanceM));
             FlashMessages.success(redirect, "Az edzéscélt felvettem.");
         } catch (BusinessRuleException | ConstraintViolationException ex) {
             FlashMessages.error(redirect, messageOf(ex));
@@ -138,8 +154,8 @@ public class ProfileController {
         model.addAttribute("fitnessLevels", FitnessLevel.values());
         model.addAttribute("weights", weights.stream().limit(WEIGHTS_SHOWN).toList());
         model.addAttribute("weightCount", weights.size());
-        model.addAttribute("goals", profileService.goals(user.getId()));
-        model.addAttribute("progress", progress);
+        model.addAttribute("goals", profileService.goals(user.getId()).stream()
+                .map(g -> GoalDisplay.of(g, progress.get(g.id()))).toList());
         model.addAttribute("goalTypes", GoalType.values());
         model.addAttribute("exerciseOptions", workouts.exerciseOptions(user.getId(), List.of()));
         model.addAttribute("today", LocalDate.now(zone));

@@ -1,11 +1,11 @@
 package hu.reptrack.web;
 
+import hu.reptrack.dto.TemplateView;
 import hu.reptrack.dto.WorkoutExerciseRequest;
 import hu.reptrack.dto.WorkoutRequest;
 import hu.reptrack.dto.WorkoutSetRequest;
 import hu.reptrack.dto.WorkoutView;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -75,6 +75,33 @@ public class WorkoutForm {
         return form;
     }
 
+    /**
+     * Új edzés egy sablonból (UC15): a neve a sablon neve, a kezdés a mostani idő, és minden gyakorlathoz annyi szett,
+     * ahány a sablonban tervezett, a tervezett értékekkel kitöltve (a meg nem adott értékek üresek maradnak). Az azóta
+     * archivált gyakorlatok kimaradnak. Az űrlap nincs mentve: az edzés a szokásos mentéssel jön létre.
+     */
+    public static WorkoutForm fromTemplate(TemplateView template, ZoneId zone) {
+        WorkoutForm form = blank(zone);
+        form.title = template.name();
+        for (TemplateView.ExerciseView e : template.exercises()) {
+            if (e.archived()) {
+                continue;
+            }
+            ExerciseBlock block = new ExerciseBlock();
+            block.exerciseId = e.exerciseId();
+            for (int i = 0; i < e.plannedSets(); i++) {
+                SetRow row = new SetRow();
+                row.weightKg = e.plannedWeightKg();
+                row.reps = e.plannedReps();
+                row.durationMin = FormValues.minutes(e.plannedDurationSec());
+                row.distanceKm = FormValues.kilometers(e.plannedDistanceM());
+                block.sets.add(row);
+            }
+            form.exercises.add(block);
+        }
+        return form;
+    }
+
     public static WorkoutForm from(WorkoutView view, ZoneId zone) {
         WorkoutForm form = new WorkoutForm();
         form.title = view.title();
@@ -92,10 +119,8 @@ public class WorkoutForm {
                 SetRow row = new SetRow();
                 row.weightKg = s.weightKg();
                 row.reps = s.reps();
-                row.durationMin = s.durationSec() == null ? null
-                        : BigDecimal.valueOf(s.durationSec()).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
-                row.distanceKm = s.distanceM() == null ? null
-                        : BigDecimal.valueOf(s.distanceM()).divide(BigDecimal.valueOf(1000), 3, RoundingMode.HALF_UP);
+                row.durationMin = FormValues.minutes(s.durationSec());
+                row.distanceKm = FormValues.kilometers(s.distanceM());
                 row.avgHeartRate = s.avgHeartRate();
                 row.maxHeartRate = s.maxHeartRate();
                 block.sets.add(row);
@@ -111,17 +136,13 @@ public class WorkoutForm {
             List<WorkoutSetRequest> sets = new ArrayList<>();
             for (SetRow row : block.sets) {
                 sets.add(new WorkoutSetRequest(row.weightKg, row.reps,
-                        scaled(row.durationMin, 60), scaled(row.distanceKm, 1000),
+                        FormValues.seconds(row.durationMin), FormValues.meters(row.distanceKm),
                         row.avgHeartRate, row.maxHeartRate));
             }
             blocks.add(new WorkoutExerciseRequest(block.exerciseId, blankToNull(block.notes), sets));
         }
         return new WorkoutRequest(title, instant(startedAt, zone), instant(endedAt, zone), fatigue,
                 blankToNull(notes), version, blocks);
-    }
-
-    private static Integer scaled(BigDecimal value, int factor) {
-        return value == null ? null : value.multiply(BigDecimal.valueOf(factor)).setScale(0, RoundingMode.HALF_UP).intValue();
     }
 
     private static Instant instant(LocalDateTime local, ZoneId zone) {

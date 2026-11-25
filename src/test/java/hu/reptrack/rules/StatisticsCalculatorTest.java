@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import hu.reptrack.dto.BodyWeightPoint;
 import hu.reptrack.dto.CardioType;
+import hu.reptrack.dto.EnduranceMetric;
 import hu.reptrack.dto.ExerciseCategory;
 import hu.reptrack.dto.ExerciseProgressPoint;
 import hu.reptrack.dto.GoalProgress;
@@ -241,7 +242,7 @@ class StatisticsCalculatorTest {
     }
 
     GoalProgress progressOf(GoalSnapshot goal, List<BodyWeightPoint> body, List<SetRecord> sets) {
-        return StatisticsCalculator.goalProgress(List.of(goal), body, sets).get(0);
+        return StatisticsCalculator.goalProgress(List.of(goal), body, sets, ZONE).get(0);
     }
 
     @Test
@@ -296,8 +297,71 @@ class StatisticsCalculatorTest {
         assertThat(progressOf(goal(GoalType.STRENGTH, null, "100", "2026-11-01"), List.of(), sets).percent()).isNull();
     }
 
+    // ---- állóképességi célok ----
+
+    static GoalSnapshot endurance(EnduranceMetric metric, String target, Integer distanceM, String createdOn) {
+        return new GoalSnapshot(1L, GoalType.ENDURANCE, 2L, kg(target), LocalDate.parse(createdOn), metric, distanceM);
+    }
+
     @Test
-    void enduranceGoalHasNoRuleYet() {
-        assertThat(progressOf(goal(GoalType.ENDURANCE, 2L, "10", "2026-11-01"), List.of(), List.of()).percent()).isNull();
+    void distanceGoalUsesTheLongestSingleDistance() {
+        List<SetRecord> sets = List.of(cardio(1, "2026-11-02T18:00:00", CardioType.RUNNING, 1800, 5000),
+                cardio(2, "2026-11-09T18:00:00", CardioType.RUNNING, 3000, 8000),
+                strength(3, "2026-11-09T19:00:00", "100", 5));                    // másik gyakorlat
+        GoalProgress progress = progressOf(endurance(EnduranceMetric.DISTANCE, "10", null, "2026-11-01"), List.of(), sets);
+        assertThat(progress.current()).isEqualByComparingTo("8");
+        assertThat(progress.percent()).isEqualByComparingTo("80.0");
+    }
+
+    @Test
+    void durationGoalUsesTheLongestSingleDurationInMinutes() {
+        List<SetRecord> sets = List.of(cardio(1, "2026-11-02T18:00:00", CardioType.OTHER, 1800, 1000),
+                cardio(2, "2026-11-09T18:00:00", CardioType.OTHER, 2700, 1500));
+        GoalProgress progress = progressOf(endurance(EnduranceMetric.DURATION, "60", null, "2026-11-01"), List.of(), sets);
+        assertThat(progress.current()).isEqualByComparingTo("45");
+        assertThat(progress.percent()).isEqualByComparingTo("75.0");
+    }
+
+    @Test
+    void timeForDistanceGoalScalesLongerRunsAndMeasuresFromTheTimeWhenTheGoalWasSet() {
+        List<SetRecord> sets = List.of(
+                cardio(1, "2026-11-02T18:00:00", CardioType.RUNNING, 1800, 5000),    // a cél előtt: 5 km 30:00
+                cardio(2, "2026-11-12T18:00:00", CardioType.RUNNING, 1716, 5200),    // 5,2 km 28:36 = 5 km 27:30
+                cardio(3, "2026-11-14T18:00:00", CardioType.RUNNING, 900, 3000));    // rövidebb a céltávnál: nem számít
+        GoalProgress progress = progressOf(
+                endurance(EnduranceMetric.TIME_FOR_DISTANCE, "25", 5000, "2026-11-10"), List.of(), sets);
+        assertThat(progress.start()).isEqualByComparingTo("30");
+        assertThat(progress.current()).isEqualByComparingTo("27.5");
+        assertThat(progress.percent()).isEqualByComparingTo("50.0");                 // 30:00 → 27:30 a 25:00 felé
+    }
+
+    @Test
+    void timeForDistanceGoalStartsFromTheFirstAttemptIfThereWasNoneBefore() {
+        List<SetRecord> sets = List.of(cardio(1, "2026-11-12T18:00:00", CardioType.RUNNING, 1800, 5000),
+                cardio(2, "2026-11-20T18:00:00", CardioType.RUNNING, 1650, 5000));
+        GoalProgress progress = progressOf(
+                endurance(EnduranceMetric.TIME_FOR_DISTANCE, "25", 5000, "2026-11-10"), List.of(), sets);
+        assertThat(progress.start()).isEqualByComparingTo("30");
+        assertThat(progress.current()).isEqualByComparingTo("27.5");
+        assertThat(progress.percent()).isEqualByComparingTo("50.0");
+    }
+
+    @Test
+    void timeForDistanceGoalIsReachedWhenAnyLongEnoughRunIsFastEnough() {
+        List<SetRecord> sets = List.of(cardio(1, "2026-11-12T18:00:00", CardioType.RUNNING, 2880, 10000));  // 10 km 48:00
+        assertThat(progressOf(endurance(EnduranceMetric.TIME_FOR_DISTANCE, "25", 5000, "2026-11-10"), List.of(), sets)
+                .percent()).isEqualByComparingTo("100");
+    }
+
+    @Test
+    void enduranceGoalWithoutDataOrExerciseHasNoPercent() {
+        List<SetRecord> shortRun = List.of(cardio(1, "2026-11-12T18:00:00", CardioType.RUNNING, 900, 3000));
+        assertThat(progressOf(endurance(EnduranceMetric.TIME_FOR_DISTANCE, "25", 5000, "2026-11-10"), List.of(), shortRun)
+                .percent()).isNull();
+        assertThat(progressOf(endurance(EnduranceMetric.DISTANCE, "10", null, "2026-11-10"), List.of(), List.of())
+                .percent()).isNull();
+        GoalSnapshot noExercise = new GoalSnapshot(1L, GoalType.ENDURANCE, null, kg("10"), LocalDate.parse("2026-11-10"),
+                EnduranceMetric.DISTANCE, null);
+        assertThat(progressOf(noExercise, List.of(), shortRun).percent()).isNull();
     }
 }

@@ -19,21 +19,11 @@
 
         <!-- jobb oldal: mobilon is látszik (a menü csak bejelentkezve csukódik össze) -->
         <div class="d-flex align-items-center gap-1 order-lg-last ms-auto">
-            <!-- témaváltó -->
-            <div class="dropdown">
-                <button class="btn btn-ghost btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                        aria-label="Téma váltása" title="Téma">
-                    <i class="bi bi-circle-half" data-theme-icon aria-hidden="true"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><button class="dropdown-item" type="button" data-theme-value="light">
-                        <i class="bi bi-sun-fill" aria-hidden="true"></i> Világos</button></li>
-                    <li><button class="dropdown-item" type="button" data-theme-value="dark">
-                        <i class="bi bi-moon-stars-fill" aria-hidden="true"></i> Sötét</button></li>
-                    <li><button class="dropdown-item" type="button" data-theme-value="auto">
-                        <i class="bi bi-circle-half" aria-hidden="true"></i> Rendszer szerint</button></li>
-                </ul>
-            </div>
+            <!-- témaváltó: egy gomb, amely a másik témára vált (alapból a rendszer témáját követi; js/app.js) -->
+            <button class="btn btn-ghost btn-icon" type="button" data-theme-toggle
+                    aria-label="Váltás sötét témára" title="Sötét téma">
+                <i class="bi bi-moon-stars-fill" data-theme-icon aria-hidden="true"></i>
+            </button>
 
             <!-- bejelentkezett felhasználó -->
             <div class="dropdown" sec:authorize="isAuthenticated()">
@@ -88,6 +78,7 @@
         <div class="collapse navbar-collapse" id="mainNav" sec:authorize="hasRole('USER')">
             <ul class="navbar-nav gap-lg-1 ms-lg-4 py-2 py-lg-0">
                 <li th:replace="~{fragments/navbar :: navLink('/workouts', 'Edzésnapló', 'bi-journal-text')}"></li>
+                <li th:replace="~{fragments/navbar :: navLink('/templates', 'Sablonok', 'bi-clipboard-check')}"></li>
                 <li th:replace="~{fragments/navbar :: navLink('/exercises', 'Gyakorlatok', 'bi-collection')}"></li>
                 <li th:replace="~{fragments/navbar :: navLink('/stats', 'Statisztika', 'bi-graph-up')}"></li>
                 <li th:replace="~{fragments/navbar :: navLink('/records', 'Csúcsok', 'bi-trophy')}"></li>
