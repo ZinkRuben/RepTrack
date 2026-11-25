@@ -260,6 +260,10 @@ class StatisticsServiceTest extends IntegrationTestBase {
         }
         em.flush();
         em.clear();
+        // A lekérdezéstervező statisztikája: élesben az autovacuum frissíti, itt a sorok épp most kerültek be (a teszt
+        // tranzakciójában). Enélkül egy korábbi takarítás „üres tábla” becslésével a tervező percekig futó tervet
+        // választhat; az ANALYZE a tranzakció saját sorait is látja.
+        jdbc.execute("ANALYZE workouts, workout_exercises, workout_sets");
 
         // bemelegítő hívás (a lekérdezések fordítása nem a mért időbe tartozik)
         statistics.summaries(alice.getId(), Granularity.WEEK, null, null, null, null);
