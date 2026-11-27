@@ -73,6 +73,7 @@ c.push(...numbered([
   "Nyisd meg a böngészőben a **https://localhost:8443** címet. A tanúsítvány önaláírt, ezért a böngésző első alkalommal figyelmeztet: a „Speciális” gombbal folytasd a megnyitást. A `http://localhost:8080` cím automatikusan a HTTPS-címre irányít.",
   "Jelentkezz be az 1. lépésben megadott adminisztrátori e-mail-címmel és jelszóval, vagy a „Regisztráció” oldalon hozz létre új felhasználót.",
 ], "n2"));
+c.push(note("Bemutatáshoz a `.env`-ben a `REPTRACK_DEMO_ENABLED=true` beállítással induláskor demófelhasználó is létrejön 16 hétnyi mintaadattal. Belépés: `demo@reptrack.com` / `demo1234`. A jelszó nyilvános, ezért a kapcsoló alapból ki van kapcsolva."));
 
 c.push(h2("3.1 Leállítás, újraindítás, törlés"));
 c.push(...code([
@@ -108,6 +109,7 @@ c.push(tcap("A környezeti változók és a `.env` beállításai"));
 c.push(table(["Változó", "Alapérték", "Jelentés"], [
   ["`REPTRACK_ADMIN_EMAIL`, `REPTRACK_ADMIN_PASSWORD`", "(nincs)", "az első adminisztrátor adatai; csak akkor használja, ha még nincs adminisztrátor (a meglévő jelszót nem írja át)"],
   ["`REPTRACK_ADMIN_NAME`", "Adminisztrátor", "az adminisztrátor megjelenített neve"],
+  ["`REPTRACK_DEMO_ENABLED`", "false", "demófelhasználó 16 hétnyi mintaadattal (`demo@reptrack.com` / `demo1234`); a meglévőt nem írja felül"],
   ["`DB_URL`, `DB_USER`, `DB_PASSWORD`", "`jdbc:postgresql://localhost:5432/reptrack`, `reptrack`, `reptrack`", "adatbázis-hozzáférés (a Compose automatikusan beállítja); a jelszó Docker esetén csak az adatbázis első létrehozása előtt módosítható"],
   ["`HTTPS_PORT`, `HTTP_PORT`", "8443, 8080", "a Docker-futtatás gazdagépen kiadott portjai"],
   ["`REPTRACK_HTTPS_HSTS`", "false", "a HSTS fejléc; valódi domainnél és hiteles tanúsítványnál kapcsold be"],
@@ -144,6 +146,7 @@ c.push(table(["Tünet", "Ok és megoldás"], [
   ["Böngészőfigyelmeztetés (például `ERR_CERT_AUTHORITY_INVALID`)", "várt jelenség, a tanúsítvány önaláírt. Fogadd el a „Speciális → Folytatás” gombbal. Hiteles tanúsítványt lásd az 5. fejezetben."],
   ["Az átirányítás rossz portra mutat", "a `HTTP_PORT` és a `HTTPS_PORT` értéke egyezzen a ténylegesen használt portokkal; a `.env` módosítása után `docker compose up -d` újraindítja az alkalmazást."],
   ["Az alkalmazás nem indul el, a naplóban admin-hiba szerepel", "az admin adatai hibásak (rossz e-mail-formátum, a jelszó rövidebb 8 karakternél vagy még a minta `CHANGE-ME` értéke, vagy a cím egy meglévő nem admin fiókhoz tartozik). A hibaüzenet megnevezi a javítandó változót. Javítsd a `.env` fájlt, és indítsd újra (Dockerben a `docker compose logs app` mutatja az üzenetet)."],
+  ["Egy felhasználó elfelejtette a jelszavát", "egy adminisztrátor a „Felhasználók” oldalon (`/admin/users`) a „Jelszó-visszaállítás” gombbal ideiglenes jelszót készít, és átadja a felhasználónak; a felhasználó vele belépve új jelszót ad meg. Az ideiglenes jelszó csak egyszer jelenik meg."],
   ["`password authentication failed for user \"reptrack\"`", "az adatbázis jelszava csak az adatbázis első létrehozásakor érvényesül. Használd a régi jelszót, vagy töröld az adatokat: `docker compose down -v` (adatvesztéssel jár)."],
   ["Flyway-hiba (`checksum mismatch`) vagy séma-eltérés", "régebbi fejlesztői adatbázis maradt meg. Fejlesztési környezetben `docker compose down -v` után újraépül."],
   ["`release version 21 not supported` (helyi build)", "a `JAVA_HOME` nem JDK 21-re mutat, lásd a 4.1 szakaszt."],

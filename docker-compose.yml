@@ -4,7 +4,8 @@
 #   Csak adatbázis:    docker compose up -d db         ->  fejlesztéshez, a ./mvnw spring-boot:run mellé
 #   Leállítás:         docker compose down             (az adatok és a tanúsítvány a kötetekben megmaradnak)
 #
-# Beállítások a .env fájlból (minta: .env.example): az első admin (REPTRACK_ADMIN_*), a portok (HTTPS_PORT, HTTP_PORT)
+# Beállítások a .env fájlból (minta: .env.example): az első admin (REPTRACK_ADMIN_*), a demófelhasználó
+# (REPTRACK_DEMO_ENABLED), a portok (HTTPS_PORT, HTTP_PORT)
 # és az adatbázis jelszava (DB_PASSWORD; csak az első indítás előtt változtatható, utána a kötetben lévő érvényes).
 # A tanúsítvány önaláírt: a böngésző első alkalommal figyelmeztet, ezt el kell fogadni.
 
@@ -41,6 +42,7 @@ services:
       REPTRACK_ADMIN_EMAIL: ${REPTRACK_ADMIN_EMAIL:-}
       REPTRACK_ADMIN_PASSWORD: ${REPTRACK_ADMIN_PASSWORD:-}
       REPTRACK_ADMIN_NAME: ${REPTRACK_ADMIN_NAME:-Adminisztrátor}
+      REPTRACK_DEMO_ENABLED: ${REPTRACK_DEMO_ENABLED:-false}
       # a HTTP -> HTTPS átirányításhoz: a gazdagépen látható portok
       REPTRACK_PUBLIC_HTTP_PORT: ${HTTP_PORT:-8080}
       REPTRACK_PUBLIC_HTTPS_PORT: ${HTTPS_PORT:-8443}

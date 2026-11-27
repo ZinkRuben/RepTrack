@@ -33,7 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * tilos; jelszó-visszaállítás után az ideiglenes jelszóval csak a jelszócsere érhető el.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"reptrack.admin.email=", "reptrack.admin.password="})
+        properties = {"reptrack.admin.email=", "reptrack.admin.password=", "reptrack.demo.enabled=false"})
 class AccountLifecycleHttpTest extends IntegrationTestBase {
 
     private static final String EMAIL = "eletciklus@example.com";

@@ -525,7 +525,12 @@ def sitemap():
     s += nd("adm", "/admin/exercises/**", ["Közös gyakorlatok kezelése", "(csak ADMIN)"], "green")
     s += nd("tpl", "/templates", ["Edzéssablonok: lista,", "edzés indítása"], "blue")
     s += nd("tplform", "/templates/new", ["Sablon-űrlap (új, szerkesztés;", "előtöltve egy edzésből)"], "blue")
+    s += nd("accpw", "/account/password", ["Jelszó módosítása"], "orange")
+    s += nd("accdel", "/account/delete", ["Fiók törlése", "(megerősítés jelszóval)"], "orange")
+    s += nd("admu", "/admin/users", ["Felhasználók kezelése:", "letiltás, jelszó-visszaállítás,", "kinevezés, törlés (csak ADMIN)"], "orange")
     s += "  home -> login; home -> reg; home -> list; home -> stats; home -> rec; home -> ex; home -> prof;\n"
+    s += "  prof -> accpw; prof -> accdel; home -> admu [label=\" ADMIN\"];\n"
+    s += '  login -> accpw [style=dashed, label=" ideiglenes jelszóval:\\n csak ez érhető el"];\n'
     s += "  ex -> exform; ex -> adm [label=\" ADMIN\"];\n  list -> new; list -> det; det -> edit;\n"
     s += '  det -> edit [style=dashed, label=" másolás: új, nyitott\\n edzés szerkesztője"];\n'
     s += "  home -> tpl; list -> tpl [label=\" Sablonból\"]; tpl -> tplform;\n"

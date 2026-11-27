@@ -10,7 +10,7 @@ module.exports = function (c) {
   // ------------------------------------------------------------------------------------------------ 4.
   out.push(h1("4. A rétegek részletesen"));
   out.push(h2("4.1 Webes réteg (`hu.reptrack.web`)"));
-  out.push(p("A webes réteg a Spring MVC-re épül. A controllerek fogadják a kérést, az űrlap adatait háttérobjektumhoz kötik (`WorkoutForm`, `TemplateForm`, `ProfileForm`, `RegistrationRequest`), meghívják a szolgáltatást, majd vagy nézetet választanak, vagy átirányítanak. Üzleti döntést nem hoznak, és entitást nem látnak."));
+  out.push(p("A webes réteg a Spring MVC-re épül. A controllerek fogadják a kérést, az űrlap adatait háttérobjektumhoz kötik (`WorkoutForm`, `TemplateForm`, `ProfileForm`, `RegistrationRequest`, `PasswordChangeRequest`), meghívják a szolgáltatást, majd vagy nézetet választanak, vagy átirányítanak. Üzleti döntést nem hoznak, és entitást nem látnak."));
   out.push(tcap("A controllerek, útvonalaik és nézeteik"));
   out.push(table(["Controller", "Útvonalak", "Nézet", "Szolgáltatások"], [
     ["`HomeController`", "GET `/`", "`index`", "–"],
@@ -23,12 +23,15 @@ module.exports = function (c) {
     ["`ProfileController`", ["GET, POST `/profile`", "POST `/profile/body-weight`, `/profile/body-weight/{id}/delete`", "POST `/profile/goals`, `/profile/goals/{id}/delete`"], "`profile`", "`ProfileService`, `StatisticsService`"],
     ["`ExerciseController`", ["GET `/exercises`, `/exercises/new`, `/exercises/{id}/edit`", "POST `/exercises`, `/exercises/{id}`, `/exercises/{id}/archive`, `/exercises/{id}/restore`, `/exercises/{id}/delete`"], "`exercises`, `exercise-form`", "`ExerciseService`"],
     ["`AdminExerciseController`", ["GET `/admin/exercises/new`, `/admin/exercises/{id}/edit`", "POST `/admin/exercises`, `/{id}`, `/{id}/archive`, `/{id}/restore`, `/{id}/delete`"], "`exercise-form`", "`ExerciseService`"],
+    ["`AccountController`", "GET, POST `/account/password`; GET, POST `/account/delete`", "`account-password`, `account-delete`", "`AccountService`"],
+    ["`AdminUserController`", ["GET `/admin/users`, `/admin/users/{id}/delete`", "POST `/admin/users/{id}/disable`, `/{id}/enable`, `/{id}/promote`, `/{id}/demote`, `/{id}/reset-password`, `/{id}/delete`"], "`admin-users`, `admin-user-delete`", "`UserAdminService`"],
   ], [1700, 3300, 1800, 2226], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(...bullets([
     "**Űrlapok és a dinamikus edzésűrlap.** Az edzés rögzítésekor a gyakorlatok és a szettek száma előre nem ismert. Az űrlap indexelt mezőneveket használ (`exercises[i].sets[j].reps`); a böngészőben futó kis szkript blokkonként ad hozzá és töröl sorokat (a gyakorlat típusához igazodó mezőkkel; az új szett az előző szett értékeiből indul, a gyakorlatok sorrendje nyilakkal változtatható), beküldés előtt pedig újraszámozza az indexeket. A szkript csak kényelmi funkció: a szerver a beküldött értékeket teljes egészében újraellenőrzi. A sablon űrlapja ugyanígy működik, gyakorlatonként egy sorral (szettszám és tervezett értékek).",
     "**Gyakorlatválasztó.** A gyakorlat egy felugró ablakból kerül az űrlapba (`js/exercise-picker.js`, mindkét űrlap ugyanazt használja): a gyakorlatok kártyákon látszanak képpel (vagy a kategória ikonjával), névvel, kategóriával és elsődleges izomcsoporttal. Felül kereső (név vagy izomcsoport, ékezettől függetlenül) és szűrők: kategória, izomcsoport, csak a saját gyakorlatok. Kattintásra vagy a keresőben Enterre a gyakorlat bekerül, az ablak bezárul. Az adatokat az `ExerciseCatalog` adja, a képeket az `ExerciseImages` méri fel induláskor.",
     "**Sablon és edzés.** Az edzés indítása sablonból (`GET /workouts/new?template={id}`) és a „Mentés sablonként” (`GET /templates/new?fromWorkout={id}`) csak előtölti a megfelelő űrlapot, adatot nem ír; ezért GET kérés, és semmi nem mentődik, amíg a felhasználó a Mentés gombot meg nem nyomja. Az űrlap tetején tájékoztató sáv jelzi, honnan jönnek az értékek, és mely (azóta archivált) gyakorlatok maradtak ki. A másolás ezzel szemben azonnal új edzést ment, ezért POST.",
+    "**Fiók és munkamenetek.** Az `AccountSessions` a `SessionRegistry` alapján lejáratja egy fiók munkameneteit: a szolgáltatások `AccountChangedEvent` eseményére a tranzakció véglegesítése után, a saját jelszó cseréjekor pedig a jelenlegi kivételével (5.6). A `PasswordChangeInterceptor` (a `WebConfig` regisztrálja) az ideiglenes jelszóval belépett felhasználót minden oldalról a `/account/password` oldalra irányítja, amíg új jelszót nem ad meg. A törlés után az `AccountController` kijelentkezteti a felhasználót (`/login?deleted`).",
     "**Post/Redirect/Get és üzenetek.** Minden módosító kérés átirányítással végződik; a visszajelzés flash-attribútumként (`FlashMessages`) jelenik meg az új oldalon, így a frissítés nem küldi el újra az űrlapot.",
     "**Nézetek.** A Thymeleaf sablonok a `fragments/layout.html` közös oldalvázat használják (fej, navigációs sáv, üzenetek, lábléc); az oldalak csak a saját `<title>` és `<main>` részüket adják. Közös darabok: `navbar`, `messages`, `ui` (kategória-címke, üres állapot). A sablonok csak DTO-kat olvasnak.",
     "**Diagramok.** A `StatsController` a szolgáltatás által kiszámolt adatsorokat (címkék, értékek) egyszerű `Map`/`List` szerkezetben adja a modellnek; a sablon JSON-ként beágyazza az oldalba (`th:inline=\"javascript\"`), a Chart.js pedig a böngészőben rajzolja ki őket. A számítás tehát a szerveren történik, a böngésző csak megjelenít.",
@@ -47,6 +50,9 @@ module.exports = function (c) {
     ["`StatisticsService`", "összesítők, fejlődési görbék, testtömeg-sorozat, célhaladás", "`summaries`, `exerciseProgress`, `bodyWeightSeries`, `goalProgress`, `usedExercises`"],
     ["`ProfileService`", "profil, túlterhelési küszöbök, testtömeg-napló, edzéscélok", "`profile`, `updateProfile`, `saveBodyWeight`, `deleteBodyWeight`, `addGoal`, `deleteGoal`"],
     ["`UserService`", "regisztráció; az első adminisztrátor létrehozása", "`register`, `createInitialAdmin`"],
+    ["`AccountService`", "a saját fiók: jelszó módosítása (a kötelező csere is), a fiók törlése minden adatával (UC14)", "`changePassword`, `deletionSummary`, `deleteOwnAccount`"],
+    ["`UserAdminService`", "a fiókok kezelése adminisztrátornak (UC13); az egész osztályt `@PreAuthorize(\"hasRole('ADMIN')\")` védi", "`list`, `get`, `setEnabled`, `setRole`, `resetPassword`, `delete`"],
+    ["`DemoDataService`", "a demófelhasználó létrehozása 16 hétnyi mintaadattal, a többi szolgáltatáson keresztül (4.6)", "`createIfMissing`"],
     ["`AccountDetailsService`", "a Spring Security felhasználó-betöltése e-mail alapján", "`loadUserByUsername`"],
     ["`ExerciseService`", "a gyakorlatok keresése; a saját gyakorlatok kezelése (UC5); a közös gyakorlatok karbantartása adminisztrátornak (UC6)", "`search`, `createOwn`, `updateOwn`, `setOwnArchived`, `deleteOwn`; `createShared`, `updateShared`, `setSharedArchived`, `deleteShared` (`@PreAuthorize`)"],
   ], [2000, 4126, 2900], { size: 18 }));
@@ -89,6 +95,18 @@ module.exports = function (c) {
     "**Edzés indítása sablonból:** az új edzés űrlapja a sablon nevével, a mostani kezdéssel és gyakorlatonként annyi szettel töltődik ki, ahány a sablonban tervezett, a tervezett értékekkel. Ami a sablonban nincs megadva, az üresen marad, és az edzés szokásos ellenőrzése kéri; az ilyen kötelező mezők halvány kiemelést kapnak, amíg ki nem töltik őket. Az azóta archivált gyakorlatok kimaradnak. Az edzés a mentéskor jön létre, a szokásos kiértékeléssel (5.1).",
     "**Mentés sablonként:** a sablon gyakorlatonként egy tervezett értéksort tárol, ezért a sablon űrlapja úgy töltődik elő, hogy a szettek száma a rögzített szettek száma (legfeljebb 20), a tervezett értékek pedig az **utolsó szett** értékei. A felhasználó mentés előtt bármelyiket átírhatja; az oldal ezt a szabályt ki is írja.",
     "A sablonnak nincs verziószáma (optimista zárolása): csak a tulajdonosa szerkeszti, két egyidejű mentésnél a későbbi érvényes.",
+  ]));
+
+  out.push(h3("A fiókok kezelésének szabályai (UC13, UC14)"));
+  out.push(...bullets([
+    "**Fióklista.** Az adminisztrátor a fiókokat e-mail-cím szerint rendezve, lapozva (20 fiók/oldal) látja, névre vagy e-mail-címre kereshet. A lista csak a nevet, az e-mail-címet, a szerepkört, az állapotot és a regisztráció dátumát mutatja (`UserAdminView`); edzés- és egészségügyi adatot (testtömeg, pulzus) nem, mert azt az adminisztrátor sem láthatja.",
+    "**Letiltás és engedélyezés.** A letiltott fiók nem léphet be, és a meglévő munkamenete is azonnal megszűnik (5.6). Az adatai megmaradnak, a fiók újra engedélyezhető.",
+    "**Jelszó-visszaállítás.** A rendszer 14 karakteres, véletlen ideiglenes jelszót készít (`SecureRandom`; az összetéveszthető karakterek nélkül, hogy diktálni is lehessen). Az adminisztrátor egyszer látja, és ő adja át a felhasználónak; az adatbázisba csak a hash kerül. A fiók munkamenetei lejárnak, és a felhasználó az ideiglenes jelszóval belépve csak a jelszócsere-oldalt éri el (`password_change_required`), amíg új jelszót nem ad meg.",
+    "**Adminisztrátor kinevezése és visszavonása.** Az új szerepkör a következő bejelentkezéstől érvényes; a fiók munkamenetei ezért lejárnak.",
+    "**Védőkorlátok.** Az adminisztrátor a saját fiókját a fióklistában nem módosíthatja (a saját jelszavát és a fiókja törlését a profilból éri el), így véletlenül sem zárhatja ki magát. Az **utolsó aktív adminisztrátor** nem tiltható le, nem minősíthető vissza és nem törölhető. Az ellenőrzés (`AdminSafeguard`) az adminisztrátorok sorait sorzárral olvassa (`SELECT … FOR UPDATE`), így két egyidejű kérés (két adminisztrátor egymást tiltja le) sem tudja kijátszani.",
+    "**Egyidejű módosítás.** A műveletek a listában látott verziószámot küldik; ha a fiókot közben más módosította, `StaleDataException` (409), és a frissített listán kell újrapróbálni.",
+    "**A saját jelszó módosítása** a jelenlegi jelszóval történik; az új nem egyezhet vele. A többi eszközön nyitott munkamenet lejár, a jelenlegi megmarad.",
+    "**A saját fiók törlése (UC14).** A megerősítő oldal összesíti, mi törlődik (edzések, saját gyakorlatok, sablonok, célok, testtömeg-mérések, csúcsok). A törlést a jelenlegi jelszó és egy jelölőnégyzet erősíti meg, így egy nyitva hagyott munkamenetből sem hajtható végre. Utána a felhasználó kijelentkezik. Az egyetlen aktív adminisztrátor nem törölheti magát. A közös gyakorlatadatbázis érintetlen marad; a törlés sorrendjét a 6.4 írja le.",
   ]));
 
   out.push(h2("4.3 Üzleti logikai réteg: szabályok és statisztikák (`hu.reptrack.rules`)"));
@@ -155,7 +173,7 @@ module.exports = function (c) {
   out.push(p("Az adatelérést Spring Data JPA repository-k végzik. Az egyszerű lekérdezések névből képzett (derived) metódusok, az összetettebbek JPQL (`@Query`), a dinamikus szűrés pedig a Criteria API segítségével készül."));
   out.push(tcap("A repository-k és jellemző lekérdezéseik"));
   out.push(table(["Repository", "Jellemző lekérdezések"], [
-    ["`UserRepository`", "`findByEmailIgnoreCase`, `existsByEmailIgnoreCase`, `existsByRole`"],
+    ["`UserRepository` és `UserRepositoryCustomImpl`", "`findByEmailIgnoreCase`, `existsByEmailIgnoreCase`, `existsByRole`; fióklista névre vagy e-mail-címre keresve, lapozva; `lockByRole`: az adott szerepkör fiókjai sorzárral; `deleteAccountWithAllData`: a fiók törlése minden adatával, meghatározott sorrendben (6.4)"],
     ["`ExerciseRepository`", "gyakorlatkeresés névre (a LIKE speciális karakterei szó szerint értendők), kategóriára, izomcsoportra, forrásra és archiváltságra; névegyediség-ellenőrzések (`existsBy…NameIgnoreCase`); `findIdsUsedInWorkouts`, `…InTemplates`, `…InGoals`: mely gyakorlatok vannak használatban"],
     ["`ExerciseOptionRepository`", "`findAvailable`: a felhasználó számára választható (közös és saját) gyakorlatok DTO-ként"],
     ["`WorkoutRepository` és `WorkoutRepositoryCustomImpl`", "`findByIdAndUserId`; `search`: dinamikus szűrés (időszak, gyakorlat, kategória) és lapozás Criteria API-val, stabil sorrenddel"],
@@ -177,8 +195,9 @@ module.exports = function (c) {
   out.push(p("A `domain` csomag 11 JPA entitást tartalmaz, amelyek a 6. fejezetben leírt táblákra képződnek le. A `dto` csomag a rétegek közös nyelve."));
   out.push(tcap("A DTO-k csoportjai"));
   out.push(table(["Csoport", "Példák", "Szerep"], [
-    ["Kérés-objektumok", "`WorkoutRequest`, `TemplateRequest`, `ProfileRequest`, `BodyWeightRequest`, `GoalRequest`, `ExerciseRequest`, `RegistrationRequest`", "a bemenet; Bean Validation szabályokkal"],
-    ["Nézet-objektumok", "`WorkoutView`, `WorkoutSummary`, `TemplateView`, `ProfileView`, `PersonalRecordView`, `OverloadWarningView`, `ExerciseView`, `EditableExercise`", "a szolgáltatások kimenete a nézeteknek"],
+    ["Kérés-objektumok", "`WorkoutRequest`, `TemplateRequest`, `ProfileRequest`, `BodyWeightRequest`, `GoalRequest`, `ExerciseRequest`, `RegistrationRequest`, `PasswordChangeRequest`", "a bemenet; Bean Validation szabályokkal"],
+    ["Nézet-objektumok", "`WorkoutView`, `WorkoutSummary`, `TemplateView`, `ProfileView`, `PersonalRecordView`, `OverloadWarningView`, `ExerciseView`, `EditableExercise`, `UserAdminView`, `AccountDeletionSummary`", "a szolgáltatások kimenete a nézeteknek"],
+    ["Események", "`AccountChangedEvent`", "a szolgáltatás jelzése a webes rétegnek: egy fiók munkameneteit le kell járatni (5.6)"],
     ["Számítási rekordok", "`WorkoutRow`, `SetRecord`, `RecordSet`, `MuscleSetCount`, `PeriodSummary`, `ExerciseProgressPoint`, `GoalProgress`", "a `rules` csomag be- és kimenete"],
     ["Enumok", "`ExerciseCategory`, `MuscleGroup`, `CardioType`, `GoalType`, `EnduranceMetric`, `RecordType`, `OverloadRule`, `DistanceBand`, `FitnessLevel`, `Role`, `Granularity`, `ExerciseSource`", "zárt értékkészletek; az adatbázisban CHECK védi őket"],
     ["Kivételek", "`NotFoundException`, `BusinessRuleException`, `StaleDataException`, `DuplicateEmailException`, `DuplicateExerciseNameException`, `DuplicateTemplateNameException`", "hibajelzés a rétegek között"],
@@ -186,11 +205,12 @@ module.exports = function (c) {
 
   out.push(h2("4.6 Konfiguráció és indulás (`hu.reptrack.config`)"));
   out.push(...bullets([
-    "**`SecurityConfig`**: a szűrőlánc, az URL-szabályok, a szerepkör-hierarchia (ADMIN > USER), a BCrypt kódoló, HTTPS esetén a HTTP→HTTPS átirányítás és a HSTS-beállítás (7. fejezet).",
+    "**`SecurityConfig`**: a szűrőlánc, az URL-szabályok, a szerepkör-hierarchia (ADMIN > USER), a BCrypt kódoló, a munkamenet-nyilvántartás (`SessionRegistry`, `HttpSessionEventPublisher`; a lejárt munkamenet a `/login?expired` oldalra kerül), HTTPS esetén a HTTP→HTTPS átirányítás és a HSTS-beállítás (7. fejezet).",
     "**`HttpsConfig`**: HTTPS esetén (docker profil) egy második, sima HTTP-csatlakozót nyit, amely csak az átirányításra való.",
     "**`ClockConfig`**: a `Clock` bean, amelyet az időfüggő szolgáltatások használnak.",
     "**`DotEnvEnvironmentPostProcessor`**: a `.env` fájl beolvasása a Spring környezetébe (a `META-INF/spring.factories` regisztrálja).",
     "**`AdminBootstrap`**: indulás után létrehozza az első adminisztrátort a `REPTRACK_ADMIN_*` változókból, ha még nincs adminisztrátor. Ha már van, nem történik semmi (a jelszót sem írja át); hibás adatnál, vagy ha a jelszó még a `.env.example` `CHANGE-ME` mintaértéke, az alkalmazás nem indul el, és az üzenet megnevezi a javítandó változót; a jelszó nem kerül a naplóba.",
+    "**`DemoDataSeeder`**: ha a `REPTRACK_DEMO_ENABLED` be van kapcsolva (alapból nincs), induláskor létrehozza a demófelhasználót (`demo@reptrack.com` / `demo1234`) a `DemoDataService`-szel: az utolsó 16 hét edzései (heti három, fokozatos terheléssel; két nehéz hét túlterhelési figyelmeztetést ad), testtömeg-napló, célok, sablonok és egy saját gyakorlat. Az adatok a meglévő szolgáltatásokon át, egy tranzakcióban jönnek létre, így a csúcsokat és a figyelmeztetéseket a valódi kiértékelés számolja. A meglévő demófiók nem változik; hiba esetén az alkalmazás nélküle indul el.",
     "**Flyway**: induláskor lefuttatja a hiányzó migrációkat, mielőtt a Hibernate ellenőrizné a sémát.",
   ]));
 
@@ -216,7 +236,7 @@ module.exports = function (c) {
   out.push(p("A bejelentkezés lépéseit a 9. ábra mutatja."));
   out.push(...bullets([
     "**Regisztráció.** Az `AuthController` a `RegistrationRequest`-et validálja (név, e-mail-formátum, jelszó legalább 8 karakter, a két jelszó egyezik, legfeljebb 72 bájt). A `UserService` az e-mail-címet kisbetűsre alakítja, kis- és nagybetűtől függetlenül ellenőrzi az egyediséget (`DuplicateEmailException`), a jelszót BCrypt-hash-ként menti, a szerepkör USER.",
-    "**Bejelentkezés.** A szűrőlánc a `POST /login` kérést az `AccountDetailsService`-szel dolgozza fel: e-mail alapján betölti a felhasználót (az `AuthenticatedUser` hordozza az azonosítót, a szerepkört és a hash-t), a BCrypt összeveti a jelszót, siker esetén új munkamenet indul.",
+    "**Bejelentkezés.** A szűrőlánc a `POST /login` kérést az `AccountDetailsService`-szel dolgozza fel: e-mail alapján betölti a felhasználót (az `AuthenticatedUser` hordozza az azonosítót, a szerepkört, a hash-t és a kötelező jelszócsere jelzőjét), a BCrypt összeveti a jelszót, siker esetén új munkamenet indul, és a `SessionRegistry` nyilvántartásba veszi. Ha az adminisztrátor visszaállította a jelszót, a felhasználó az ideiglenes jelszóval belépve csak a jelszócsere-oldalt éri el (4.2).",
     "**Hiba.** Hibás e-mailre és hibás jelszóra ugyanaz az üzenet jelenik meg, a letiltott fiók külön üzenetet kap. A védett oldalra érkező, be nem jelentkezett kérés a `/login` oldalra irányít, és bejelentkezés után a felhasználó visszakerül a kért oldalra. Ezt csak valódi oldalbetöltésnél (HTML-t kérő GET) jegyzi meg a rendszer; a böngésző háttérkéréseit (kép, adat, szkript) nem, különben bejelentkezés után egy nem létező fájlra kerülne. A böngészők és keresők szokásos háttérkérései (`/.well-known/…`, `/robots.txt`, `/favicon.ico`, `/apple-touch-icon…png`) bejelentkezés nélkül is azonnal 404-et kapnak.",
   ]));
   out.push(...FIG("szekvencia-bejelentkezes", 13.5, "Bejelentkezés a Spring Security szűrőláncával"));
@@ -241,6 +261,16 @@ module.exports = function (c) {
   out.push(h2("5.5 Figyelmeztetések nyugtázása (UC12)"));
   out.push(p("A nyitott figyelmeztetések az edzésnapló tetején és az érintett edzés oldalán jelennek meg. A „Nyugtázom” gomb a `POST /warnings/{id}/acknowledge` kérést küldi; az `OverloadService.acknowledge` a figyelmeztetést tulajdonos szerint tölti be (idegen figyelmeztetés 404), és nyugtázottra állítja. A nyugtázott állapot az újraszámolások után is megmarad (4.3)."));
 
+  out.push(h2("5.6 Fiók letiltása, munkamenetek lejáratása (UC13, UC14)"));
+  out.push(p("A Spring Security a bejelentkezett felhasználót a munkamenetben tartja, és kérésenként nem olvassa újra az adatbázisból. Ha tehát egy bejelentkezett felhasználó fiókját letiltják, nem elég az adatbázist módosítani: a már nyitott munkamenetét is meg kell szüntetni. A folyamat (letiltásnál; a szerepkör-változás, a jelszó-visszaállítás és a törlés ugyanígy működik):"));
+  out.push(...numbered([
+    "Az adminisztrátor a fióklistán a „Letiltás” gombra kattint; a kérés a listában látott verziószámot is küldi.",
+    "A `UserAdminService.setEnabled` egy tranzakcióban ellenőrzi a verziót és a védőkorlátokat (saját fiók, utolsó aktív adminisztrátor, sorzárral), átállítja a fiókot, és közzéteszi az `AccountChangedEvent` eseményt.",
+    "A tranzakció véglegesítése után az `AccountSessions` (`@TransactionalEventListener`) a `SessionRegistry`-ből megkeresi a fiók összes munkamenetét, és lejártnak jelöli őket. Ha a tranzakció visszagördül, az esemény nem fut le, és a munkamenetek megmaradnak.",
+    "A letiltott felhasználó következő kérésénél a Spring Security a lejárt munkamenetet érvényteleníti, és a `/login?expired` oldalra irányít; ott tájékoztatást kap, és mivel a fiókja le van tiltva, újra belépni sem tud.",
+  ], "n2"));
+  out.push(p("A saját fiók törlése ugyanezt az eseményt használja (a többi eszközön nyitott munkamenet is megszűnik), a jelenlegi munkamenetet pedig az `AccountController` zárja le kijelentkeztetéssel. A nyilvántartás memóriában van, ami egyetlen alkalmazáspéldánynál (Docker Compose) elég; több példányhoz közös munkamenet-tár kellene (12.2)."));
+
   // ------------------------------------------------------------------------------------------------ 6.
   out.push(h1("6. Adatbázisterv"));
   out.push(h2("6.1 Áttekintés"));
@@ -250,7 +280,7 @@ module.exports = function (c) {
   out.push(h2("6.2 A táblák leírása"));
   out.push(tcap("A táblák és szerepük"));
   out.push(table(["Tábla", "Tartalom", "Megjegyzés"], [
-    ["`users`", "felhasználó: e-mail, jelszó-hash, név, születési dátum, magasság, edzettségi szint, szerepkör, engedélyezettség, túlterhelési küszöbök, `version`", "az e-mail kis- és nagybetűtől függetlenül egyedi; a testtömeg nincs itt"],
+    ["`users`", "felhasználó: e-mail, jelszó-hash, név, születési dátum, magasság, edzettségi szint, szerepkör, engedélyezettség, kötelező jelszócsere (`password_change_required`), túlterhelési küszöbök, `version`", "az e-mail kis- és nagybetűtől függetlenül egyedi; a testtömeg nincs itt"],
     ["`body_weight_entries`", "testtömeg-napló: nap és súly", "naponta egy mérés; 20–500 kg"],
     ["`exercises`", "gyakorlat: név, kategória, elsődleges izomcsoport, kardió típus, leírás, `tracks_*` jelzők, archivált, képkulcs (`image_key`), `version`", "`owner_id` üres = közös, kitöltött = privát; a képkulcs csak kisbetű, számjegy és kötőjel lehet"],
     ["`exercise_secondary_muscles`", "a gyakorlat másodlagos izomcsoportjai", "(gyakorlat, izomcsoport) összetett kulcs"],
@@ -273,7 +303,7 @@ module.exports = function (c) {
     "**`ck_workouts_closed`:** a befejezett edzéshez fáradtság és a kezdés utáni befejezés tartozik.",
     "**`ck_personal_records_shape`:** a rekordtípushoz kötelező vagy tiltott mezők (a tempó-PR-hez távsáv kell és ismétlés nem; a súly-PR-hez ismétlés kell és távsáv nem).",
     "**Egyediség:** `users.email`; (`user_id`, `measured_on`) a testtömegnél; a gyakorlatnév kis- és nagybetűtől függetlenül egyedi a közös gyakorlatok között és felhasználónként a privátoknál (részleges egyedi indexek); a sablon neve felhasználónként, kis- és nagybetűtől függetlenül (`ux_workout_templates_name`); (`user_id`, `rule_code`, `rule_key`) a figyelmeztetéseknél.",
-    "**Idegen kulcsok `ON DELETE CASCADE`-del:** a felhasználó törlése minden adatát viszi (az UC14 alapja), az edzés törlése a szettjeit, csúcsait és figyelmeztetéseit.",
+    "**Idegen kulcsok `ON DELETE CASCADE`-del:** a felhasználóra mutató kulcsok (a felhasználó adatai), az edzés törlése pedig a gyakorlatait, szettjeit, csúcsait és figyelmeztetéseit viszi. A **gyakorlatra** mutató kulcsok (`workout_exercises`, `template_exercises`, `goals`, `personal_records` → `exercises`) szándékosan **nem** kaszkádoltak: a használatban lévő gyakorlat így az adatbázis szintjén sem törölhető. Emiatt a fiók törlése a kaszkáddal önmagában nem működik (6.4).",
     "**Indexek:** `idx_workouts_user_started` (a napló és a statisztikák fő szűrője), `idx_workout_exercises_workout` és `_exercise`, `idx_workout_sets_we`, `idx_template_exercises_template` és `_exercise`, `idx_pr_user_exercise`, `idx_warnings_user`, `idx_exercises_owner` és `_category`.",
   ]));
 
@@ -285,6 +315,7 @@ module.exports = function (c) {
     "**Időpontok és napok.** Az időpontok `timestamptz` típusúak (UTC); a naphoz kötött adatok (mérés, cél határideje, csúcs dátuma) `date` típusúak.",
     "**Optimista zárolás.** A gyakran szerkesztett táblák (`users`, `exercises`, `workouts`) `version` oszlopot kapnak. A sablon nem: csak a tulajdonosa szerkeszti.",
     "**A sablon gyakorlatonként egy tervezett értéksort tárol** („3 × 8 × 80 kg”), nem szettenként. A terv így egyszerű; edzés indításakor a sor a tervezett számú, azonos értékű szettre bomlik, amelyet a felhasználó az edzés közben igazíthat.",
+    "**A fiók törlése meghatározott sorrendben (UC14).** Ha a felhasználó saját gyakorlatára edzés, sablon vagy cél hivatkozik, a `users` sor puszta törlésekor a PostgreSQL elutasítja a gyakorlat kaszkádolt törlését (`workout_exercises_exercise_id_fkey`). Ezért a `UserRepositoryCustomImpl` egy tranzakcióban, sorrendben töröl: előbb a csúcsokat, a figyelmeztetéseket, az edzéseket, a sablonokat és a célokat (a hozzájuk tartozó sorokat a kaszkád viszi), végül a fiókot, amely a saját gyakorlatait és a testtömeg-naplóját viszi magával. Az idegen kulcsokhoz nem nyúltunk, így a használatban lévő gyakorlat továbbra sem törölhető véletlenül; ha egy másik fiók adata hivatkozna a felhasználó gyakorlatára (a szolgáltatások ezt nem engedik), a törlés hibával megáll, és semmi sem törlődik. Teszt igazolja, hogy a törölt felhasználónak egyetlen sora sem marad, a többi felhasználó adatai pedig érintetlenek.",
     "**A `rule_key` az idempotens egyeztetéshez kell:** a figyelmeztetés a szabály konkrét előfordulását azonosítja, így az újraszámolás nem duplikál, és a nyugtázás megmarad.",
   ]));
 
@@ -298,6 +329,7 @@ module.exports = function (c) {
     ["`V5__template_constraints.sql`", "a sablonok tervezett értékeinek CHECK megszorításai, a sablonnév egyedisége felhasználónként, indexek"],
     ["`V6__endurance_goals.sql`", "az állóképességi célok mértéke és céltávja, megszorításokkal; a meglévő állóképességi célok távcéllá (ha a gyakorlat távot rögzít) vagy időcéllá alakulnak"],
     ["`V7__exercise_images.sql`", "a gyakorlatok képkulcsa (`image_key`), a beépített 50 gyakorlatnál kitöltve"],
+    ["`V8__password_change_required.sql`", "a kötelező jelszócsere jelzője a felhasználóknál (`password_change_required`), az adminisztrátori jelszó-visszaállításhoz (UC13)"],
   ], [3300, 5726], { size: 19 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(p("Az új migráció új fájl (a már lefuttatott migrációkat nem módosítjuk). Az ER-diagram újragenerálása: `python3 docs/generate-er.py` (egy ábra), illetve `python3 docs/rendszerterv/diagrams.py` (a jelen dokumentum ábrái)."));

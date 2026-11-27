@@ -144,7 +144,8 @@ public class ProfileService {
                 .toList();
     }
 
-    public void addGoal(Long userId, @Valid GoalRequest request) {
+    /** @return az új cél azonosítója */
+    public Long addGoal(Long userId, @Valid GoalRequest request) {
         GoalType type = request.type();
         boolean bodyWeightGoal = type == GoalType.WEIGHT_LOSS || type == GoalType.MUSCLE_GAIN;
 
@@ -185,7 +186,7 @@ public class ProfileService {
             }
             goal.setExercise(exercise);
         }
-        goals.save(goal);
+        return goals.save(goal).getId();
     }
 
     /**

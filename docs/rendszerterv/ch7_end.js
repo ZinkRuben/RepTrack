@@ -8,22 +8,23 @@ module.exports = function (c) {
   out.push(p("A biztonság keresztmetszeti szempont: a Spring Security minden kérésnél hitelesít és jogosultságot ellenőriz, a szolgáltatások pedig minden műveletnél a tulajdonost is. A következő táblázat a fenyegetésekhez és követelményekhez rendeli a megoldást."));
   out.push(tcap("Biztonsági megoldások"));
   out.push(table(["Terület", "Megoldás"], [
-    ["Hitelesítés", "Spring Security űrlapos bejelentkezés e-mail-címmel és jelszóval, saját `/login` oldalon. A felhasználót az `AccountDetailsService` tölti be az adatbázisból; a letiltott fiók (`enabled = false`) nem léphet be."],
+    ["Hitelesítés", "Spring Security űrlapos bejelentkezés e-mail-címmel és jelszóval, saját `/login` oldalon. A felhasználót az `AccountDetailsService` tölti be az adatbázisból; a letiltott fiók (`enabled = false`) nem léphet be. Az adminisztrátor által visszaállított, ideiglenes jelszóval belépett felhasználó csak a jelszócsere-oldalt éri el, amíg új jelszót nem ad meg."],
     ["Jelszótárolás", "BCrypt hash a `password_hash` oszlopban; a jelszó legalább 8 karakter, legfeljebb 72 bájt (a BCrypt határa). A jelszó sehol nem kerül a naplóba."],
     ["Hibaüzenetek", "Hibás e-mail-címre és hibás jelszóra ugyanaz az üzenet jelenik meg, így nem derül ki, mely címek regisztráltak."],
-    ["Munkamenet", "Szerveroldali munkamenet; bejelentkezéskor új munkamenet-azonosító jön létre (session fixation elleni védelem, a Spring Security alapja). A süti HTTPS-en `secure` jelzésű. A kijelentkezés csak POST kéréssel és tokennel működik."],
+    ["Munkamenet", "Szerveroldali munkamenet; bejelentkezéskor új munkamenet-azonosító jön létre (session fixation elleni védelem, a Spring Security alapja). A süti HTTPS-en `secure` jelzésű. A kijelentkezés csak POST kéréssel és tokennel működik. A munkamenetek nyilvántartásban vannak (`SessionRegistry`): letiltás, szerepkör-változás, jelszó-visszaállítás és fióktörlés után a fiók munkamenetei azonnal lejárnak, a saját jelszó cseréjekor a többi eszközé (5.6)."],
     ["CSRF", "Bekapcsolva; minden `th:action` űrlap automatikusan megkapja a tokent, a token nélküli módosító kérés elutasításra kerül."],
-    ["Jogosultság", "URL-szabályok: a nyitóoldal, a bejelentkezés, a regisztráció, a hibaoldal, a statikus fájlok és a böngészők szokásos háttérkérései (ezekre 404 a válasz) nyilvánosak; az `/admin/**` ADMIN szerepkört kér; minden más USER-t. Szerepkör-hierarchia: ADMIN > USER. A közös gyakorlatokat kezelő szolgáltatásmetódusokat metódusszintű `@PreAuthorize(\"hasRole('ADMIN')\")` is védi (`@EnableMethodSecurity`)."],
-    ["Tulajdonos-ellenőrzés", "Minden szolgáltatásművelet a bejelentkezett felhasználó azonosítójával dolgozik; idegen adat „nem található” (404). A testtömeg- és pulzusadatokat csak a tulajdonosuk éri el, az adminisztrátor sem (nincs ilyen funkció)."],
+    ["Jogosultság", "URL-szabályok: a nyitóoldal, a bejelentkezés, a regisztráció, a hibaoldal, a statikus fájlok és a böngészők szokásos háttérkérései (ezekre 404 a válasz) nyilvánosak; az `/admin/**` ADMIN szerepkört kér; minden más USER-t. Szerepkör-hierarchia: ADMIN > USER. A közös gyakorlatokat kezelő szolgáltatásmetódusokat és a fiókokat kezelő `UserAdminService`-t metódusszintű `@PreAuthorize(\"hasRole('ADMIN')\")` is védi (`@EnableMethodSecurity`)."],
+    ["Tulajdonos-ellenőrzés", "Minden szolgáltatásművelet a bejelentkezett felhasználó azonosítójával dolgozik; idegen adat „nem található” (404). Az edzés-, testtömeg- és pulzusadatokat csak a tulajdonosuk éri el, az adminisztrátor sem: a fióklista csak a nevet, az e-mail-címet, a szerepkört és az állapotot mutatja."],
+    ["Fiókok kezelése", "Az adminisztrátor a saját fiókját a fióklistában nem módosíthatja; az utolsó aktív adminisztrátor nem tiltható le, nem minősíthető vissza és nem törölhető (sorzárral, egyidejű kérésekre is). Az ideiglenes jelszó véletlen (`SecureRandom`), csak egyszer jelenik meg, az adatbázisba csak a hash kerül. A jelszó módosítását és a fiók törlését a jelenlegi jelszó erősíti meg, így egy nyitva hagyott munkamenetből sem hajthatók végre."],
     ["Bemenet-ellenőrzés", "Három szinten: Bean Validation, üzleti szabályok, adatbázis-megszorítások (3.6). Az űrlapmezők típusa és tartománya a böngészőben is korlátozott, de a szerver nem bízik benne."],
     ["SQL injection", "Kizárólag paraméterezett lekérdezések (Spring Data, JPQL, Criteria API); a névkeresés LIKE mintájában a `%`, `_` és `\\` jelek szó szerint értendők."],
     ["XSS", "A Thymeleaf `th:text` minden kimenetet escape-el; `th:utext` sehol nincs használatban."],
-    ["Titkok", "Az adatbázis-jelszó és az első adminisztrátor adatai környezeti változóban vagy a tárolón kívüli `.env` fájlban vannak. Az adminisztrátor létrehozása után a jelszó törölhető a `.env`-ből. A tárolóban lévő `.env.example` csak mintaértéket tartalmaz (`CHANGE-ME`); ha ez a jelszó bent marad, az alkalmazás nem indul el, így a minta nem kerülhet élesbe."],
+    ["Titkok", "Az adatbázis-jelszó és az első adminisztrátor adatai környezeti változóban vagy a tárolón kívüli `.env` fájlban vannak. Az adminisztrátor létrehozása után a jelszó törölhető a `.env`-ből. A tárolóban lévő `.env.example` csak mintaértéket tartalmaz (`CHANGE-ME`); ha ez a jelszó bent marad, az alkalmazás nem indul el, így a minta nem kerülhet élesbe. A demófiók jelszava szándékosan nyilvános, ezért a demófiók csak kapcsolóval jön létre (alapból kikapcsolva)."],
     ["Hibaoldalak", "Egységes hibaoldal; nem jelenít meg veremnyomot vagy technikai részleteket."],
     ["HTTPS", "A Docker-futtatás a 8443-as porton HTTPS-t szolgál ki önaláírt tanúsítvánnyal (első induláskor készül, véletlen jelszóval, kötetben marad). A 8080-as porton érkező HTTP-kérések HTTPS-re irányítódnak. A HSTS fejléc kapcsolható (önaláírt tanúsítványnál alapból ki van kapcsolva). A tanúsítvány és a jelszava nem kerül a tárolóba."],
   ], [2000, 7026], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
-  out.push(p("A biztonsági megoldásokat külön automatizált tesztek ellenőrzik (9. fejezet): a tulajdonos-ellenőrzés minden adattípusra, az, hogy minden végpont be van sorolva és védett (új végpont felvételekor a teszt addig bukik, amíg a besorolás hiányzik), a szerepkörök, a regisztráció és a munkamenet-azonosító cseréje bejelentkezéskor."));
+  out.push(p("A biztonsági megoldásokat külön automatizált tesztek ellenőrzik (9. fejezet): a tulajdonos-ellenőrzés minden adattípusra, az, hogy minden végpont be van sorolva és védett (új végpont felvételekor a teszt addig bukik, amíg a besorolás hiányzik), a szerepkörök, a regisztráció, a munkamenet-azonosító cseréje bejelentkezéskor, valamint valódi szerverrel az, hogy a letiltott felhasználó meglévő munkamenete megszűnik, és az ideiglenes jelszóval csak a jelszócsere érhető el."));
   out.push(note("Ismert korlát: az önaláírt tanúsítványt a böngésző első alkalommal figyelmeztetéssel fogadja; éles üzemben hiteles tanúsítvány kell."));
 
   // ------------------------------------------------------------------------------------------------ 8.
@@ -42,7 +43,10 @@ module.exports = function (c) {
     ["Egyéni csúcsok", "időrendi lista, hivatkozással az edzésre"],
     ["Gyakorlatok", "keresés névre, szűrés kategóriára, izomcsoportra, forrásra és archiváltságra; a saját gyakorlatok kezelése, adminisztrátornak a közösöké is"],
     ["Gyakorlat-űrlap", "új gyakorlat és módosítás: név, kategória, izomcsoportok, rögzíthető mezők; használatban lévő gyakorlatnál a szerkezeti mezők zároltak"],
-    ["Profil és célok", "személyes adatok, túlterhelési küszöbök, testtömeg-napló, edzéscélok a haladással"],
+    ["Profil és célok", "személyes adatok, túlterhelési küszöbök, testtömeg-napló, edzéscélok a haladással; alul a „Fiók” kártya: jelszó módosítása és a fiók törlése"],
+    ["Jelszó módosítása (`/account/password`)", "a jelenlegi és az új jelszó; ideiglenes jelszó után ez az egyetlen elérhető oldal, amíg új jelszót nem ad meg a felhasználó"],
+    ["Fiók törlése (`/account/delete`)", "összesítés arról, mi törlődik (edzések, saját gyakorlatok, sablonok, célok, mérések, csúcsok); megerősítés jelszóval és jelölőnégyzettel"],
+    ["Felhasználók (`/admin/users`, ADMIN)", "kereshető, lapozott fióklista (név, e-mail, szerepkör, állapot); letiltás és engedélyezés, jelszó-visszaállítás (az ideiglenes jelszó egyszer jelenik meg), adminisztrátor kinevezése és visszavonása, törlés külön megerősítő oldalon"],
   ], [2500, 6526], { size: 19 }));
   out.push(p("", { spacing: { after: 60 } }));
   out.push(...bullets([
@@ -59,14 +63,14 @@ module.exports = function (c) {
   // ------------------------------------------------------------------------------------------------ 9.
   out.push(h1("9. Tesztelés"));
   out.push(p("A tesztstratégia a rétegekhez igazodik. A tiszta szabály-komponenseket adatbázis nélkül, gyorsan teszteljük; minden más (szolgáltatások, adatelérés, séma) **valódi PostgreSQL-lel** fut Testcontainers segítségével. A tesztek egyetlen, közös PostgreSQL 16 konténert használnak (`IntegrationTestBase`), így a Flyway-migrációk, a megszorítások és a lekérdezések a tesztekben is a valós sémán futnak."));
-  out.push(tcap("A tesztek összetétele (362 tesztmetódus, a paraméterezett esetekkel 462 futás, 2026. november 23.)"));
+  out.push(tcap("A tesztek összetétele (410 tesztmetódus, a paraméterezett esetekkel 554 futás, 2026. november 25.)"));
   out.push(table(["Réteg", "Mit ellenőriznek", "Eszköz", "Darab"], [
     ["Szabályok (`rules`)", "PR-felismerés, túlterhelési szabályok, statisztikák, képletek, edzéscélok haladása (határesetekkel); tiszta egységtesztek", "JUnit 5", "74"],
-    ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése, edzéssablonok, edzéscélok", "Spring Boot Test, Testcontainers", "112"],
+    ["Szolgáltatások (`service`)", "használati esetek valódi adatbázissal: edzés rögzítése, módosítása, törlése, a PR-ek és figyelmeztetések következményei, szűrés, statisztikák, regisztráció, gyakorlatok keresése és kezelése, edzéssablonok, edzéscélok, fiókok kezelése (védőkorlátok, ideiglenes jelszó), a fiók törlése (a törölt felhasználónak egyetlen sora sem marad, a többieké érintetlen), a demófelhasználó adatai", "Spring Boot Test, Testcontainers", "134"],
     ["Adatelérés és séma (`repository`)", "a CHECK, UNIQUE és idegen kulcs megszorítások tényleges kikényszerítése, a 50 gyakorlatos alapadat épsége, lekérdezések, a V6 migráció átalakítása meglévő adatokon", "Testcontainers", "51"],
-    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, sablonok oldalai, edzés indítása sablonból és mentés sablonként, edzéscélok, gyakorlatválasztó és képek, magyar formátum, hibaoldalak, a bejelentkezés utáni visszairányítás, HTTP→HTTPS átirányítás", "MockMvc, Spring Security Test", "84"],
-    ["Konfiguráció (`config`)", "az első adminisztrátor létrehozása indulásnál (a mintajelszó elutasításával), a `.env` beolvasása", "JUnit 5, Spring Boot Test", "15"],
-    ["Biztonság (`security`)", "tulajdonos-ellenőrzés (idegen adat 404, az adminisztrátor sem látja), minden végpont besorolása és védelme, szerepkörök, regisztráció és munkamenet, session fixation elleni védelem valódi Tomcat-tal", "MockMvc, valódi szerver", "25"],
+    ["Web (`web`)", "ki melyik oldalt éri el (biztonsági szabályok), regisztráció és bejelentkezés, közös oldalváz, gyakorlatböngésző és -kezelés, sablonok oldalai, edzés indítása sablonból és mentés sablonként, edzéscélok, gyakorlatválasztó és képek, magyar formátum, hibaoldalak, a bejelentkezés utáni visszairányítás, HTTP→HTTPS átirányítás, jelszócsere és fióktörlés, a fiókok kezelésének oldalai, munkamenetek lejáratása", "MockMvc, Spring Security Test", "103"],
+    ["Konfiguráció (`config`)", "az első adminisztrátor létrehozása indulásnál (a mintajelszó elutasításával), a demófelhasználó kapcsolója, a `.env` beolvasása", "JUnit 5, Spring Boot Test", "18"],
+    ["Biztonság (`security`)", "tulajdonos-ellenőrzés (idegen adat 404, az adminisztrátor sem látja), minden végpont besorolása és védelme, szerepkörök, regisztráció és munkamenet, session fixation elleni védelem valódi Tomcat-tal; a letiltott fiók munkamenetének megszűnése és a kötelező jelszócsere valódi Tomcat-tal", "MockMvc, valódi szerver", "29"],
     ["Alkalmazás indulása", "a Spring-kontextus hiba nélkül betöltődik", "Spring Boot Test", "1"],
   ], [2300, 4300, 1700, 726], { size: 18 }));
   out.push(p("", { spacing: { after: 60 } }));
@@ -101,6 +105,7 @@ module.exports = function (c) {
     ["`DB_USER`, `DB_PASSWORD`", "`reptrack`, `reptrack`", "adatbázis-hozzáférés (fejlesztési alapérték; éles üzemben felülírandó)"],
     ["`REPTRACK_ADMIN_EMAIL`, `REPTRACK_ADMIN_PASSWORD`", "(nincs)", "az első adminisztrátor adatai; csak akkor használja, ha még nincs adminisztrátor"],
     ["`REPTRACK_ADMIN_NAME`", "Adminisztrátor", "az első adminisztrátor megjelenített neve"],
+    ["`REPTRACK_DEMO_ENABLED`", "false", "a demófelhasználó létrehozása induláskor (`demo@reptrack.com` / `demo1234`, 4.6)"],
     ["`SERVER_PORT`", "8080", "a HTTP-port helyi indításnál (Spring Boot szabványos beállítás)"],
     ["`HTTPS_PORT`, `HTTP_PORT`", "8443, 8080", "a Docker-futtatás gazdagépen kiadott portjai (az átirányítás is ezekre mutat)"],
     ["`REPTRACK_HTTPS_HSTS`", "false", "a HSTS fejléc; valódi domainnél és tanúsítványnál kapcsolható be"],
@@ -121,19 +126,18 @@ module.exports = function (c) {
   out.push(h1("11. Megvalósítási állapot és ismert korlátok"));
   out.push(tcap("Hiányzó elemek és ismert korlátok"));
   out.push(table(["Terület", "Állapot vagy korlát", "Terv"], [
-    ["Fiókkezelés (UC13)", "az adminisztrátori fiókkezelés (listázás, tiltás, jelszó-visszaállítás) még nem készült el", "fiókok kezelése az `/admin/**` alatt"],
-    ["Fiók és adatok törlése (UC14)", "az adatbázis kaszkádolt törlése kész, a felület nincs meg", "megerősítéssel védett törlés"],
     ["Tanúsítvány", "a HTTPS önaláírt tanúsítványt használ, a böngésző első alkalommal figyelmeztet", "hiteles tanúsítvány (pl. Let's Encrypt) valódi domainhez"],
-    ["Demófelhasználó", "mintaadatokkal feltöltött felhasználó nincs", "bemutatható, több hónapnyi adat"],
     ["Mértékegységek", "csak metrikus mértékegység van (kg, km)", "mértékegység-választás"],
     ["Felület tesztelése", "nincs automatizált böngészős teszt", "néhány végponttól végpontig teszt a fő folyamatokra"],
+    ["Elfelejtett jelszó", "a jelszót csak egy adminisztrátor állíthatja vissza (ideiglenes jelszóval); önkiszolgáló visszaállítás nincs", "e-mailes visszaállító hivatkozás"],
+    ["Munkamenet-nyilvántartás", "memóriában van, ezért egyetlen alkalmazáspéldánynál működik (a Docker Compose ilyen)", "közös munkamenet-tár (pl. Spring Session) több példányhoz"],
   ], [2300, 4500, 2226], { size: 18 }));
 
   // ------------------------------------------------------------------------------------------------ 12.
   out.push(h1("12. Továbbfejlesztési lehetőségek"));
   out.push(h2("12.1 Funkciók"));
   out.push(...bullets([
-    "A **fiókkezelés** (UC13) befejezése; a fiók és az adatok törlése (UC14), valamint **adatexport** (CSV, JSON) a felhasználó kérésére.",
+    "**Adatexport** (CSV, JSON) a felhasználó kérésére, például a fiók törlése előtt; **elfelejtett jelszó** önkiszolgáló visszaállítása e-mailben (most az adminisztrátor állítja vissza).",
     "**Sablonok szettenkénti tervvel** (például bemelegítő és munkaszettek eltérő súllyal), illetve a sablon frissítése egy újabb edzés alapján.",
     "**További rekordtípusok és célok:** heti volumen, heti táv vagy edzésidő mint cél, kerékpáros sebesség-PR, pulzuszónák.",
     "**Értesítések:** a túlterhelési figyelmeztetések e-mailben is, ütemezett összefoglaló a heti statisztikáról.",
@@ -142,7 +146,7 @@ module.exports = function (c) {
   ]));
   out.push(h2("12.2 Technikai fejlesztések"));
   out.push(...bullets([
-    "**Üzemeltetés:** hiteles tanúsítvány és domain, folyamatos integráció (build és tesztek minden pull requestnél), Actuator-alapú állapot- és metrikavégpontok.",
+    "**Üzemeltetés:** hiteles tanúsítvány és domain, folyamatos integráció (build és tesztek minden pull requestnél), Actuator-alapú állapot- és metrikavégpontok; több alkalmazáspéldányhoz közös munkamenet-tár (a munkamenet-nyilvántartás most memóriában van, 5.6).",
     "**REST API (JSON):** mobilalkalmazás vagy külső kliens számára; a szolgáltatási réteg változtatás nélkül újrahasznosítható, mert a webes réteg csak DTO-kat használ.",
     "**Teljesítmény:** a statisztikák gyorsítótárazása nagy adatmennyiségnél (az újraszámolás az edzésmentésre érvényteleníthető), nagyobb adatkészletekhez az összesítések adatbázis-oldali aggregálása.",
     "**Offline használat:** PWA-támogatás, hogy az edzés a szerver elérése nélkül is rögzíthető legyen (a statikus erőforrások már az alkalmazásba vannak csomagolva).",
@@ -151,7 +155,7 @@ module.exports = function (c) {
 
   // ------------------------------------------------------------------------------------------------ 13.
   out.push(h1("13. Összegzés"));
-  out.push(p("A RepTrack egy többrétegű (web, szolgáltatás és szabály-komponens, adatelérés, adatbázis) Spring Boot webalkalmazás, amely az edzések rögzítésére, elemzésére és az egyéni csúcsok, valamint a túlterhelés automatikus felismerésére szolgál. A rendszer magja működik: a regisztráció és bejelentkezés, a profil és a célok, a testtömeg-napló, az edzésnapló dinamikus űrlappal, a statisztikai oldal diagramokkal, az egyéni csúcsok, a túlterhelési figyelmeztetések, az edzéssablonok, valamint a gyakorlatok kezelése (saját és közös)."));
+  out.push(p("A RepTrack egy többrétegű (web, szolgáltatás és szabály-komponens, adatelérés, adatbázis) Spring Boot webalkalmazás, amely az edzések rögzítésére, elemzésére és az egyéni csúcsok, valamint a túlterhelés automatikus felismerésére szolgál. A rendszer magja működik: a regisztráció és bejelentkezés, a profil és a célok, a testtömeg-napló, az edzésnapló dinamikus űrlappal, a statisztikai oldal diagramokkal, az egyéni csúcsok, a túlterhelési figyelmeztetések, az edzéssablonok, a gyakorlatok kezelése (saját és közös), valamint a fiókok kezelése és a fiók törlése. A specifikáció mind a 16 használati esete elkészült; bemutatáshoz 16 hétnyi mintaadattal feltöltött demófelhasználó kapcsolható be."));
   out.push(p("Az architektúra legfontosabb döntései a következők:"));
   out.push(...bullets([
     "az **egyirányú rétegfüggőség és a DTO-határ**, amely a webes réteget az adatbázistól és a JPA-tól elválasztja;",
@@ -160,7 +164,7 @@ module.exports = function (c) {
     "a **tulajdonos-ellenőrzés mint alapelv**: minden művelet a bejelentkezett felhasználó azonosítójával dolgozik;",
     "az **optimista zárolás** és az **egy tranzakcióban végzett mentés és kiértékelés**, amelyek a párhuzamos használatnál is konzisztensen tartják az adatot.",
   ]));
-  out.push(p("Néhány funkció még hátra van (fiókkezelés, fióktörlés és a demófelhasználó); ezeket a 11. fejezet sorolja fel. A rétegelt felépítés miatt ezek a meglévő kód módosítása nélkül, új szolgáltatásként és felületként illeszthetők be, a 12. fejezet pedig további irányokat mutat."));
+  out.push(p("Az ismert korlátokat a 11. fejezet sorolja fel. A rétegelt felépítés a bővítést is megkönnyíti: a fiókkezelés és a fióktörlés is új szolgáltatásként és felületként került be, a meglévő kódban csak kisebb kiegészítések kellettek (munkamenet-nyilvántartás, számláló lekérdezések). A 12. fejezet további irányokat mutat."));
 
   // ------------------------------------------------------------------------------------------------ függelék
   out.push(h1("Függelék: Képletek és definíciók"));

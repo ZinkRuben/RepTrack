@@ -7,7 +7,7 @@ module.exports = function (c) {
   out.push(h1("1. Bevezetés"));
   out.push(h2("1.1 A dokumentum célja és hatóköre"));
   out.push(p("Ez a dokumentum az **Edzéskövető és elemző alkalmazás** (kódneve: **RepTrack**) rendszerterve. A követelményspecifikáció azt írja le, __mit__ tud a rendszer; a rendszerterv azt, __hogyan__ valósítottuk meg: milyen architektúrára épül, milyen rétegekből és komponensekből áll, hogyan működnek a főbb funkciók, hogyan épül fel az adatbázis, és hogyan oldottuk meg a biztonságot, a tesztelést és az üzemeltetést."));
-  out.push(p("A dokumentum a **megvalósított** rendszert mutatja be; a forráskód a GitHub-tárolóban érhető el (https://github.com/ZinkRuben/RepTrack). Ahol a megvalósítás eltér a specifikációtól, vagy egy funkció még nem készült el, azt külön jelöljük (2.4. és 11. fejezet)."));
+  out.push(p("A dokumentum a **megvalósított** rendszert mutatja be; a forráskód a GitHub-tárolóban érhető el (https://github.com/ZinkRuben/RepTrack). Ahol a megvalósítás eltér a specifikációtól, azt a 2.4. fejezet jelöli; az ismert korlátokat a 11. fejezet sorolja fel."));
   out.push(p("A dokumentum olvasói a fejlesztők (a rendszer továbbfejlesztéséhez és karbantartásához), a konzulens és az értékelők. Feltételezi a Java, a Spring és a relációs adatbázisok alapfogalmainak ismeretét."));
 
   out.push(h2("1.2 Kapcsolódó dokumentumok"));
@@ -55,12 +55,12 @@ module.exports = function (c) {
   out.push(p("A RepTrack egy webalkalmazás, amellyel a felhasználók strukturáltan rögzíthetik edzéseiket (súlyzós, kardió és saját testsúlyos gyakorlatok szettenként), nyomon követhetik a testtömegüket és az edzéscéljaikat, és statisztikák, diagramok segítségével elemezhetik a fejlődésüket. Extra funkcióként a rendszer mentéskor automatikusan felismeri az egyéni csúcsokat (PR), és figyelmeztet a túlterhelés jeleire. Nem helyettesíti az edzői vagy orvosi tanácsadást."));
   out.push(...bullets([
     "**Vendég**: megtekintheti a nyitóoldalt, regisztrálhat és bejelentkezhet.",
-    "**Felhasználó (USER)**: a saját edzéseit, profilját, céljait és statisztikáit kezeli. Az adatait más felhasználó nem látja.",
-    "**Adminisztrátor (ADMIN)**: a felhasználó minden funkcióját eléri, emellett a közös gyakorlatadatbázist kezeli (UC6); a fiókok kezelése (UC13) tervezett. Az első adminisztrátort a telepítés hozza létre.",
+    "**Felhasználó (USER)**: a saját edzéseit, profilját, céljait és statisztikáit kezeli; a jelszavát módosíthatja, a fiókját minden adatával együtt törölheti (UC14). Az adatait más felhasználó nem látja.",
+    "**Adminisztrátor (ADMIN)**: a felhasználó minden funkcióját eléri, emellett a közös gyakorlatadatbázist (UC6) és a fiókokat kezeli (UC13): letiltás, jelszó-visszaállítás, adminisztrátor kinevezése, fiók törlése. A felhasználók edzés- és egészségügyi adatait ő sem látja. Az első adminisztrátort a telepítés hozza létre.",
   ]));
 
   out.push(h2("2.2 Funkciók és megvalósítási állapot"));
-  out.push(p("A táblázat a specifikáció használati eseteit (UC1–UC16) és azok megvalósítási állapotát mutatja a dokumentum legutóbbi frissítésekor (2026. november 23.). A „Kész” állapotú funkciók működnek és tesztelve vannak; a „Részben” és „Tervezett” sorokat a 11. fejezet részletezi."));
+  out.push(p("A táblázat a specifikáció használati eseteit (UC1–UC16) és azok megvalósítási állapotát mutatja a dokumentum legutóbbi frissítésekor (2026. november 25.). Mind a 16 használati eset elkészült; a „Kész” állapotú funkciók működnek és automatizált tesztek ellenőrzik őket (9. fejezet). Az ismert korlátokat a 11. fejezet sorolja fel."));
   out.push(tcap("Használati esetek és megvalósítási állapotuk"));
   out.push(table(["Azon.", "Használati eset", "Állapot", "Megvalósítás"], [
     ["UC1", "Regisztráció, bejelentkezés", "Kész", "`AuthController`, `UserService`, `AccountDetailsService`, `SecurityConfig`"],
@@ -75,8 +75,8 @@ module.exports = function (c) {
     ["UC10", "Statisztikák és diagramok", "Kész", "`StatsController`, `StatisticsService`, `StatisticsCalculator`"],
     ["UC11", "PR-ek megtekintése", "Kész", "`RecordController`, `PersonalRecordService`, `PersonalRecordDetector`"],
     ["UC12", "Túlterhelési figyelmeztetések kezelése", "Kész", "`OverloadService`, `OverloadDetector`, `WarningController`"],
-    ["UC13", "Felhasználók kezelése", "Tervezett", "adminisztrációs felület"],
-    ["UC14", "Fiók és adatok törlése", "Tervezett", "az adatbázis `ON DELETE CASCADE` kapcsolatai már támogatják"],
+    ["UC13", "Felhasználók kezelése", "Kész", "`AdminUserController`, `UserAdminService`; `/admin/users` (ADMIN): kereshető fióklista, letiltás, jelszó-visszaállítás ideiglenes jelszóval, adminisztrátor kinevezése, fiók törlése"],
+    ["UC14", "Fiók és adatok törlése", "Kész", "`AccountController`, `AccountService`; törlés jelszóval megerősítve, minden adattal együtt, meghatározott sorrendben (6.4); a jelszó módosítása is itt"],
     ["UC15", "Edzéssablonok kezelése", "Kész", "`TemplateController`, `TemplateService`; sablon mentése (üresen vagy egy edzésből), szerkesztése, törlése; edzés indítása sablonból"],
     ["UC16", "Eredmények kiértékelése", "Kész", "automatikusan fut az edzés mentésekor, módosításakor és törlésekor"],
   ], [700, 2900, 1100, 4326], { statusCol: 2, size: 19 }));
@@ -91,7 +91,7 @@ module.exports = function (c) {
     ["Üzleti logika", "Spring `@Service`, `@Transactional`, Bean Validation", "tranzakció és validáció a szolgáltatásokon"],
     ["Adatelérés", "Spring Data JPA (Hibernate 7), JPQL, Criteria API", "paraméterezett lekérdezések"],
     ["Adatbázis", "PostgreSQL 16", "fejlesztéskor Docker konténerben"],
-    ["Séma-verziózás", "Flyway (V1–V7)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
+    ["Séma-verziózás", "Flyway (V1–V8)", "`ddl-auto=validate`: a Hibernate csak ellenőriz"],
     ["Biztonság", "Spring Security 7", "űrlapos bejelentkezés, BCrypt, CSRF, szerepkör-hierarchia, HTTPS"],
     ["Üzemeltetés", "Docker, Docker Compose", "többlépcsős Dockerfile; az alkalmazás és a PostgreSQL egy paranccsal indul"],
     ["Tesztelés", "JUnit 5, Spring Boot Test, Testcontainers, Spring Security Test", "valódi PostgreSQL a tesztekben"],
@@ -99,7 +99,7 @@ module.exports = function (c) {
   ], [1700, 3700, 3626], { size: 19 }));
 
   out.push(h2("2.4 Eltérések a specifikációtól"));
-  out.push(p("A fejlesztés során néhány ponton a specifikációtól eltérő megoldást választottunk, vagy egy elem még nem készült el. Az alábbi táblázat ezeket gyűjti össze, indoklással."));
+  out.push(p("A fejlesztés során néhány ponton a specifikációtól eltérő megoldást választottunk. Az alábbi táblázat ezeket gyűjti össze, indoklással."));
   out.push(tcap("Eltérések a követelményspecifikációtól"));
   out.push(table(["Terület", "Specifikáció", "Megvalósítás", "Indok"], [
     ["Spring Boot", "3-as főverzió", "4.1.3", "az újabb, stabil kiadást választottuk; a rétegeket, a JPA-t és a Security-t nem érinti"],
@@ -108,7 +108,7 @@ module.exports = function (c) {
     ["Állóképességi cél", "célérték megadása", "háromféle mérték: táv egyben (km), idő egyben (perc), idő adott távon (pl. 5 km 25:00 alatt)", "a futás, úszás és kerékpározás céljai eltérőek: van, aki távot, van, aki időt vagy tempót szeretne javítani"],
     ["A BLL tesztelése", "Mockito egységtesztek", "szabályok: tiszta egységtesztek; szolgáltatások: integrációs tesztek valódi PostgreSQL-lel", "a szolgáltatások logikája az adatbázishoz (megszorítások, lekérdezések) kötődik, ezt mock nem ellenőrzi"],
     ["Edzés indítása sablonból", "az edzés létrejön, és betölti a tervezett gyakorlatokat és szetteket", "az új edzés űrlapja töltődik ki a sablonból; az edzés a Mentés gombra jön létre", "a félbehagyott indítás nem hagy üres, nyitott edzést a naplóban"],
-    ["Demófelhasználó", "néhány hónapnyi mintaadat", "tervezett", "az 50 gyakorlatos alapadatbázis már megvan"],
+    ["Demófelhasználó", "néhány hónapnyi mintaadat", "16 hétnyi mintaadat; a `REPTRACK_DEMO_ENABLED` kapcsolóval jön létre, alapból kikapcsolva (4.6)", "a demófiók jelszava nyilvános, éles telepítésben ne jöjjön létre magától"],
   ], [1500, 2000, 2900, 2626], { size: 19 }));
 
   // ------------------------------------------------------------------------------------------------ 3.
@@ -143,7 +143,7 @@ module.exports = function (c) {
   out.push(...bullets([
     "A `service` az egyetlen csomag, amely a `repository`-t és a `rules`-t is használja; a `web` nem lát sem entitást, sem repository-t.",
     "A `web` → `rules` függőség egyetlen segédosztályra szól: a `Periods` az időszakhatárokat (hét, hónap) számolja a statisztikai oldal alapértelmezett időszakához.",
-    "A `config` → `service` függőség az `AdminBootstrap`: induláskor a `UserService`-szel hozza létre az első adminisztrátort.",
+    "A `config` → `service` függőség az indulási feladatoké: az `AdminBootstrap` a `UserService`-szel hozza létre az első adminisztrátort, a `DemoDataSeeder` a `DemoDataService`-szel a demófelhasználót.",
     "A `dto` nem függ semmitől, ezért bármelyik réteg használhatja; a `domain` csak a `dto` enumjait ismeri.",
   ]));
 
@@ -176,6 +176,7 @@ module.exports = function (c) {
     "**Tranzakciókezelés.** A szolgáltatásosztályok `@Transactional`-ak, a lekérdező metódusok `readOnly = true` módban futnak. A `WorkoutService` létrehozó, módosító és törlő műveletei **egyetlen tranzakcióban** mentik az edzést, számolják újra a PR-eket és értékelik ki a túlterhelési szabályokat, ezért hiba esetén semmi nem marad félig mentve (5.1).",
     "**Validáció három szinten.** (1) Bean Validation a kérés-DTO-kon (`@NotBlank`, `@Min`, `@DecimalMax`, …), a szolgáltatások `@Validated`-ek. (2) Üzleti szabályok a szolgáltatásokban (például az edzés befejezése a kezdése után van). (3) Az adatbázis CHECK, UNIQUE és idegen kulcs megszorításai végső védelemként. A böngészőoldali ellenőrzés csak kényelmi funkció: a szerver mindent újraellenőriz.",
     "**Hibakezelés.** Három szándékos kivételtípus van: `NotFoundException` (404: nem létező vagy más felhasználóé), `BusinessRuleException` (400: üzleti szabály megsértése) és `StaleDataException` (409: egyidejű módosítás). A `GlobalExceptionHandler` mindhármat az egységes hibaoldalra képezi le. Az edzés- és a profilűrlapon az üzleti szabály megsértése a kitöltött űrlap fölött jelenik meg, az adatok megmaradnak; a regisztrációnál a `BindingResult` mezőnkénti üzenetet ad. A sikerről szóló üzenetek átirányítás után is megjelennek (`FlashMessages`).",
+    "**Fiókváltozás és munkamenetek.** A Spring Security a bejelentkezett felhasználó adatait a munkamenetben tartja, kérésenként nem olvassa újra. Ha egy fiók biztonsági szempontból megváltozik (letiltás, szerepkör-változás, jelszó-visszaállítás, törlés), a szolgáltatás eseményt tesz közzé (`AccountChangedEvent`), és a webes réteg a tranzakció véglegesítése után lejáratja a fiók munkameneteit (5.6). A szolgáltatások így nem tudnak a munkamenetekről, a webes réteg pedig csak a sikeresen mentett változásra reagál.",
     "**Idő és időzóna.** Az időpontok `timestamptz`/`Instant` (UTC) formában tárolódnak. A hét- és hónaphatárok, a napi bontás és a „ma” a `reptrack.timezone` (alapértelmezés: Europe/Budapest) szerint számolódik; a hét hétfőn kezdődik. A pillanatnyi időt a `Clock` bean adja, így a tesztekben rögzíthető.",
     "**Konfiguráció.** Az `application.properties` `${…}` helyőrzőket használ; helyben a projekt gyökerében lévő `.env` fájlt a `DotEnvEnvironmentPostProcessor` olvassa be. A `.env` nem kerül a tárolóba.",
   ]));
@@ -193,6 +194,8 @@ module.exports = function (c) {
     ["Template View, Layout", "`fragments/layout.html`", "egységes oldalváz, kevés ismétlődés"],
     ["Tiszta függvények (Domain Logic)", "`rules` csomag", "determinisztikus, adatbázis nélkül tesztelhető számítás"],
     ["Optimista zárolás", "`@Version`, `StaleDataException`", "párhuzamos szerkesztés védelme zárolás nélkül"],
+    ["Pesszimista zárolás (sorzár)", "`UserRepository.lockByRole`, `AdminSafeguard`", "az utolsó aktív adminisztrátor védelme egyidejű kéréseknél is"],
+    ["Observer (eseményközzététel)", "`AccountChangedEvent`, `@TransactionalEventListener` (`AccountSessions`)", "a szolgáltatásréteg nem függ a webes rétegtől; csak véglegesített változásra fut"],
     ["Dinamikus lekérdezés (Specification jellegű)", "`WorkoutRepositoryCustomImpl` (Criteria API)", "opcionális szűrők lapozással"],
     ["Idempotens újraszámolás", "`PersonalRecordService`, `OverloadService`", "a származtatott adat újraépítése minden módosítás után"],
   ], [2600, 3000, 3426], { size: 19 }));

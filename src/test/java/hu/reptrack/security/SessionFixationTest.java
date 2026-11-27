@@ -27,7 +27,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  * nem jelentkezik be. Így egy támadó által előre "elültetett" munkamenet a bejelentkezés után sem használható.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"reptrack.admin.email=", "reptrack.admin.password="})
+        properties = {"reptrack.admin.email=", "reptrack.admin.password=", "reptrack.demo.enabled=false"})
 class SessionFixationTest extends IntegrationTestBase {
 
     private static final String EMAIL = "session-fixation@example.com";
